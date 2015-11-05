@@ -1,0 +1,21 @@
+db:
+  image: postgres
+  ports:
+    - "5432"
+web:
+  build: .
+  command: >
+    /bin/bash -c '
+    sleep 3 &&
+    npm install --production --no-bin-links &&
+    python manage.py migrate &&
+    python manage.py runserver 0.0.0.0:$PORT'
+  volumes:
+    - .:/src
+  environment:
+    PORT: 8075
+    DATABASE_URL: postgres://postgres@db:5432/postgres
+  ports:
+    - "8075:8075"
+  links:
+    - db
