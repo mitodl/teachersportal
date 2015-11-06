@@ -1,13 +1,5 @@
 teachersportal
 --------
-.. image:: https://img.shields.io/travis/mitodl/teachersportal.svg
-    :target: https://travis-ci.org/mitodl/teachersportal
-.. image:: https://img.shields.io/coveralls/mitodl/teachersportal.svg
-    :target: https://coveralls.io/r/mitodl/teachersportal
-.. image:: https://img.shields.io/github/issues/mitodl/teachersportal.svg
-    :target: https://github.com/mitodl/teachersportal/issues
-.. image:: https://img.shields.io/badge/license-AGPLv3-blue.svg
-    :target: https://github.com/mitodl/teachersportal/blob/master/LICENSE
 
 Teacher's Portal
 
