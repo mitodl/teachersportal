@@ -1,4 +1,14 @@
 {
   "name": "teachersportal",
-  "version": "0.0.0"
+  "version": "0.0.0",
+  "devDependencies": {
+    "babel": "^6.0.15",
+    "babel-eslint": "^4.1.4",
+    "chai": "^3.4.0",
+    "eslint": "^1.9.0",
+    "eslint-plugin-babel": "^2.1.1",
+    "eslint-plugin-react": "^3.7.1",
+    "mocha": "^2.3.3"
+  },
+  "dependencies": {}
 }
