@@ -7,7 +7,6 @@ web:
   command: >
     /bin/bash -c '
     sleep 3 &&
-    npm install --production --no-bin-links &&
     python manage.py migrate &&
     python manage.py runserver 0.0.0.0:$PORT'
   volumes:
@@ -19,3 +18,12 @@ web:
     - "8075:8075"
   links:
     - db
+watch:
+  image: teachersportal_web
+  command: >
+    /bin/bash -c '
+    npm install --production --no-bin-links &&
+    echo Finished npm install &&
+    node ./node_modules/webpack/bin/webpack.js --watch'
+  volumes:
+    - .:/src
