@@ -77,3 +77,7 @@ staticfiles/
 
 # Heroku/Foreman
 .env
+
+# webpack stats ouput
+webpack-stats.json
+static/bundles

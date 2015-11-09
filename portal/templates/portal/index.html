@@ -1,9 +1,14 @@
 {% extends "base.html" %}
 {% load i18n static %}
+{% load render_bundle from webpack_loader %}
 
-{% block title %}{% trans "portal" %}{% endblock %}
+{% block extrahead %}
+    {% render_bundle 'main' 'css' %}
+{% endblock %}
+
 
 {% block content %}
-<h1>{% trans "Hi, I'm portal" %}</h1>
+  <div id="container"></div>
+  {% render_bundle 'main' 'js' %}
 {% endblock %}
 
