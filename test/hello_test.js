@@ -3,7 +3,7 @@ import ReactTestUtils from 'react-addons-test-utils';
 import ReactDOM from 'react-dom';
 import React from 'react';
 
-import HelloWorld from '../static/js/hello_world'
+import HelloWorld from '../static/js/components/hello_world'
 
 describe('hello world', function() {
   it('says Hello world', function(done) {
