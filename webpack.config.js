@@ -1,3 +1,4 @@
+var Promise = require('es6-promise').Promise;
 var path = require("path");
 var webpack = require('webpack');
 var BundleTracker = require('webpack-bundle-tracker');
@@ -23,7 +24,12 @@ module.exports = {
         query: {
           presets: ['es2015', 'react']
         }
-      } // to transform JSX into JS
+      },  // to transform JSX into JS
+      {
+        test: /\.scss$/,
+        exclude: /node_modules/,
+        loader: 'style!css!sass'
+      }
     ]
   },
 
