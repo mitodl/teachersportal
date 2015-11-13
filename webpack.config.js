@@ -2,6 +2,7 @@ var Promise = require('es6-promise').Promise;
 var path = require("path");
 var webpack = require('webpack');
 var BundleTracker = require('webpack-bundle-tracker');
+var NodeNeat = require("node-neat");
 
 module.exports = {
   context: __dirname,
@@ -31,6 +32,10 @@ module.exports = {
         loader: 'style!css!sass'
       }
     ]
+  },
+
+  sassLoader: {
+    includePaths: NodeNeat.includePaths
   },
 
   resolve: {
