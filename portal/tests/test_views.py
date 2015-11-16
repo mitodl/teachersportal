@@ -20,6 +20,6 @@ class TestViews(TestCase):
         response = self.client.get(reverse('portal_index'))
         self.assertContains(
             response,
-            "Hi, I'm portal",
+            "8076/index_page.js",
             status_code=200
         )
