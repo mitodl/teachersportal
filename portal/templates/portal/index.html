@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 {% load i18n static %}
-{% load render_bundle from webpack_loader %}
 
 {% block title %}Teacher's Portal{% endblock %}
 
-{% block extrahead %}
-    {% render_bundle 'main' 'css' %}
-{% endblock %}
-
-
 {% block content %}
   <div id="container"></div>
-  {% render_bundle 'main' 'js' %}
+  {% if debug %}
+  <script type="text/javascript" src="http://{{ host }}:8076/main.js">
+  </script>
+  {% else %}
+  <script type="text/javascript" src="{% static "bundles/main.js" %}">
+  </script>
+  {% endif %}
 {% endblock %}
 
