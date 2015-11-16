@@ -23,8 +23,8 @@ class TestSettings(unittest.TestCase):
         with open(temp_config_path, 'w') as temp_config:
             temp_config.write(yaml.dump(config_settings))
 
-        with mock.patch('teachersportal.settings.CONFIG_PATHS') as config_paths:
-            config_paths.__iter__.return_value = [temp_config_path]
+        with mock.patch('teachersportal.settings.CONFIG_PATHS') as paths:
+            paths.__iter__.return_value = [temp_config_path]
             fallback_config = load_fallback()
             self.assertDictEqual(fallback_config, config_settings)
 
