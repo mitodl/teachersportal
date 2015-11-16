@@ -1,6 +1,20 @@
 @import "bourbon";
 @import "neat";
 
-h1 {
-    font-size: large;
+#container {
+    @include outer-container(1350px);
+
+    h1 {
+        font-size: large;
+    }
+
+    #cards li {
+        @include span-columns(3);
+        @include omega(4n);
+    }
+
+    #body {
+        @include span-columns(10);
+        @include shift(1);
+    }
 }
