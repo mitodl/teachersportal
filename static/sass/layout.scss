@@ -22,3 +22,77 @@
 body {
   font-family: 'Roboto', sans-serif;
 }
+
+h2 {
+  font-size: 18pt;
+  font-weight: 900;
+}
+
+.earn-mit-credit {
+  @include row(table);
+  height: 200px;
+  text-align: center;
+  color: white;
+
+  font-weight: 400;
+  font-size: 15pt;
+}
+
+.earn-mit-credit div  {
+  vertical-align: middle;
+}
+
+.earn-mit-credit div:nth-child(1) {
+  @include span-columns(2);
+  background-color: #00AF73;
+}
+
+.earn-mit-credit div:nth-child(2) {
+  @include span-columns(8);
+  padding-left: 10%;
+  padding-right: 10%;
+  background-color: #007A64;
+}
+
+
+.learn-more {
+  text-align: center;
+  border-top: 1px solid white;
+
+  font-weight: 400;
+  font-size: 15pt;
+}
+
+.learn-more div {
+  @include span-columns(5);
+  @include pad();
+  height: 400px;
+  vertical-align: middle;
+  background-color: #202224;
+  color: white;
+}
+
+.learn-more div:nth-child(1) {
+  border-right: 2px solid white;
+}
+
+.learn-more div:nth-child(2) {
+  border-left: 1px solid white;
+}
+
+.learn-more div p {
+  padding-left: 15%;
+  padding-right: 15%;
+}
+
+.white-border {
+  display: inline-block;
+  border: 1px solid white;
+  background: transparent;
+  padding: 5px 20px;
+}
+
+.white-border a {
+  text-decoration: none;
+  color: #75FFE5;
+}
