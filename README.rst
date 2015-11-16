@@ -19,6 +19,20 @@ To run one-off commands, like shell, you can run
 ``docker-compose run web python manage.py shell`` or to create root
 user, etc.
 
+For OS X development
+====================
+
+Install docker-osx-dev before starting.
+
+You can do that by typing `make` after you set up your docker
+container for the first time.
+
+Subsequently, before you start up your docker container with
+docker-compose up, you would run: docker-osx-dev -m default -s ./
+(if your docker VM is called `default`, and your CWD is the
+root of the teachers portal source directory).
+
+
 Adding an application
 =====================
 
