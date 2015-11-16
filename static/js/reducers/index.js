@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux';
-import helloWorld from './hello_world';
+import indexPageReducer from './index_page';
 
 export default combineReducers({
-  helloWorld
+  indexPageReducer
 });

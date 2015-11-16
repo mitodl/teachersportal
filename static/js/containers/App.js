@@ -1,9 +1,9 @@
 import React from 'react';
-import HelloWorldContainer from './HelloWorldContainer';
+import IndexPage from './IndexPage';
 
 class App extends React.Component {
   render() {
-    return <HelloWorldContainer />;
+    return <IndexPage />;
   }
 }
 export default App;
