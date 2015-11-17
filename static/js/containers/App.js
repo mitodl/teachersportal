@@ -1,9 +1,9 @@
 import React from 'react';
-import IndexPage from './IndexPage';
+import Page from './Page';
 
 class App extends React.Component {
   render() {
-    return <IndexPage />;
+    return <Page />;
   }
 }
 export default App;

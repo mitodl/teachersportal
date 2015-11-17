@@ -1,5 +1,7 @@
 import React from 'react';
 import Header from '../components/Header';
+import Body from '../components/Body';
+import Footer from '../components/Footer';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import * as IndexPageActions from '../actions/index_page';
@@ -8,8 +10,10 @@ class IndexPage extends React.Component {
   render() {
     const {  } = this.props;
 
-    return <div><Header
-    />
+    return <div>
+      <Header/>
+      <Body/>
+      <Footer/>
       </div>
       ;
   }

@@ -1,24 +1,58 @@
 @import "bourbon";
 @import "neat";
+@import "grid-settings";
+@import "variables";
 
-#container {
-    @include outer-container(1350px);
-
-    h1 {
-        font-size: large;
-    }
-
-    #cards li {
-        @include span-columns(3);
-        @include omega(4n);
-    }
-
-    #body {
-        @include span-columns(10);
-        @include shift(1);
-    }
-}
+$border-box-sizing: true !global;
 
 body {
   font-family: 'Roboto', sans-serif;
+  background-color: $darkgrey;
+  margin-top: 0;
+}
+
+#container {
+    @include outer-container;
+
+    #header {
+      @include pad($block-padding);
+      h1 {
+          font-size: large;
+      }
+      background-color: white;
+      border: 1px solid #ddd;
+      img {
+        width: 200px;
+      }
+    }
+
+    #body {
+        @include pad($block-padding);
+        @include fill-parent;
+        background-color: $lightgrey;
+        border: 1px solid #ddd;
+
+
+        #inner {
+          @include pad($block-padding);
+          @include border-top-radius(4px);
+          @include border-right-radius(4px);
+          @include border-bottom-radius(4px);
+          @include border-left-radius(4px);
+          background-color: white;
+          color: white;
+          border: 1px solid #ddd;
+          -webkit-box-shadow: 0px 0px 5px 0px #ccc;
+                  box-shadow: 0px 0px 5px 0px #ccc;
+        }
+    }
+
+    #footer {
+      @include pad($block-padding);
+      background-color: black;
+      color: white;
+      img {
+        width: 100px;
+      }
+    }
 }
