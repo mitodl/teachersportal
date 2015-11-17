@@ -1,0 +1,6 @@
+node_modules
+.git
+.rsync-ignore
+Makefile
+README.rst
+.DS_Store
