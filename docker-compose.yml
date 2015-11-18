@@ -14,6 +14,7 @@ web:
   environment:
     PORT: 8075
     DATABASE_URL: postgres://postgres@db:5432/postgres
+    CCXCON_API: http://private-anon-388fdf8b0-ccxcon.apiary-mock.com/
   ports:
     - "8075:8075"
   links:

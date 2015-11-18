@@ -4,15 +4,18 @@ import Body from '../components/Body';
 import Footer from '../components/Footer';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-import * as IndexPageActions from '../actions/index_page';
+import { fetchCourses } from '../actions/index_page';
 
-class IndexPage extends React.Component {
+class Page extends React.Component {
   render() {
-    const {  } = this.props;
+    const { courses, dispatch } = this.props;
 
     return <div>
       <Header/>
-      <Body/>
+      <Body
+        updateCourses={() => dispatch(fetchCourses())}
+        courses={courses}
+      />
       <Footer/>
       </div>
       ;
@@ -21,14 +24,8 @@ class IndexPage extends React.Component {
 
 const mapStateToProps = (state) => {
   return {
+    courses: state.courses.get("courses")
   };
 };
 
-function mapDispatchToProps(dispatch) {
-  return bindActionCreators(IndexPageActions, dispatch);
-}
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(IndexPage);
+export default connect(mapStateToProps)(Page);

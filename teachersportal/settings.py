@@ -121,6 +121,8 @@ DATABASES = {
     )
 }
 
+CCXCON_API = get_var('CCXCON_API', None)
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
