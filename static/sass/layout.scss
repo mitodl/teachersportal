@@ -21,8 +21,16 @@ body {
       }
       background-color: white;
       border: 1px solid #ddd;
+      #navigation {
+        display: inline-block;
+        button div span {
+          text-transform: initial;
+        }
+      }
       img {
         width: 200px;
+        display: inline-block;
+        vertical-align: middle;
       }
     }
 
@@ -53,6 +61,14 @@ body {
       color: white;
       img {
         width: 100px;
+      }
+      #links, #address {
+        margin-left: 10px;
+        font-size: 12px;
+        a {
+          padding-right: 10px;
+          color: #358CDD;
+        }
       }
     }
 }
