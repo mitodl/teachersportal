@@ -6,9 +6,10 @@ WORKDIR /tmp
 
 # Install base packages
 COPY apt.txt /tmp/apt.txt
-RUN apt-get update &&\
+RUN apt-get install curl -y &&\
+    curl --silent --location https://deb.nodesource.com/setup_4.x | bash - &&\
+    apt-get update &&\
     apt-get install -y $(grep -vE "^\s*#" apt.txt  | tr "\n" " ") &&\
-    ln -s /usr/bin/nodejs /usr/bin/node &&\
     pip install pip --upgrade
 
 # Add non-root user.
