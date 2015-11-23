@@ -4,7 +4,10 @@ Views for teachersportal.
 
 from __future__ import unicode_literals
 
+import json
+
 from django.shortcuts import render
+from django.conf import settings
 
 
 def index_view(request):
@@ -16,6 +19,13 @@ def index_view(request):
         HttpResponse
     """
 
+    host = request.get_host().split(":")[0]
+    js_settings = {
+        "host": host,
+        "ccxconApi": settings.CCXCON_API
+    }
+
     return render(request, 'portal/index.html', context={
-        "host": request.get_host().split(":")[0]
+        "host": host,
+        "js_settings_json": json.dumps(js_settings)
     })

@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux';
-import indexPageReducer from './index_page';
+import { courses } from './index_page';
 
 export default combineReducers({
-  indexPageReducer
+  courses
 });
