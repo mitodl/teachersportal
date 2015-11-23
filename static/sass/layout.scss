@@ -39,6 +39,16 @@ body {
         @include fill-parent;
         background-color: $lightgrey;
         border: 1px solid #ddd;
+        #tabs {
+          @include pad($block-padding);
+          font-size: 14px;
+          div {
+            background-color: white;
+            .tab {
+              color: black !important;
+            }
+          }
+        }
     }
 
     #footer {

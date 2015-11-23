@@ -1,6 +1,7 @@
 import React from 'react';
 import Card from 'material-ui/lib/card/card';
 import CardText from 'material-ui/lib/card/card-text';
+import CourseTabs from '../components/CourseTabs';
 
 class Body extends React.Component {
   render() {
@@ -14,7 +15,7 @@ class Body extends React.Component {
 
     return <div id="body">
         <Card id="page-card">
-            <CardText>
+            <CardText id="description">
                 Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
                 tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
                 quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
@@ -25,6 +26,7 @@ class Body extends React.Component {
               <button onClick={this.props.updateCourses}>Test</button>
               {courses}
             </CardText>
+            <CourseTabs />
         </Card>
     </div>
     ;
