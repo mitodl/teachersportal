@@ -113,12 +113,20 @@ WSGI_APPLICATION = 'teachersportal.wsgi.application'
 # Uses DATABASE_URL to configure with sqlite default:
 # For URL structure:
 # https://github.com/kennethreitz/dj-database-url
-DATABASES = {
-    'default': dj_database_url.parse(
-        get_var('DATABASE_URL', 'sqlite:///{0}'.format(
-            os.path.join(BASE_DIR, 'db.sqlite3')
-        ))
+DEFAULT_DATABASE_CONFIG = dj_database_url.parse(
+    get_var(
+        'DATABASE_URL',
+        'sqlite:///{0}'.format(os.path.join(BASE_DIR, 'db.sqlite3'))
     )
+)
+
+if get_var('PORTAL_DB_DISABLE_SSL', False):
+    DEFAULT_DATABASE_CONFIG['OPTIONS'] = {}
+else:
+    DEFAULT_DATABASE_CONFIG['OPTIONS'] = {'sslmode': 'require'}
+
+DATABASES = {
+    'default': DEFAULT_DATABASE_CONFIG
 }
 
 CCXCON_API = get_var('CCXCON_API', None)

@@ -1,5 +1,5 @@
 language: python
 script:
-  - docker-compose run -e TOX_WORK_DIR=/tmp -e COVERAGE_DIR=/tmp web tox
+  - docker-compose -f travis-docker-compose.yml run web tox
 services:
   - docker
