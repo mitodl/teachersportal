@@ -1,6 +1,7 @@
 import { combineReducers } from 'redux';
-import { courses } from './index_page';
+import { courses, showLoginModal } from './index_page';
 
 export default combineReducers({
-  courses
+  courses,
+  showLoginModal
 });
