@@ -6,6 +6,10 @@ import { Provider } from 'react-redux';
 import configureStore from './store/configureStore';
 import { Router, Route } from 'react-router';
 
+// Make sure these are accessible everywhere
+import 'react-mdl/extra/material.js';
+import 'react-mdl/extra/material.css';
+
 const store = configureStore();
 
 ReactDOM.render(

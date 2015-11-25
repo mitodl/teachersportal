@@ -5,13 +5,9 @@ import CourseTabs from '../components/CourseTabs';
 
 class Body extends React.Component {
   render() {
-    let courses;
-
-    if (this.props.courses) {
-      courses = this.props.courses.map(
-        course => <div key={course.uuid}>{course.description}</div>
-      );
-    }
+    const { courses, updateCoursesIfAbsent, selectedCourses, updateCourseSelection,
+      updateCourseSelectAll
+      } = this.props;
 
     return <div id="body">
         <Card id="page-card">
@@ -22,11 +18,14 @@ class Body extends React.Component {
                 consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
                 cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
                 proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
-              <button onClick={this.props.updateCourses}>Test</button>
-              {courses}
             </CardText>
-            <CourseTabs />
+            <CourseTabs
+              courses={courses}
+              updateCoursesIfAbsent={updateCoursesIfAbsent}
+              selectedCourses={selectedCourses}
+              updateCourseSelection={updateCourseSelection}
+              updateCourseSelectAll={updateCourseSelectAll}
+            />
         </Card>
     </div>
     ;

@@ -28,8 +28,7 @@ module.exports = {
         }
       },  // to transform JSX into JS
       {
-        test: /\.scss$/,
-        exclude: /node_modules/,
+        test: /\.s?css$/,
         loader: 'style!css!sass'
       }
     ]
