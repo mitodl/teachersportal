@@ -1,11 +1,16 @@
 import React from 'react';
 import Navigation from '../components/Navigation';
+import LoginModal from '../components/LoginModal';
 
 class Header extends React.Component {
   render() {
+    const { showSignIn, hideSignIn, isLoginModalShowing } = this.props;
+
     return <div id="header">
       <img src="/static/images/mit-white.png" className="logo" />
-      <Navigation />
+      <Navigation onShowSignIn={showSignIn} />
+
+      <LoginModal isOpen={isLoginModalShowing} onHideLoginModal={hideSignIn} />
       </div>;
   }
 }

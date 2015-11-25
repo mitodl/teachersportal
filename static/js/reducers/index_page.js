@@ -1,4 +1,4 @@
-import { RECEIVE_COURSES, REQUEST_COURSES } from '../actions/index_page';
+import { RECEIVE_COURSES, REQUEST_COURSES, SHOW_LOGIN } from '../actions/index_page';
 import Immutable from 'immutable';
 
 export function courses(state = Immutable.Map(), action) {
@@ -12,4 +12,8 @@ export function courses(state = Immutable.Map(), action) {
   default:
     return state;
   }
+}
+
+export function showLoginModal(state = false, action) {
+  return action.type === SHOW_LOGIN;
 }

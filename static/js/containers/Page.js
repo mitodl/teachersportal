@@ -4,14 +4,20 @@ import Body from '../components/Body';
 import Footer from '../components/Footer';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-import { fetchCourses } from '../actions/index_page';
+import { fetchCourses, showLogin, hideLogin } from '../actions/index_page';
 
 class Page extends React.Component {
   render() {
-    const { courses, dispatch } = this.props;
+    const {
+      courses, dispatch, isLoginModalShowing
+    } = this.props;
 
     return <div>
-      <Header/>
+      <Header
+        isLoginModalShowing={isLoginModalShowing}
+        showSignIn={() => dispatch(showLogin())}
+        hideSignIn={() => dispatch(hideLogin())}
+      />
       <Body
         updateCourses={() => dispatch(fetchCourses())}
         courses={courses}
@@ -24,7 +30,8 @@ class Page extends React.Component {
 
 const mapStateToProps = (state) => {
   return {
-    courses: state.courses.get("courses")
+    courses: state.courses.get("courses"),
+    isLoginModalShowing: state.showLoginModal
   };
 };
 
