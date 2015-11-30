@@ -22,7 +22,7 @@ class LoginModal extends React.Component {
 
 LoginModal.propTypes = {
   isOpen: React.PropTypes.bool.isRequired,
-  onhideLoginModal: React.PropTypes.func.isRequired
+  onHideLoginModal: React.PropTypes.func.isRequired
 };
 
 export default LoginModal;
