@@ -35,6 +35,14 @@ docker-compose up, you would run: docker-osx-dev -m default -s ./
 (if your docker VM is called `default`, and your CWD is the
 root of the teachers portal source directory).
 
+Dev Tools
+=========
+
+`react-devtools <https://github.com/gaearon/redux-devtools>` is in use
+on this repository. This will help you debug actions and mutations to
+the underlying redux store. To enable it, press `Ctrl+H`. You can then
+click the action names to undo or redo them.
+
 
 Adding an application
 =====================

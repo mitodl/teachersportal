@@ -27,7 +27,7 @@ watch:
   command: >
     /bin/bash -c '
     npm cache clean &&
-    npm install --production --no-bin-links &&
+    npm install --no-bin-links &&
     npm rebuild node-sass &&
     echo Finished npm install &&
     node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --content-base ./static --host 0.0.0.0 --port 8076 --progress --hot --inline'

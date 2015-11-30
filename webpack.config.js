@@ -7,15 +7,12 @@ var NodeNeat = require("node-neat");
 module.exports = {
   context: __dirname,
   entry: {
-    index_page: './static/js/index_page'
+    'index_page': './static/js/index_page'
   },
   output: {
-      path: path.resolve('./static/bundles/'),
-      filename: "[name].js"
+    path: path.resolve('./static/bundles/'),
+    filename: "[name].js"
   },
-
-  plugins: [
-  ],
 
   module: {
     loaders: [

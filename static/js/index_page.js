@@ -6,13 +6,21 @@ import { Provider } from 'react-redux';
 import configureStore from './store/configureStore';
 import { Router, Route } from 'react-router';
 
+import { devTools, persistState } from 'redux-devtools';
+import { DevTools, DebugPanel, LogMonitor } from 'redux-devtools/lib/react';
+
 const store = configureStore();
 
 ReactDOM.render(
-  <Provider store={store}>
-    <Router>
-      <Route path="/" component={App}/>
-    </Router>
-  </Provider>,
+  <div>
+    <Provider store={store}>
+      <Router>
+        <Route path="/" component={App}/>
+      </Router>
+    </Provider>
+    <DebugPanel top right bottom>
+      <DevTools store={store} monitor={LogMonitor} visibleOnLoad={false}/>
+    </DebugPanel>
+  </div>,
   document.getElementById("container")
 );
