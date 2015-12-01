@@ -27,7 +27,8 @@ describe('common api functions', function () {
   jsdom();
 
   it('gets courses', done => {
-    fetchMock.mock(/\/api\/v1\/coursexs\/$/, COURSES_RESPONSE);
+    const { ccxconApi } = SETTINGS;
+    fetchMock.mock(`${ccxconApi}v1/coursexs/`, COURSES_RESPONSE);
     getCourses().then(receivedCourses => {
       assert(receivedCourses, COURSES_RESPONSE);
 

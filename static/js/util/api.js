@@ -4,6 +4,6 @@ import 'isomorphic-fetch';
 const { ccxconApi } = SETTINGS;
 
 export function getCourses() {
-  return fetch(`${ccxconApi}api/v1/coursexs/`).
+  return fetch(`${ccxconApi}v1/coursexs/`).
     then(response => response.json());
 }
