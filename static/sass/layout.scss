@@ -34,21 +34,81 @@ body {
       }
     }
 
-    #body {
-        @include pad($block-padding);
-        @include fill-parent;
-        background-color: $lightgrey;
-        border: 1px solid #ddd;
-        #tabs {
-          @include pad($block-padding);
-          font-size: 14px;
-          div {
-            background-color: white;
-            .tab {
-              color: black !important;
+    #course-body {
+      @include pad($block-padding);
+      @include fill-parent;
+      background-color: $lightgrey;
+      border: 1px solid #ddd;
+
+      #course-content {
+        @include pad($page-padding);
+        #course-title {
+          padding: 0 16px 26px 0 !important;
+          span:nth-child(1) {
+            font-weight: 800;
+            font-size: 30px !important;
+          }
+
+          span:nth-child(2) {
+            font-size: 20px !important;
+            font-weight: 400 !important;
+          }
+        }
+
+        #course-image {
+          display: inline-block;
+          max-width: 400px;
+        }
+
+        #course-description {
+          display: inline-block;
+          padding: 0 0 0 30px !important;
+          vertical-align: top;
+          font-size: 18px !important;
+          line-height: 2em;
+          width: 700px;
+        }
+
+        #course-about-tab {
+          display: inline-block;
+          padding: 30px !important;
+          vertical-align: top;
+          font-size: 18px !important;
+          line-height: 2em;
+        }
+
+        #course-purchase-selector {
+          #number-of-seats, h3 {
+            padding: 40px;
+            display:inline-block;
+            vertical-align: middle;
+          }
+        }
+
+        #course-tabs-card {
+          margin-top: 20px;
+          #course-tabs {
+            font-size: 14px;
+
+            .mui-table-header-column {
+              // &:nth-child(1) {
+                width:100px;
+              // }
+            }
+
+            div {
+              .tab {
+                background-color: white;
+                color: black !important;
+                text-transform: uppercase;
+                & > div > div div {
+                  padding:20px;
+                }
+              }
             }
           }
         }
+      }
     }
 
     #footer {

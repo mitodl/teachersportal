@@ -2,6 +2,12 @@ import React from 'react';
 import Card from 'material-ui/lib/card/card';
 import CardText from 'material-ui/lib/card/card-text';
 import CourseTabs from '../components/CourseTabs';
+import CardActions from 'material-ui/lib/card/card-actions';
+import CardExpandable from 'material-ui/lib/card/card-expandable';
+import CardHeader from 'material-ui/lib/card/card-header';
+import CardMedia from 'material-ui/lib/card/card-media';
+import CardTitle from 'material-ui/lib/card/card-title';
+import Lorem from './Lorem';
 
 class Body extends React.Component {
   render() {
@@ -13,20 +19,24 @@ class Body extends React.Component {
       );
     }
 
-    return <div id="body">
-        <Card id="page-card">
-            <CardText id="description">
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-                tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-                quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-                consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-                cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-                proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
+    return <div id="course-body">
+        <Card id="course-content">
+          <CardTitle
+            title="Introductory Physics: Classical Mechanics"
+            subtitle="by David E. Pritchard"
+            id="course-title"
+          />
+          <Card id="course-image">
+              <CardMedia>
+                <img src="http://lorempixel.com/g/350/250/abstract" />
+              </CardMedia>
+          </Card>
+          <CardText id="course-description">
+              <Lorem />
               <button onClick={this.props.updateCourses}>Test</button>
               {courses}
-            </CardText>
-            <CourseTabs />
+          </CardText>
+          <CourseTabs />
         </Card>
     </div>
     ;

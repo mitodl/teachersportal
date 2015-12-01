@@ -1,38 +1,50 @@
 import React from 'react';
+import Card from 'material-ui/lib/card/card';
 import Tabs from 'material-ui/lib/tabs/tabs';
 import Tab from 'material-ui/lib/tabs/tab';
+import ChapterTab from '../components/ChapterTab';
+import AboutTab from '../components/AboutTab';
+import ReviewsTab from '../components/ReviewsTab';
+import BuyTab from '../components/BuyTab';
+
 // Required for material ui tabs
 import injectTapEventPlugin from "react-tap-event-plugin";
 injectTapEventPlugin();
 
 class CourseTabs extends React.Component {
   render() {
-    return <div>
-        <Tabs id="tabs">
+    return <Card id="course-tabs-card">
+        <Tabs id="course-tabs">
             <Tab label="About" id="about" className="tab">
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-                tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-                quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-                consequat.
+                <AboutTab />
             </Tab>
             <Tab label="Content" id="content" className="tab">
-                Duis aute irure dolor in reprehenderit in voluptate velit esse
-                cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-                proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                <ChapterTab
+                  selectable={false}
+                  fixedHeader={true}
+                  fixedFooter={true}
+                  stripedRows={false}
+                  showRowHover={true}
+                  deselectOnClickaway={true}
+                  height={'auto'}
+                 />
             </Tab>
             <Tab label="Reviews" id="reviews" className="tab">
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-                tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-                quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-                consequat.
+                <ReviewsTab />
             </Tab>
             <Tab label="Buy" id="buy" className="tab">
-                Duis aute irure dolor in reprehenderit in voluptate velit esse
-                cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-                proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                <BuyTab
+                  selectable={true}
+                  fixedHeader={true}
+                  fixedFooter={true}
+                  stripedRows={false}
+                  showRowHover={true}
+                  deselectOnClickaway={true}
+                  height={'auto'}
+                />
             </Tab>
         </Tabs>
-      </div>;
+      </Card>;
   }
 }
 
