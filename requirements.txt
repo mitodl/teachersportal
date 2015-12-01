@@ -7,4 +7,4 @@ psycopg2==2.6
 tox>=2.0.2,<3.0.0
 static3==0.6.1
 django-oscar==1.1.1
-git+https://github.com/django-oscar/django-oscar-api.git@725806683dc5d3467d10f0941f93bdbe960e523f#egg=django-oscar-api==0.0.36-odl
+git+https://github.com/mitodl/django-oscar-api.git@e7b61defd6d762e2b4c4fcc451040b056d36b26b#egg=django-oscar-api==0.0.36-odl

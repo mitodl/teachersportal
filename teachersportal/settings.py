@@ -15,6 +15,8 @@ import os
 import dj_database_url
 import yaml
 
+from oscar import get_core_apps
+
 CONFIG_PATHS = [
     os.environ.get('TEACHERSPORTAL_CONFIG', ''),
     os.path.join(os.getcwd(), 'teachersportal.yml'),
@@ -63,15 +65,26 @@ ALLOWED_HOSTS = get_var('ALLOWED_HOSTS', [])
 
 # Application definition
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.flatpages',
+    'widget_tweaks',
     # Our INSTALLED_APPS
     'portal'
+] + get_core_apps()
+
+# Oscar site id
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = (
+    'oscar.apps.customer.auth_backends.EmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -83,6 +96,8 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'oscar.apps.basket.middleware.BasketMiddleware',
+    'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
 )
 
 ROOT_URLCONF = 'teachersportal.urls'
@@ -144,6 +159,12 @@ USE_L10N = True
 
 USE_TZ = True
 
+# Haystack is required for Oscar
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.simple_backend.SimpleEngine',
+    },
+}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
@@ -156,3 +177,7 @@ STATICFILES_DIRS = (
 )
 
 INTERNAL_IPS = (get_var('HOST_IP', '127.0.0.1'), )
+
+# Import oscar default settings
+# pylint: disable=wrong-import-position,unused-wildcard-import,wildcard-import
+from oscar.defaults import *  # noqa
