@@ -1,14 +1,16 @@
 import { RECEIVE_COURSES, REQUEST_COURSES, SHOW_LOGIN } from '../actions/index_page';
-import Immutable from 'immutable';
 
-export function courses(state = Immutable.Map(), action) {
+export function courses(state = {}, action) {
   switch (action.type) {
   case REQUEST_COURSES:
-    return state.set("isFetching", true);
+    return Object.assign({}, state, {
+      isFetching: true
+    });
   case RECEIVE_COURSES:
-    return state.
-      set("isFetching", false).
-      set("courses", action.courses);
+    return Object.assign({}, state, {
+      isFetching: false,
+      courses: action.courses
+    });
   default:
     return state;
   }
