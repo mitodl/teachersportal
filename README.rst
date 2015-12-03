@@ -6,6 +6,10 @@ Teacher's Portal
 .. image:: https://travis-ci.com/mitodl/teachersportal.svg?token=XTpdxUNyGRQG4uuk8RkK
     :target: https://travis-ci.com/mitodl/teachersportal
 
+.. image:: https://www.herokucdn.com/deploy/button.png
+    :target: https://heroku.com/deploy
+
+
 Getting Started
 ===============
 
