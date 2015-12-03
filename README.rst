@@ -3,6 +3,9 @@ teachersportal
 
 Teacher's Portal
 
+.. image:: https://travis-ci.com/mitodl/teachersportal.svg?token=XTpdxUNyGRQG4uuk8RkK
+    :target: https://travis-ci.com/mitodl/teachersportal
+
 Getting Started
 ===============
 
