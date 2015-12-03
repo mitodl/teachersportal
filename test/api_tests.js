@@ -6,7 +6,6 @@ import ReactDOM from 'react-dom';
 import React from 'react';
 import jsdom from 'mocha-jsdom';
 import fetchMock from 'fetch-mock/src/server';
-import Immutable from 'immutable';
 import { getCourses } from '../static/js/util/api';
 
 const COURSES_RESPONSE = [
@@ -30,7 +29,7 @@ describe('common api functions', function () {
   it('gets courses', done => {
     fetchMock.mock(/\/api\/v1\/coursexs\/$/, COURSES_RESPONSE);
     getCourses().then(receivedCourses => {
-      assert(Immutable.fromJS(receivedCourses), COURSES_RESPONSE);
+      assert(receivedCourses, COURSES_RESPONSE);
 
       done();
     });

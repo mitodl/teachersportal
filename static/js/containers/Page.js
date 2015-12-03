@@ -30,7 +30,7 @@ class Page extends React.Component {
 
 const mapStateToProps = (state) => {
   return {
-    courses: state.courses.get("courses"),
+    courses: state.courses.courses,
     isLoginModalShowing: state.showLoginModal
   };
 };
