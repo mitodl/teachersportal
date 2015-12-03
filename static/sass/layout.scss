@@ -9,9 +9,7 @@ body {
   font-family: 'Roboto', sans-serif;
   background-color: $darkgrey;
   margin-top: 0;
-}
-
-#container {
+  #container {
     @include outer-container;
 
     #header {
@@ -23,8 +21,9 @@ body {
       border: 1px solid #ddd;
       #navigation {
         display: inline-block;
-        button div span {
+        button.mdl-button {
           text-transform: initial;
+          padding: 0 30px;
         }
       }
       img {
@@ -34,22 +33,94 @@ body {
       }
     }
 
-    #body {
+    #course-body {
         @include pad($block-padding);
         @include fill-parent;
         background-color: $lightgrey;
         border: 1px solid #ddd;
-        #tabs {
+
+        #course-content {
           @include pad($block-padding);
-          font-size: 14px;
-          div {
-            background-color: white;
-            .tab {
-              color: black !important;
+          width: 100%;
+
+          #course-title {
+            padding: 0;
+            h2 {
+              font-weight: 600;
+              color: #545454;
+              font-size: 36px;
+            }
+          }
+
+          #course-byline {
+            padding: 0;
+            h2 {
+              font-size: 26px;
+              color: #bbb;
+              font-weight: 200;
+            }
+          }
+
+          #course-image {
+            max-width: 400px;
+            min-height: 250px;
+          }
+
+          #course-description {
+            vertical-align: top;
+            font-size: 18px;
+            line-height: 2em;
+            width: 100%;
+            padding-top: 0;
+          }
+
+          #course-tabs-card {
+            margin-top: 20px;
+            #content {
+              margin-top: 20px;
+              table {
+                width: 100%;
+                td {
+                  height: 100px;
+                  .mdl-tooltip {
+                      background: white;
+                      color: #000;
+                      max-width: 100%;
+                      position: static;
+                      text-align: left;
+                  }
+                  a {
+                    text-decoration: none;
+                    color: black;
+                    border-bottom-style: dashed;
+                    border-bottom-width: thin;
+                  }
+                }
+              }
+              .mdl-data-table {
+                thead {
+                  background-color: #CDEEFF;
+                  th {
+                    font-size: 16px;
+                    font-weight: 700;
+                  }
+                }
+              }
+            }
+
+
+            #course-tabs {
+             .mdl-tabs__tab-bar {
+              justify-content: space-between;
+              .mdl-tabs__tab {
+                width:25%;
+              }
+             }
+             font-size: 14px;
             }
           }
         }
-    }
+      }
 
     #footer {
       @include pad($block-padding);
@@ -67,4 +138,5 @@ body {
         }
       }
     }
+  }
 }

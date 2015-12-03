@@ -1,28 +1,30 @@
 import React from 'react';
-import Dialog from 'material-ui/lib/dialog';
-import TextField from 'material-ui/lib/text-field';
-import RaisedButton from 'material-ui/lib/raised-button';
+import Textfield from 'react-mdl';
+import Modal from 'elemental/lib/components/Modal';
+import ModalHeader from 'elemental/lib/components/ModalHeader';
+import ModalBody from 'elemental/lib/components/ModalBody';
+import ModalFooter from 'elemental/lib/components/ModalFooter';
+import Button from 'elemental/lib/components/Button';
 
 class LoginModal extends React.Component {
   render() {
-    const { onHideLoginModal, isOpen } = this.props;
+    // const { onHideLoginModal, isOpen } = this.props;
 
-    // TODO(abrahms): Get login actually hooked into actions / store.
-
-    return <Dialog title="Sign in"
-      open={isOpen}
-      onRequestClose={onHideLoginModal}>
-      <TextField hintText="Username" />
-      <TextField hintText="Password" />
-      <RaisedButton label="Sign In" primary={true}/>
-      <RaisedButton label="Cancel" secondary={true} onClick={onHideLoginModal}/>
-      </Dialog>;
+    return <Modal>
+      <ModalHeader text="Modal Header" />
+      <ModalBody>[...Body...]
+      </ModalBody>
+      <ModalFooter>
+      <Button type="primary" onClick={this.toggleModal}>Close modal</Button>
+      </ModalFooter>
+    </Modal>
+    ;
   }
-};
+}
 
-LoginModal.propTypes = {
-  isOpen: React.PropTypes.bool.isRequired,
-  onHideLoginModal: React.PropTypes.func.isRequired
-};
+// LoginModal.propTypes = {
+//   isOpen: React.PropTypes.bool.isRequired,
+//   onHideLoginModal: React.PropTypes.func.isRequired
+// }
 
 export default LoginModal;

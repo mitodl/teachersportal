@@ -1,18 +1,17 @@
 import React from 'react';
-import FlatButton from 'material-ui/lib/flat-button';
-import RaisedButton from 'material-ui/lib/raised-button';
+import Button from 'elemental/lib/components/Button';
 
 class Navigation extends React.Component {
   render() {
     const { onShowSignIn } = this.props;
 
     return <div id="navigation">
-        <FlatButton label="Courses" />
-        <FlatButton label="MIT's Pedagogy" />
-        <FlatButton label="Resources and Teaching Guides" />
-        <FlatButton label="About" />
-        <RaisedButton label="Sign In" onClick={onShowSignIn} secondary={true}/>
-      </div>;
+    <button className="mdl-button mdl-js-button mdl-js-ripple-effect">Courses</button>
+    <button className="mdl-button mdl-js-button mdl-js-ripple-effect">MIT's Pedagogy</button>
+    <button className="mdl-button mdl-js-button mdl-js-ripple-effect">Resources & Teaching Guides</button>
+    <button className="mdl-button mdl-js-button mdl-js-ripple-effect">About</button>
+    <button className="mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect" onClick={this.toggleModal}>Sign in</button>
+    </div>;
   }
 }
 

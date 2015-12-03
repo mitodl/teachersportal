@@ -27,11 +27,18 @@ module.exports = {
           presets: ['es2015', 'react']
         }
       },  // to transform JSX into JS
+
+      // SASS
       {
-        test: /\.scss$/,
-        exclude: /node_modules/,
+        test: /\.s?css$/,
         loader: 'style!css!sass'
-      }
+      },
+
+      // LESS
+      {
+        test: /\.less$/,
+        loader: 'style!css!less'
+      },
     ]
   },
 

@@ -8,6 +8,10 @@ import { Router, Route } from 'react-router';
 
 const store = configureStore();
 
+import 'elemental/less/elemental.less';
+import 'react-mdl/extra/material.js';
+import 'react-mdl/extra/material.min.css';
+
 ReactDOM.render(
   <Provider store={store}>
     <Router>
