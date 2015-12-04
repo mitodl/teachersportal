@@ -10,12 +10,16 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 
 """
+import ast
 import os
+import platform
 
 import dj_database_url
 import yaml
 
 from oscar import get_core_apps
+
+VERSION = "0.0.0"
 
 CONFIG_PATHS = [
     os.environ.get('TEACHERSPORTAL_CONFIG', ''),
@@ -26,7 +30,7 @@ CONFIG_PATHS = [
 
 
 def load_fallback():
-    """Load optional yaml config"""
+    """Load optional yaml config."""
     fallback_config = {}
     config_file_path = None
     for config_path in CONFIG_PATHS:
@@ -42,8 +46,12 @@ FALLBACK_CONFIG = load_fallback()
 
 
 def get_var(name, default):
-    """Return the settings in a precedence way with default"""
-    return os.environ.get(name, FALLBACK_CONFIG.get(name, default))
+    """Return the settings in a precedence way with default."""
+    try:
+        value = os.environ.get(name, FALLBACK_CONFIG.get(name, default))
+        return ast.literal_eval(value)
+    except (SyntaxError, ValueError):
+        return value
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -58,7 +66,7 @@ SECRET_KEY = get_var(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = get_var('DEBUG', True)
+DEBUG = get_var('DEBUG', False)
 
 ALLOWED_HOSTS = get_var('ALLOWED_HOSTS', [])
 
@@ -182,3 +190,86 @@ INTERNAL_IPS = (get_var('HOST_IP', '127.0.0.1'), )
 # Import oscar default settings
 # pylint: disable=wrong-import-position,unused-wildcard-import,wildcard-import
 from oscar.defaults import *  # noqa
+
+# Configure e-mail settings
+EMAIL_HOST = get_var('PORTAL_EMAIL_HOST', 'localhost')
+EMAIL_PORT = get_var('PORTAL_EMAIL_PORT', 25)
+EMAIL_HOST_USER = get_var('PORTAL_EMAIL_USER', '')
+EMAIL_HOST_PASSWORD = get_var('PORTAL_EMAIL_PASSWORD', '')
+EMAIL_USE_TLS = get_var('PORTAL_EMAIL_TLS', False)
+EMAIL_SUPPORT = get_var('PORTAL_SUPPORT_EMAIL', 'support@example.com')
+DEFAULT_FROM_EMAIL = get_var('PORTAL_FROM_EMAIL', 'webmaster@localhost')
+
+# e-mail configurable admins
+ADMIN_EMAIL = get_var('PORTAL_ADMIN_EMAIL', '')
+if ADMIN_EMAIL is not '':
+    ADMINS = (('Admins', ADMIN_EMAIL),)
+else:
+    ADMINS = ()
+
+# Logging configuration
+LOG_LEVEL = get_var('PORTAL_LOG_LEVEL', 'DEBUG')
+DJANGO_LOG_LEVEL = get_var('DJANGO_LOG_LEVEL', 'DEBUG')
+
+# For logging to a remote syslog host
+LOG_HOST = get_var('PORTAL_LOG_HOST', 'localhost')
+LOG_HOST_PORT = get_var('PORTAL_LOG_HOST_PORT', 514)
+
+HOSTNAME = platform.node().split('.')[0]
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        }
+    },
+    'formatters': {
+        'verbose': {
+            'format': (
+                '[%(asctime)s] %(levelname)s %(process)d [%(name)s] '
+                '%(filename)s:%(lineno)d - '
+                '[{hostname}] - %(message)s'
+            ).format(hostname=HOSTNAME),
+            'datefmt': '%Y-%m-%d %H:%M:%S'
+        }
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
+        'syslog': {
+            'level': LOG_LEVEL,
+            'class': 'logging.handlers.SysLogHandler',
+            'facility': 'local7',
+            'formatter': 'verbose',
+            'address': (LOG_HOST, LOG_HOST_PORT)
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler'
+        },
+    },
+    'loggers': {
+        'root': {
+            'handlers': ['console', 'syslog'],
+            'level': LOG_LEVEL,
+        },
+        'django': {
+            'propagate': True,
+            'level': DJANGO_LOG_LEVEL,
+            'handlers': ['console', 'syslog'],
+        },
+        'django.request': {
+            'handlers': ['mail_admins'],
+            'level': DJANGO_LOG_LEVEL,
+            'propagate': True,
+        },
+        'urllib3': {
+            'level': 'INFO',
+        }
+    },
+}
