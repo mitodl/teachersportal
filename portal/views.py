@@ -10,6 +10,10 @@ from django.conf import settings
 from django.shortcuts import render, HttpResponse
 from django.views.decorators.http import require_http_methods
 import requests
+from rest_framework.views import APIView
+from rest_framework.exceptions import ValidationError
+
+import portal.webhooks as webhooks
 
 
 def index_view(request):
@@ -79,3 +83,35 @@ def ccxcon_view(request):
         HttpResponse
     """
     return forward_to_ccxcon(request)
+
+
+class WebhooksCCXConView(APIView):
+    """
+    Accepts messages from CCXCon
+    """
+
+    def post(self, request):  # pylint: disable=no-self-use
+        """
+        Handle messages from CCXCon.
+
+        Args:
+            request: HttpRequest
+        Returns:
+            HttpResponse
+        """
+        # We'll probably want to move this logic out of an if statement when
+        # it gets complicated.
+        message = request.data
+        for key in ('type', 'action', 'payload'):
+            if key not in message:
+                raise ValidationError("Missing key {key}".format(key=key))
+        try:
+            hook = getattr(webhooks, message['type'].lower())
+        except AttributeError:
+            raise ValidationError("No handler for type {type}".format(type=message['type']))
+
+        hook(message['action'], message['payload'])
+
+        # On success webhooks won't return anything since CCXCon
+        # can't do anything with this information.
+        return HttpResponse(status=200)

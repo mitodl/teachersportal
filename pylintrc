@@ -4,4 +4,4 @@ const-rgx = (([A-Z_][A-Z0-9_]*)|(__.*__)|log|urlpatterns)$
 
 [TYPECHECK]
 
-ignored-classes = WSGIRequest
+ignored-classes = WSGIRequest, Category, Partner, Product, ProductCategory, ProductClass, StockRecord
