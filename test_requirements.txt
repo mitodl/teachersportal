@@ -6,3 +6,5 @@ pytest-django
 pytest-watch
 mock
 semantic_version
+requests-mock==0.7.0
+

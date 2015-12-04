@@ -75,8 +75,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.flatpages',
     'widget_tweaks',
+    'rest_framework',
     # Our INSTALLED_APPS
-    'portal'
+    'portal',
 ] + get_core_apps()
 
 # Oscar site id
@@ -100,7 +101,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
 )
 
-ROOT_URLCONF = 'teachersportal.urls'
+ROOT_URLCONF = 'portal.urls'
 
 TEMPLATES = [
     {
