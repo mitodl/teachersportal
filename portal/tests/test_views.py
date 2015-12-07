@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 from django.test import TestCase
 from django.test.client import Client
+from django.test.utils import override_settings
 from django.core.urlresolvers import reverse
 
 
@@ -26,3 +27,16 @@ class TestViews(TestCase):
             "8076/index_page.js",
             status_code=200
         )
+
+    def test_oscar_view(self):
+        """
+        Verify that oscar is present
+        """
+        response = self.client.get("/oscar/")
+        assert "oscar" in response.content.decode('utf-8')
+        assert response.status_code == 200
+
+        with override_settings(DEBUG=False):
+            response = self.client.get("/oscar/")
+            assert "oscar" not in response.content.decode('utf-8')
+            assert response.status_code == 200

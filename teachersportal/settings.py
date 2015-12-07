@@ -15,7 +15,7 @@ import os
 import dj_database_url
 import yaml
 
-from oscar import get_core_apps
+from oscar import get_core_apps, OSCAR_MAIN_TEMPLATE_DIR
 
 CONFIG_PATHS = [
     os.environ.get('TEACHERSPORTAL_CONFIG', ''),
@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.flatpages',
+    'compressor',
     'widget_tweaks',
     'rest_framework',
     # Our INSTALLED_APPS
@@ -107,7 +108,8 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR + '/templates/'
+            BASE_DIR + '/templates/',
+            OSCAR_MAIN_TEMPLATE_DIR,
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -116,6 +118,11 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'oscar.apps.search.context_processors.search_form',
+                'oscar.apps.promotions.context_processors.promotions',
+                'oscar.apps.checkout.context_processors.checkout',
+                'oscar.apps.customer.notifications.context_processors.notifications',
+                'oscar.core.context_processors.metadata',
             ],
         },
     },
