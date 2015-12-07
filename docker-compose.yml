@@ -12,6 +12,7 @@ web:
   volumes:
     - .:/src
   environment:
+    DEBUG: 'True'
     PORT: 8075
     DATABASE_URL: postgres://postgres@db:5432/postgres
     PORTAL_DB_DISABLE_SSL: 'True'
