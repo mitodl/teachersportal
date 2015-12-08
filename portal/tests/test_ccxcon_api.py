@@ -55,6 +55,21 @@ class TestCCXConAPI(TestCase):
         assert resp.content.decode('utf-8') == 'success'
         assert resp['response_header'] == 'response_header_value'
 
+    @requests_mock.mock()
+    def test_hop_by_hop(self, mock):
+        """Test that Keep-Alive and other hop-by-hop headers are filtered out"""
+
+        mock.get(
+            "{base}v1/end/point".format(base=FAKE_CCXCON_API),
+            text="success",
+            headers={"Connection": "Keep-Alive"}
+        )
+
+        resp = self.client.get("{base}v1/end/point".format(base=reverse("ccxcon-api")))
+        assert resp.status_code == 200
+        assert resp.content.decode('utf-8') == 'success'
+        assert 'Connection' not in resp
+
     def test_post(self):
         """
         Test that POST requests are rejected.
