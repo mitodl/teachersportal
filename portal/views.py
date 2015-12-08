@@ -37,6 +37,7 @@ def index_view(request):
 
     return render(request, 'portal/index.html', context={
         "host": host,
+        "use_webpack": settings.DEBUG and settings.USE_WEBPACK_DEV_SERVER,
         "js_settings_json": json.dumps(js_settings)
     })
 
