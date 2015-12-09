@@ -187,11 +187,22 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
 )
 
+STATICFILES_FINDERS = (
+    # defaults
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    # Necessary for oscar which uses compressor
+    'compressor.finders.CompressorFinder',
+)
+
 INTERNAL_IPS = (get_var('HOST_IP', '127.0.0.1'), )
 
 # Import oscar default settings
 # pylint: disable=wrong-import-position,unused-wildcard-import,wildcard-import
 from oscar.defaults import *  # noqa
+
+# Is oscar visible at /oscar/?
+PORTAL_OSCAR_VISIBLE = get_var('PORTAL_OSCAR_VISIBLE', False)
 
 # Configure e-mail settings
 EMAIL_HOST = get_var('PORTAL_EMAIL_HOST', 'localhost')
