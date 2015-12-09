@@ -5,6 +5,7 @@ Views for teachersportal.
 from __future__ import unicode_literals
 
 import json
+from wsgiref.util import is_hop_by_hop
 
 from django.conf import settings
 from django.shortcuts import render, HttpResponse
@@ -63,7 +64,8 @@ def forward_to_ccxcon(request):
     )
 
     for key, value in response.headers.items():
-        ccxcon_response[key] = value
+        if not is_hop_by_hop(key):
+            ccxcon_response[key] = value
 
     return ccxcon_response
 
