@@ -14,6 +14,7 @@ import requests
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
 
+from portal.permissions import HmacPermission
 import portal.webhooks as webhooks
 
 
@@ -91,6 +92,8 @@ class WebhooksCCXConView(APIView):
     """
     Accepts messages from CCXCon
     """
+
+    permission_classes = (HmacPermission, )
 
     def post(self, request):  # pylint: disable=no-self-use
         """

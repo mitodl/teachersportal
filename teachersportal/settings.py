@@ -14,6 +14,7 @@ import ast
 import os
 import platform
 
+from django.utils.encoding import force_bytes
 import dj_database_url
 import yaml
 
@@ -286,3 +287,6 @@ LOGGING = {
         }
     },
 }
+
+# Secret used with signatures for CCXCon webhooks endpoint
+CCXCON_WEBHOOKS_SECRET = force_bytes(get_var('CCXCON_WEBHOOKS_SECRET', ''))
