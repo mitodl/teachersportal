@@ -8,11 +8,15 @@ web:
     /bin/bash -c '
     sleep 3 &&
     python manage.py migrate &&
+    python manage.py oscar_populate_countries >& /dev/null || true &&
     ./with_host.sh python manage.py runserver 0.0.0.0:8075'
   environment:
+    DEBUG: 'True'
     PORT: 8075
     DATABASE_URL: postgres://postgres@db:5432/postgres
     PORTAL_DB_DISABLE_SSL: 'True'
+    CCXCON_API: http://private-anon-388fdf8b0-ccxcon.apiary-mock.com/api/
+    PORTAL_OSCAR_VISIBLE: 'True'
   ports:
     - "8075:8075"
   links:
