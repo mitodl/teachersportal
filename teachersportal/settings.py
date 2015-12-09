@@ -17,7 +17,7 @@ import platform
 import dj_database_url
 import yaml
 
-from oscar import get_core_apps
+from oscar import get_core_apps, OSCAR_MAIN_TEMPLATE_DIR
 
 VERSION = "0.0.0"
 
@@ -82,6 +82,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.flatpages',
+    'compressor',
     'widget_tweaks',
     'rest_framework',
     # Our INSTALLED_APPS
@@ -115,7 +116,8 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR + '/templates/'
+            BASE_DIR + '/templates/',
+            OSCAR_MAIN_TEMPLATE_DIR
         ],
         'APP_DIRS': True,
         'OPTIONS': {

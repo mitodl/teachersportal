@@ -1,16 +1,22 @@
-{% extends "base.html" %}
 {% load i18n static %}
-{% block title %}Teacher's Portal{% endblock %}
-{% block content %}
-  <div id="container"></div>
-  <script type="text/javascript">
-  var SETTINGS = {{ js_settings_json|safe }};
-  </script>
-  {% if True %}
-  <script type="text/javascript" src="http://{{ host }}:8076/index_page.js">
-  </script>
-  {% else %}
-  <script type="text/javascript" src="{% static "bundles/index_page.js" %}">
-  </script>
-  {% endif %}
-{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Teacher's Portal</title>
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700' rel='stylesheet' type='text/css'>
+  </head>
+  <body>
+    <div id="container"></div>
+    <script type="text/javascript">
+    var SETTINGS = {{ js_settings_json|safe }};
+    </script>
+    {% if True %}
+    <script type="text/javascript" src="http://{{ host }}:8076/index_page.js">
+    </script>
+    {% else %}
+    <script type="text/javascript" src="{% static "bundles/index_page.js" %}">
+    </script>
+    {% endif %}
+  </body>
+</html>
