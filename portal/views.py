@@ -11,6 +11,7 @@ from wsgiref.util import is_hop_by_hop  # pylint: disable=wrong-import-order
 from django.conf import settings
 from django.shortcuts import render, HttpResponse
 from django.views.decorators.http import require_http_methods
+from django.template import RequestContext
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
 from rest_framework.views import APIView
@@ -28,18 +29,19 @@ def index_view(request):
     Returns:
         HttpResponse
     """
-
     host = request.get_host().split(":")[0]
     js_settings = {
         "host": host,
         "ccxconApi": "/ccxcon/"
     }
 
-    return render(request, 'portal/index.html', context={
-        "host": host,
-        "use_webpack": settings.DEBUG and settings.USE_WEBPACK_DEV_SERVER,
-        "js_settings_json": json.dumps(js_settings)
-    })
+    return render(
+        request, 'portal/index.html',
+        context={
+            "js_settings_json": json.dumps(js_settings)
+        },
+        context_instance=RequestContext(request)
+    )
 
 
 def forward_to_ccxcon(request):

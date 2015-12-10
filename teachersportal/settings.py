@@ -199,7 +199,8 @@ STATICFILES_FINDERS = (
 INTERNAL_IPS = (get_var('HOST_IP', '127.0.0.1'), )
 
 # Request files from the webpack dev server
-USE_WEBPACK_DEV_SERVER = get_var('USE_WEBPACK_DEV_SERVER', False)
+USE_WEBPACK_DEV_SERVER = get_var('PORTAL_USE_WEBPACK_DEV_SERVER', False)
+WEBPACK_SERVER_URL = get_var('PORTAL_WEBPACK_SERVER_URL', 'http://{host}:8076')
 
 # Import oscar default settings
 # pylint: disable=wrong-import-position,unused-wildcard-import,wildcard-import
