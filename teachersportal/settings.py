@@ -290,3 +290,7 @@ LOGGING = {
 
 # Secret used with signatures for CCXCon webhooks endpoint
 CCXCON_WEBHOOKS_SECRET = force_bytes(get_var('CCXCON_WEBHOOKS_SECRET', ''))
+
+# Oauth settings for CCXCon
+CCXCON_OAUTH_CLIENT_ID = get_var("CCXCON_OAUTH_CLIENT_ID", "")
+CCXCON_OAUTH_CLIENT_SECRET = get_var("CCXCON_OAUTH_CLIENT_SECRET", "")
