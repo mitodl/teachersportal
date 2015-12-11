@@ -3,8 +3,10 @@ import Lorem from './Lorem';
 
 class AboutTab extends React.Component {
   render() {
+    const { content } = this.props;
+
     return <div id="course-about-tab">
-      <Lorem />
+        { content }
     </div>;
   }
 }

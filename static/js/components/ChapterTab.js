@@ -15,13 +15,24 @@ class ChapterTab extends React.Component {
       stripedRows,
       showRowHover,
       deselectOnClickaway,
-      height
+      height,
+      modules
     } = this.props;
 
+    let rows = [];
+
+    if (modules) {
+      rows = modules.map((module, i) =>
+        <TableRow key={module.uuid}>
+          <TableRowColumn>{i}: {module.title}</TableRowColumn>
+        </TableRow>
+      );
+    }
+
     return <Table
-      height={this.props.height}
-      fixedHeader={this.props.fixedHeader}
-      fixedFooter={this.props.fixedFooter}
+      height={height}
+      fixedHeader={fixedHeader}
+      fixedFooter={fixedFooter}
       selectable={selectable}
       multiSelectable={selectable}
       onRowSelection={this._onRowSelection}>
@@ -31,31 +42,17 @@ class ChapterTab extends React.Component {
         enableSelectAll={selectable}>
         <TableRow>
           <TableHeaderColumn colSpan="2" style={{textAlign: 'left'}}>
-            &nbsp;
+            Chapters
           </TableHeaderColumn>
         </TableRow>
       </TableHeader>
       <TableBody
         style={{textAlign: 'left'}}
-        deselectOnClickaway={this.props.deselectOnClickaway}
+        deselectOnClickaway={deselectOnClickaway}
         displayRowCheckbox={selectable}
-        showRowHover={this.props.showRowHover}
-        stripedRows={this.props.stripedRows}>
-        <TableRow>
-          <TableRowColumn>0: Introduction</TableRowColumn>
-        </TableRow>
-        <TableRow>
-          <TableRowColumn>1: Newton's Laws of Motion</TableRowColumn>
-        </TableRow>
-        <TableRow>
-          <TableRowColumn>2: Interactions and Forces</TableRowColumn>
-        </TableRow>
-        <TableRow>
-          <TableRowColumn>3: Applying Newton's Laws</TableRowColumn>
-        </TableRow>
-        <TableRow>
-          <TableRowColumn>4: Kinematics, the Mathematical Description of Motion</TableRowColumn>
-        </TableRow>
+        showRowHover={showRowHover}
+        stripedRows={stripedRows}>
+        {rows}
       </TableBody>
     </Table>
     ;

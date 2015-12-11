@@ -3,7 +3,22 @@
 import 'isomorphic-fetch';
 const { ccxconApi } = SETTINGS;
 
-export function getCourses() {
-  return fetch(`${ccxconApi}v1/coursexs/`).
-    then(response => response.json());
+export function getCourse(courseUuid) {
+  return fetch(`${ccxconApi}v1/coursexs/${courseUuid}/`).
+    then(response => {
+      if (response.status < 200 || response.status >= 300) {
+        throw response.json();
+      }
+      return response.json();
+    });
+}
+
+export function getModules(courseUuid) {
+  return fetch(`${ccxconApi}v1/coursexs/${courseUuid}/modules/`).
+    then(response => {
+      if (response.status < 200 || response.status >= 300) {
+        throw response.json();
+      }
+      return response.json();
+    });
 }

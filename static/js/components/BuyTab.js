@@ -5,7 +5,7 @@ import ChapterTab from '../components/ChapterTab';
 
 class BuyTab extends React.Component {
     render() {
-      const { selectable } = this.props;
+      const { selectable, modules } = this.props;
 
       return <div id="course-purchase-selector">
           <h3>Seats</h3>
@@ -29,6 +29,7 @@ class BuyTab extends React.Component {
             displaySelectAll={selectable}
             adjustForCheckbox={selectable}
             displayRowCheckbox={selectable}
+            modules={modules}
           />
         </div>;
     }

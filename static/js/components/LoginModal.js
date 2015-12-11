@@ -18,7 +18,7 @@ class LoginModal extends React.Component {
       <RaisedButton label="Cancel" secondary={true} onClick={onHideLoginModal}/>
       </Dialog>;
   }
-};
+}
 
 LoginModal.propTypes = {
   isOpen: React.PropTypes.bool.isRequired,
