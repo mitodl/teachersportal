@@ -3,8 +3,9 @@ Tests for CCXCon API forwarding
 """
 
 from __future__ import unicode_literals
-from mock import patch
+from six.moves.urllib.parse import urlparse, urlunparse  # pylint: disable=import-error
 
+from mock import patch
 from django.core.urlresolvers import reverse
 from django.test import TestCase, Client
 from django.test.utils import override_settings
@@ -121,12 +122,14 @@ class TestCCXConAPI(TestCase):
             assert request.headers["Authorization"].startswith("Bearer")
             return 'success'
 
+        oauth_endpoint = urlunparse(urlparse(FAKE_CCXCON_API)._replace(path="/o/token/"))
+
         mock.get(
             "{base}v1/".format(base=FAKE_CCXCON_API),
             text=response_callback
         )
         mock.post(
-            "{base}o/token/".format(base=FAKE_CCXCON_API),
+            oauth_endpoint,
             text='{"token_type":"bearer","access_token":"AAAA%2FAAA%3DAAAAAAAA"}'
         )
 
