@@ -3,14 +3,19 @@ Tests for webhooks API.
 """
 
 from __future__ import unicode_literals
+import hashlib
+import hmac
 import json
 
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from oscar.apps.catalogue.models import Product
 
 from portal.util import make_upc
+
+
+FAKE_SECRET = b'secret'
 
 
 def as_json(resp):
@@ -27,6 +32,7 @@ def as_json(resp):
 
 
 # pylint: disable=invalid-name, too-many-public-methods
+@override_settings(CCXCON_WEBHOOKS_SECRET=FAKE_SECRET)
 class WebhookTests(TestCase):
     """
     Tests for CCXCon webhooks.
@@ -37,9 +43,10 @@ class WebhookTests(TestCase):
     MODULE_UUID1 = 'c3677c69-c2f8-4316-9376-41e245729808'
     MODULE_UUID2 = 'f65023cd-54f6-406b-81cf-f2fa37a10fba'
 
-    COURSE_TITLE1 = "Course's title 1"
+    # These characters are interrobangs to assert unicode support
+    COURSE_TITLE1 = "Course's title 1\u203d"
     COURSE_TITLE2 = "Course's title 2"
-    MODULE_TITLE1 = "Module's title 1"
+    MODULE_TITLE1 = "Module's title 1\u203d"
     MODULE_TITLE2 = "Module's title 2"
 
     COURSE_TYPE = 'Course'
@@ -76,11 +83,15 @@ class WebhookTests(TestCase):
         """
         Helper method to POST a message to webhook endpoint.
         """
+        data_bytes = json.dumps(data)
+        signature = hmac.new(FAKE_SECRET, data_bytes.encode('utf-8'), hashlib.sha1).hexdigest()
+
         old_products = self.get_products()
         resp = self.client.post(
             reverse('webhooks-ccxcon'),
-            data=json.dumps(data),
-            content_type="application/json"
+            data=data_bytes,
+            content_type="application/json",
+            HTTP_X_CCXCON_SIGNATURE=signature
         )
         try:
             assert resp.status_code == expected_status
@@ -108,6 +119,53 @@ class WebhookTests(TestCase):
         Returns list of products in oscar.
         """
         return list(Product.objects.order_by('id').values())
+
+    def test_webhook_with_no_auth(self):
+        """
+        Test that we get a 403 if we post to the webhook endpoint without
+        the right headers.
+        """
+        data = {
+            'action': 'update',
+            'type': self.COURSE_TYPE,
+            'payload': {
+                'title': self.COURSE_TITLE2,
+                'external_pk': self.COURSE_UUID2
+            }
+        }
+        resp = self.client.post(
+            reverse('webhooks-ccxcon'),
+            data=json.dumps(data),
+            content_type="application/json"
+        )
+        assert resp.status_code == 403
+        assert "Authentication credentials were not provided" in resp.content.decode('utf-8')
+
+    def test_webhook_with_bad_auth(self):
+        """
+        Test that we get a 403 if we post to the webhook endpoint with invalid
+        authentication.
+        """
+        data = {
+            'action': 'update',
+            'type': self.COURSE_TYPE,
+            'payload': {
+                'title': self.COURSE_TITLE2,
+                'external_pk': self.COURSE_UUID2
+            }
+        }
+        # Signature is now for a different set of data and therefore invalid
+        data_bytes = json.dumps(data) + " and something extra"
+        signature = hmac.new(FAKE_SECRET, data_bytes.encode('utf-8'), hashlib.sha1).hexdigest()
+
+        resp = self.client.post(
+            reverse('webhooks-ccxcon'),
+            data=json.dumps(data),
+            content_type="application/json",
+            HTTP_X_CCXCON_SIGNATURE=signature
+        )
+        assert resp.status_code == 403
+        assert "Authentication credentials were not provided" in resp.content.decode('utf-8')
 
     def test_add_course(self):
         """
