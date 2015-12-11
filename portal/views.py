@@ -5,7 +5,8 @@ Views for teachersportal.
 from __future__ import unicode_literals
 
 import json
-from wsgiref.util import is_hop_by_hop
+from six.moves.urllib.parse import urlparse, urlunparse  # pylint: disable=import-error
+from wsgiref.util import is_hop_by_hop  # pylint: disable=wrong-import-order
 
 from django.conf import settings
 from django.shortcuts import render, HttpResponse
@@ -58,11 +59,9 @@ def forward_to_ccxcon(request):
     # this if it doesn't already so we don't make an unnecessary request here.
     client = BackendApplicationClient(client_id=client_id)
     oauth_ccxcon = OAuth2Session(client=client)
+    token_url = urlunparse(urlparse(ccxcon_api)._replace(path="/o/token/"))
     oauth_ccxcon.fetch_token(
-        token_url="{api_base}{oauth_endpoint}".format(
-            api_base=ccxcon_api,
-            oauth_endpoint="o/token/"
-        ),
+        token_url=token_url,
         client_id=client_id,
         client_secret=client_secret,
     )
