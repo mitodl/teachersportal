@@ -10,7 +10,8 @@ from wsgiref.util import is_hop_by_hop
 from django.conf import settings
 from django.shortcuts import render, HttpResponse
 from django.views.decorators.http import require_http_methods
-import requests
+from oauthlib.oauth2 import BackendApplicationClient
+from requests_oauthlib import OAuth2Session
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
 
@@ -50,12 +51,27 @@ def forward_to_ccxcon(request):
         HttpResponse
     """
     ccxcon_api = settings.CCXCON_API
+    client_id = settings.CCXCON_OAUTH_CLIENT_ID
+    client_secret = settings.CCXCON_OAUTH_CLIENT_SECRET
+
+    # Get an oauth token. At some point in the future we may want to cache
+    # this if it doesn't already so we don't make an unnecessary request here.
+    client = BackendApplicationClient(client_id=client_id)
+    oauth_ccxcon = OAuth2Session(client=client)
+    oauth_ccxcon.fetch_token(
+        token_url="{api_base}{oauth_endpoint}".format(
+            api_base=ccxcon_api,
+            oauth_endpoint="o/token/"
+        ),
+        client_id=client_id,
+        client_secret=client_secret,
+    )
 
     path = request.path
     if path.startswith("/ccxcon/"):
         path = path[len("/ccxcon/"):]
 
-    response = requests.get(
+    response = oauth_ccxcon.get(
         "{api_base}{path}".format(
             api_base=ccxcon_api,
             path=path
