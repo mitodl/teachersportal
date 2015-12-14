@@ -3,3 +3,6 @@ up:
 	chmod +x /usr/local/bin/docker-osx-dev
 	docker-osx-dev install
 	docker-osx-dev -m default -s ./ --ignore-file '.rsync-ignore'
+
+charts:
+	docker-compose run web find figures -name "*.mscgen" -exec mscgen -i {} -T png \;

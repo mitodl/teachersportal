@@ -10,7 +10,9 @@ nodejs
 
 # developer requirements
 postgresql-client
+mscgen
 
 # required for phantomjs
 libfreetype6
 libfontconfig1
+

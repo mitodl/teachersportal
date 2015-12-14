@@ -1,0 +1,17 @@
+msc {
+  width = "800";
+
+  EDX [label="edX"], USER [label="User"], TP [label="Teachers' Portal"], CCX [label="CCXCon"];
+  
+  USER => EDX [label="Saves valid, listable course"];
+  EDX => USER;
+  EDX => USER [label="Email link to teachers' portal"];
+  --- [label="Time passes?"];
+  USER => TP [label="User clicks email link"];
+  TP => USER [label="login/signup form"];
+  USER => TP [label="Submit"];
+  TP => CCX [label="Checks if userid exists"];
+  CCX => TP;
+  TP => USER [label="User ids linked to instructor id"];
+  
+}

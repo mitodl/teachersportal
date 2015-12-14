@@ -1,0 +1,12 @@
+msc {
+  width = "800";
+
+  USER [label="User"], EDX [label="edX"], CCX [label="CCXCon"], TP [label="Teachers' Portal"];
+  
+  USER => EDX [label="Saves valid, listable course"];
+  EDX => USER [label="200"];
+  EDX => CCX [label="POST async webhook w/ retries"];
+  CCX => EDX [label="200"];
+  CCX => TP [label="POST signed webhook"];
+  TP => CCX [label="200"];
+}
