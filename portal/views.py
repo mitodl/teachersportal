@@ -18,6 +18,7 @@ from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
 
 from portal.permissions import HmacPermission
+from portal.templatetags.webpack import webpack_bundle  # pylint: disable=unused-import
 import portal.webhooks as webhooks
 
 
