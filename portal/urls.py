@@ -12,6 +12,7 @@ from portal.views import (
     WebhooksCCXConView,
     LoginView,
     logout_view,
+    ProductListView,
 )
 
 urlpatterns = [
@@ -20,6 +21,7 @@ urlpatterns = [
     url(r'^api/v1/webhooks/ccxcon/$', WebhooksCCXConView.as_view(), name='webhooks-ccxcon'),
     url(r'^api/v1/login/$', LoginView.as_view(), name='login'),
     url(r'^api/v1/logout/$', logout_view, name='logout'),
+    url(r'^api/v1/products/$', ProductListView.as_view(), name='product-list'),
 ]
 
 if settings.PORTAL_OSCAR_VISIBLE:

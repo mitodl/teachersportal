@@ -14,14 +14,23 @@ from django.shortcuts import render, HttpResponse
 from django.template import RequestContext
 from django.views.decorators.http import require_http_methods
 from oauthlib.oauth2 import BackendApplicationClient
+from oscar.apps.catalogue.models import Product
 from requests_oauthlib import OAuth2Session
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
 
 from portal.permissions import HmacPermission
 from portal.templatetags.webpack import webpack_bundle  # pylint: disable=unused-import
+from portal.serializers import ProductSerializer
+from portal.util import (
+    get_external_pk,
+    get_price_without_tax,
+    get_product_type,
+    is_available_to_buy,
+)
 import portal.webhooks as webhooks
 
 
@@ -197,3 +206,25 @@ def logout_view(request):
     """
     logout(request)
     return Response(status=200)
+
+
+class ProductListView(ListAPIView):
+    """
+    Lists products available for purchase
+    """
+    serializer_class = ProductSerializer
+
+    def get_queryset(self):
+        """A queryset for products that are available for purchase"""
+
+        return (
+            {
+                "title": product.title,
+                "external_pk": get_external_pk(product),
+                "product_type": get_product_type(product),
+                "price_without_tax": get_price_without_tax(product),
+                "parent_external_pk": get_external_pk(product.parent)
+            }
+            for product in Product.objects.order_by("date_created")
+            if is_available_to_buy(product)
+        )
