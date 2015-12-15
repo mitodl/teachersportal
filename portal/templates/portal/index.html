@@ -1,3 +1,4 @@
+{% load webpack %}
 {% load i18n static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -11,12 +12,7 @@
     <script type="text/javascript">
     var SETTINGS = {{ js_settings_json|safe }};
     </script>
-    {% if True %}
-    <script type="text/javascript" src="http://{{ host }}:8076/index_page.js">
+    <script type="text/javascript" src="{% webpack_bundle "index_page.js" %}">
     </script>
-    {% else %}
-    <script type="text/javascript" src="{% static "bundles/index_page.js" %}">
-    </script>
-    {% endif %}
   </body>
 </html>
