@@ -6,12 +6,20 @@ from django.conf.urls import url, include
 from django.contrib import admin
 from oscar.app import application as oscar
 
-from portal.views import index_view, ccxcon_view, WebhooksCCXConView
+from portal.views import (
+    index_view,
+    ccxcon_view,
+    WebhooksCCXConView,
+    LoginView,
+    logout_view,
+)
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^ccxcon/', ccxcon_view, name='ccxcon-api'),
     url(r'^api/v1/webhooks/ccxcon/$', WebhooksCCXConView.as_view(), name='webhooks-ccxcon'),
+    url(r'^api/v1/login/$', LoginView.as_view(), name='login'),
+    url(r'^api/v1/logout/$', logout_view, name='logout'),
 ]
 
 if settings.PORTAL_OSCAR_VISIBLE:

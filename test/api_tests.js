@@ -1,4 +1,3 @@
-/* global describe:false, it:false */
 import './global_init';
 import assert from 'assert';
 import ReactTestUtils from 'react-addons-test-utils';
@@ -6,7 +5,7 @@ import ReactDOM from 'react-dom';
 import React from 'react';
 import jsdom from 'mocha-jsdom';
 import fetchMock from 'fetch-mock/src/server';
-import { getCourse, getModules } from '../static/js/util/api';
+import { getCourse, getModules, login, logout } from '../static/js/util/api';
 
 const COURSE_RESPONSE = {
   "uuid": "8cc92ca1-162d-4729-96fc-d1733ebc1a40",
@@ -94,6 +93,42 @@ describe('common api functions', function () {
       status: 400
     });
     getModules(uuid).catch(() => {
+      done();
+    });
+  });
+
+  it('logs in successfully', done => {
+    fetchMock.mock(`/api/v1/login/`, {
+      status: 200
+    });
+    login("user", "pass").then(() => {
+      done();
+    });
+  });
+
+  it('fails to login', done => {
+    fetchMock.mock(`/api/v1/login/`, {
+      status: 400
+    });
+    login("user", "pass").catch(() => {
+      done();
+    });
+  });
+
+  it('logs out successfully', done => {
+    fetchMock.mock(`/api/v1/logout/`, {
+      status: 200
+    });
+    logout().then(() => {
+      done();
+    });
+  });
+
+  it('fails to log out', done => {
+    fetchMock.mock(`/api/v1/logout/`, {
+      status: 400
+    });
+    logout().catch(() => {
       done();
     });
   });

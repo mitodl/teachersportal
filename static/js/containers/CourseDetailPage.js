@@ -9,16 +9,24 @@ import {
   fetchModules,
   showLogin,
   hideLogin,
-  FETCH_FAILURE
+  logout,
+  login,
+  FETCH_FAILURE,
 } from '../actions/index_page';
 
 class CourseDetailPage extends React.Component {
 
   componentDidMount() {
-    const { dispatch, params: { uuid } } = this.props;
+    const {
+      dispatch,
+      authentication,
+      params: { uuid }
+    } = this.props;
 
-    dispatch(fetchCourse(uuid));
-    dispatch(fetchModules(uuid));
+    if (authentication.isAuthenticated) {
+      dispatch(fetchCourse(uuid));
+      dispatch(fetchModules(uuid));
+    }
   }
 
   render() {
@@ -27,7 +35,8 @@ class CourseDetailPage extends React.Component {
       modules,
       courseFetchStatus,
       modulesFetchStatus,
-      isLoginModalShowing,
+      loginModal,
+      authentication,
       dispatch
       } = this.props;
 
@@ -37,26 +46,45 @@ class CourseDetailPage extends React.Component {
       error = "An error occurred fetching information about this course.";
     } else if (modulesFetchStatus === FETCH_FAILURE) {
       error = "An error occurred fetching information about the course's modules.";
+    } else if (!authentication.isAuthenticated) {
+      error = "Please log in to view the course information.";
     }
 
-    let detail;
-
-    if (error !== undefined) {
-      detail = <CourseDetail error={error} />;
-    } else if (course !== undefined && modules !== undefined) {
-      detail = <CourseDetail course={course} modules={modules} />;
-    }
+    let detail = <CourseDetail error={error} course={course} modules={modules} />;
 
     return <div>
       <Header
-        isLoginModalShowing={isLoginModalShowing}
         showSignIn={() => dispatch(showLogin())}
         hideSignIn={() => dispatch(hideLogin())}
+        onSignOut={() => dispatch(logout())}
+        signIn={this.signIn.bind(this)}
+        authentication={authentication}
+
+        loginModal={loginModal}
       />
       {detail}
       <Footer/>
       </div>
       ;
+  }
+
+  signIn(username, password) {
+    const {
+      dispatch,
+      courseFetchStatus,
+      modulesFetchStatus,
+      params: { uuid }
+    } = this.props;
+
+    dispatch(login(username, password)).
+      then(() => {
+        if (courseFetchStatus === undefined) {
+          dispatch(fetchCourse(uuid));
+        }
+        if (modulesFetchStatus === undefined) {
+          dispatch(fetchModules(uuid));
+        }
+      });
   }
 }
 
@@ -66,7 +94,8 @@ const mapStateToProps = (state) => {
     modules: state.courses.modules,
     courseFetchStatus: state.courses.courseFetchStatus,
     modulesFetchStatus: state.courses.modulesFetchStatus,
-    isLoginModalShowing: state.showLoginModal
+    authentication: state.authentication,
+    loginModal: state.loginModal,
   };
 };
 

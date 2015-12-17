@@ -5,7 +5,6 @@ Test end to end django views.
 from __future__ import unicode_literals
 
 from django.test import TestCase
-from django.test.client import Client
 from django.core.urlresolvers import reverse
 
 
@@ -13,11 +12,6 @@ class TestViews(TestCase):
     """
     Test that the views work as expected.
     """
-    def setUp(self):
-        """Common test setup"""
-        super(TestViews, self).setUp()
-        self.client = Client()
-
     def test_webpack_url(self):
         """Verify that webpack tag behaves correctly in production"""
         for debug, expected_url in [
