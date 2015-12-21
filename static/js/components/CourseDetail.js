@@ -4,16 +4,14 @@ import { connect } from 'react-redux';
 import Card from 'material-ui/lib/card/card';
 import CardText from 'material-ui/lib/card/card-text';
 import CourseTabs from './CourseTabs';
+import CourseImage from './CourseImage';
 import CardActions from 'material-ui/lib/card/card-actions';
 import CardExpandable from 'material-ui/lib/card/card-expandable';
 import CardHeader from 'material-ui/lib/card/card-header';
 import CardMedia from 'material-ui/lib/card/card-media';
 import CardTitle from 'material-ui/lib/card/card-title';
-import Lorem from './Lorem';
-import { fetchCourses } from '../actions/index_page';
 
 class CourseDetail extends Component {
-
     render() {
       const { course, modules, error } = this.props;
 
@@ -22,11 +20,6 @@ class CourseDetail extends Component {
       if (error !== undefined) {
         content = <CardText>{error}</CardText>;
       } else {
-        let courseImageUrl = "http://lorempixel.com/g/350/250/abstract";
-
-        if (course.image_url) {
-          courseImageUrl = course.image_url;
-        }
 
         content = <div>
           <CardTitle
@@ -34,11 +27,7 @@ class CourseDetail extends Component {
             subtitle={course.author}
             id="course-title"
           />
-          <Card id="course-image">
-              <CardMedia>
-                <img src={courseImageUrl} alt="Course detail image"/>
-              </CardMedia>
-          </Card>
+          <CourseImage src={course.image_url} />
           <CardText id="course-description">
               {course.description}
           </CardText>
