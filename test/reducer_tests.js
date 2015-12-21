@@ -5,6 +5,10 @@ import {
   loginFailure,
   loginSuccess,
   login,
+  register,
+  activate,
+  FETCH_FAILURE,
+  FETCH_SUCCESS,
 } from '../static/js/actions/index_page';
 import * as api from '../static/js/util/api';
 import { createDispatchThen } from './util';
@@ -16,6 +20,8 @@ import jsdom from 'mocha-jsdom';
 
 let loginStub;
 let logoutStub;
+let registerStub;
+let activateStub;
 let store;
 
 
@@ -23,6 +29,8 @@ describe('reducers', () => {
   beforeEach(() => {
     logoutStub = sinon.stub(api, 'logout');
     loginStub = sinon.stub(api, 'login');
+    registerStub = sinon.stub(api, 'register');
+    activateStub = sinon.stub(api, 'activate');
 
     store = configureStore();
   });
@@ -30,6 +38,8 @@ describe('reducers', () => {
   afterEach(() => {
     logoutStub.restore();
     loginStub.restore();
+    registerStub.restore();
+    activateStub.restore();
 
     store = null;
   });
@@ -61,7 +71,7 @@ describe('reducers', () => {
     });
 
     it('should set login state to hide when triggered', done => {
-      dispatchThen(hideLogin(), 2, state => {
+      dispatchThen(hideLogin(), 3, state => {
         assert.deepEqual(state, {
           visible: false
         });
@@ -89,10 +99,10 @@ describe('reducers', () => {
     });
 
     it('should clear authentication and show an error message if failed to log in', done => {
-      dispatchThen(loginFailure(), state => {
+      dispatchThen(loginFailure("Error logging in inside test"), state => {
         assert.deepEqual(state, {
           isAuthenticated: false,
-          error: "Unable to log in"
+          error: "Error logging in inside test"
         });
         done();
       });
@@ -109,14 +119,10 @@ describe('reducers', () => {
     });
 
     it('should login and logout successfully', done => {
-      logoutStub.returns(new Promise((resolve, reject) => {
-        resolve();
-      }));
-      loginStub.returns(new Promise((resolve, reject) => {
-        resolve();
-      }));
+      logoutStub.returns(Promise.resolve());
+      loginStub.returns(Promise.resolve());
 
-      dispatchThen(login("user", "pass"), 3, loginState => {
+      dispatchThen(login("user", "pass"), 4, loginState => {
         assert.deepEqual(loginState, {
           isAuthenticated: true,
           error: ""
@@ -134,12 +140,8 @@ describe('reducers', () => {
     });
 
     it('should error if login fails', done => {
-      logoutStub.returns(new Promise((resolve, reject) => {
-        resolve();
-      }));
-      loginStub.returns(new Promise((resolve, reject) => {
-        reject();
-      }));
+      logoutStub.returns(Promise.resolve());
+      loginStub.returns(Promise.reject());
 
       dispatchThen(login("user", "pass"), loginState => {
         assert.deepEqual(loginState, {
@@ -153,14 +155,10 @@ describe('reducers', () => {
     });
 
     it('should error if logout fails', done => {
-      logoutStub.returns(new Promise((resolve, reject) => {
-        reject();
-      }));
-      loginStub.returns(new Promise((resolve, reject) => {
-        resolve();
-      }));
+      logoutStub.returns(Promise.reject());
+      loginStub.returns(Promise.resolve());
 
-      dispatchThen(login("user", "pass"), 3, loginState => {
+      dispatchThen(login("user", "pass"), 4, loginState => {
         assert.deepEqual(loginState, {
           isAuthenticated: true,
           error: ""
@@ -175,6 +173,72 @@ describe('reducers', () => {
 
           done();
         });
+      });
+    });
+  });
+
+  describe('registration reducers', () => {
+    jsdom();
+    /**
+     * Helper function for dispatch and assert pattern
+     */
+    let dispatchThen = createDispatchThen(() => store, state => state.registration);
+
+    it('successfully registers', done => {
+      registerStub.returns(Promise.resolve());
+
+      dispatchThen(register("name", "email", "org", "pass", "redirect"), 4, registrationState => {
+        assert.deepEqual(registrationState, {
+          error: "",
+          status: FETCH_SUCCESS
+        });
+
+        done();
+      });
+    });
+
+    it('fails to register', done => {
+      registerStub.returns(Promise.reject());
+
+      dispatchThen(register("name", "email", "org", "pass", "redirect"), registrationState => {
+        assert.deepEqual(registrationState, {
+          error: "Unable to register",
+          status: FETCH_FAILURE
+        });
+
+        done();
+      });
+    });
+  });
+
+  describe('activation reducers', () => {
+    jsdom();
+    /**
+     * Helper function for dispatch and assert pattern
+     */
+    let dispatchThen = createDispatchThen(() => store, state => state.activation);
+
+    it('successfully activates', done => {
+      activateStub.returns(Promise.resolve());
+
+      dispatchThen(activate("token"), activationState => {
+        assert.deepEqual(activationState, {
+          status: FETCH_SUCCESS
+        });
+
+        done();
+      });
+    });
+
+    it('fails to activate', done => {
+      activateStub.returns(Promise.reject());
+
+      dispatchThen(activate("token"), activationState => {
+        assert.deepEqual(activationState, {
+          status: FETCH_FAILURE
+        });
+
+        done();
       });
     });
   });

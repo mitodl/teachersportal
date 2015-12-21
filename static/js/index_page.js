@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import '../sass/layout.scss';
 import App from './containers/App';
 import CourseDetailPage from './containers/CourseDetailPage';
+import ActivatePage from './containers/ActivatePage';
 import { Provider } from 'react-redux';
 import configureStore from './store/configureStore';
 import { Router, Route } from 'react-router';
@@ -19,6 +20,7 @@ ReactDOM.render(
       <Router history={createBrowserHistory()}>
         <Route path="/" component={App}>
           <Route path="courses/:uuid" component={CourseDetailPage} />
+          <Route path="activate" component={ActivatePage} />
         </Route>
       </Router>
     </Provider>

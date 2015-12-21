@@ -32,6 +32,15 @@ body {
         display: inline-block;
         vertical-align: middle;
       }
+
+      .login-container {
+        @include outer-container;
+        @include pad($block-padding);
+        > div {
+          @include span-columns(6);
+          display: inline-block;
+        }
+      }
     }
 
     #course-body {

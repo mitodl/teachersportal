@@ -5,43 +5,15 @@ Tests for login and logout views
 from __future__ import unicode_literals
 import json
 
-from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
-from django.test import TestCase
+
+from portal.tests.base import AuthenticationTestCase
 
 
-class LoginTests(TestCase):
+class LoginTests(AuthenticationTestCase):
     """
     Tests for login and logout views.
     """
-
-    USERNAME = "user"
-    PASSWORD = "pass"
-    OTHER_USERNAME = "other_user"
-    OTHER_PASSWORD = "other_pass"
-
-    def is_authenticated(self, user):
-        """Is user authenticated in self.client.session?"""
-        # http://stackoverflow.com/questions/5660952/test-that-user-was-logged-in-successfully
-        return (
-            '_auth_user_id' in self.client.session and
-            user.pk == int(self.client.session['_auth_user_id'])
-        )
-
-    def setUp(self):
-        """Common test setup"""
-        super(LoginTests, self).setUp()
-
-        self.user = User.objects.create_user(
-            username=self.USERNAME,
-            password=self.PASSWORD,
-        )
-        self.other_user = User.objects.create_user(
-            username=self.OTHER_USERNAME,
-            password=self.OTHER_PASSWORD,
-        )
-        assert not self.is_authenticated(self.user)
-        assert not self.is_authenticated(self.other_user)
 
     def test_login_get(self):
         """Make sure that GET is not allowed"""

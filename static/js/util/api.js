@@ -65,9 +65,7 @@ function fetchJSONWithCSRF(input, init) {
 
     // For non 2xx status codes reject the promise
     if (response.status < 200 || response.status >= 300) {
-      return new Promise((resolve, reject) => {
-        reject(text);
-      });
+      return Promise.reject(text);
     }
     return text;
   }).then(text => {
@@ -100,5 +98,27 @@ export function login(username, password) {
 export function logout() {
   return fetchJSONWithCSRF('/api/v1/logout/', {
     method: 'POST'
+  });
+}
+
+export function register(fullName, email, organization, password, redirect) {
+  return fetchJSONWithCSRF('/api/v1/register/', {
+    method: 'POST',
+    body: JSON.stringify({
+      "full_name": fullName,
+      "email": email,
+      "organization": organization,
+      "password": password,
+      "redirect": redirect
+    })
+  });
+}
+
+export function activate(token) {
+  return fetchJSONWithCSRF('/api/v1/activate/', {
+    method: 'POST',
+    body: JSON.stringify({
+      token
+    })
   });
 }
