@@ -19,6 +19,9 @@ class CourseDetail extends Component {
 
       if (error !== undefined) {
         content = <CardText>{error}</CardText>;
+      } else if (course === undefined) {
+        content = <div>
+        </div>;
       } else {
 
         content = <div>

@@ -9,11 +9,14 @@ from six.moves.urllib.parse import urlparse, urlunparse  # pylint: disable=impor
 from wsgiref.util import is_hop_by_hop  # pylint: disable=wrong-import-order
 
 from django.conf import settings
+from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, HttpResponse
-from django.views.decorators.http import require_http_methods
 from django.template import RequestContext
+from django.views.decorators.http import require_http_methods
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
 
@@ -33,7 +36,8 @@ def index_view(request):
     host = request.get_host().split(":")[0]
     js_settings = {
         "host": host,
-        "ccxconApi": "/ccxcon/"
+        "ccxconApi": "/ccxcon/",
+        "isAuthenticated": request.user.is_authenticated()
     }
 
     return render(
@@ -51,7 +55,6 @@ def forward_to_ccxcon(request):
 
     Args:
         request (HttpRequest): Django request.
-
     Returns:
         HttpResponse
     """
@@ -112,6 +115,8 @@ class WebhooksCCXConView(APIView):
     Accepts messages from CCXCon
     """
 
+    # Note that this does not include IsAuthenticated. We use only hmac
+    # signatures to verify authentication for this API.
     permission_classes = (HmacPermission, )
 
     def post(self, request):  # pylint: disable=no-self-use
@@ -119,7 +124,7 @@ class WebhooksCCXConView(APIView):
         Handle messages from CCXCon.
 
         Args:
-            request: HttpRequest
+            request (HttpRequest)
         Returns:
             HttpResponse
         """
@@ -139,3 +144,56 @@ class WebhooksCCXConView(APIView):
         # On success webhooks won't return anything since CCXCon
         # can't do anything with this information.
         return HttpResponse(status=200)
+
+
+class LoginView(APIView):
+    """
+    View to authenticate and login user.
+    """
+    # This tuple intentionally left blank
+    permission_classes = ()
+
+    def post(self, request):  # pylint: disable=no-self-use
+        """
+        View to authenticate and login user.
+
+        Args:
+            request (rest_framework.request.Request)
+        Returns:
+            rest_framework.response.Response
+        """
+        # Adapted from https://docs.djangoproject.com/en/1.9/topics/auth/default/#auth-web-requests
+        try:
+            username = request.data['username']
+            password = request.data['password']
+        except KeyError:
+            raise ValidationError("Missing key")
+        except TypeError:
+            raise ValidationError("Invalid data")
+
+        user = authenticate(
+            username=username,
+            password=password,
+        )
+        if user is not None:
+            if user.is_active:
+                login(request, user)
+                return Response(status=200)
+            else:
+                return Response(status=403)
+        else:
+            return Response(status=403)
+
+
+@api_view(["POST"])
+def logout_view(request):
+    """
+    View to logout user.
+
+    Args:
+        request (rest_framework.request.Request)
+    Returns:
+        rest_framework.response.Response
+    """
+    logout(request)
+    return Response(status=200)
