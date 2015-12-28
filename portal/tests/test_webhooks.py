@@ -3,6 +3,7 @@ Tests for webhooks API.
 """
 
 from __future__ import unicode_literals
+from decimal import Decimal
 import hashlib
 import hmac
 import json
@@ -11,24 +12,17 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from oscar.apps.catalogue.models import Product
+from oscar.apps.partner.models import Partner, StockRecord
 
-from portal.util import make_upc
+from portal.util import (
+    make_upc,
+    COURSE_PRODUCT_TYPE,
+    MODULE_PRODUCT_TYPE,
+)
+from portal.tests.util import as_json
 
 
 FAKE_SECRET = b'secret'
-
-
-def as_json(resp):
-    """
-
-    Args:
-        resp (HttpResponse): Response
-
-    Returns:
-        object: An object created from JSON in response.
-    """
-    assert resp.status_code == 200
-    return json.loads(resp.content.decode('utf-8'))
 
 
 # pylint: disable=invalid-name, too-many-public-methods
@@ -49,9 +43,6 @@ class WebhookTests(TestCase):
     MODULE_TITLE1 = "Module's title 1\u203d"
     MODULE_TITLE2 = "Module's title 2"
 
-    COURSE_TYPE = 'Course'
-    MODULE_TYPE = 'Module'
-
     def setUp(self):
         """
         Create a user to use with django-oscar-api
@@ -62,7 +53,7 @@ class WebhookTests(TestCase):
         # Create course and module
         self.post_webhook({
             'action': 'update',
-            'type': self.COURSE_TYPE,
+            'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': self.COURSE_TITLE1,
                 'external_pk': self.COURSE_UUID1
@@ -70,7 +61,7 @@ class WebhookTests(TestCase):
         })
         self.post_webhook({
             'action': 'update',
-            'type': self.MODULE_TYPE,
+            'type': MODULE_PRODUCT_TYPE,
             'payload': {
                 'title': self.MODULE_TITLE1,
                 "external_pk": self.MODULE_UUID1,
@@ -86,6 +77,11 @@ class WebhookTests(TestCase):
         data_bytes = json.dumps(data)
         signature = hmac.new(FAKE_SECRET, data_bytes.encode('utf-8'), hashlib.sha1).hexdigest()
 
+        # Only products marked is_available should show up in this list
+        resp = self.client.get(reverse("product-list"))
+        assert resp.status_code == 200, resp.content
+        old_available = [product['external_pk'] for product in as_json(resp)]
+
         old_products = self.get_products()
         resp = self.client.post(
             reverse('webhooks-ccxcon'),
@@ -93,18 +89,14 @@ class WebhookTests(TestCase):
             content_type="application/json",
             HTTP_X_CCXCON_SIGNATURE=signature
         )
-        try:
-            assert resp.status_code == expected_status
-        except AssertionError:
-            raise AssertionError(
-                "expected_status = {expected}, "
-                "resp.status_code = {actual}, "
-                "body = {body}".format(
-                    expected=expected_status,
-                    actual=resp.status_code,
-                    body=resp.content,
-                )
-            )
+        assert resp.status_code == expected_status, resp.content
+
+        product_api_resp = self.client.get(reverse("product-list"))
+        assert product_api_resp.status_code == 200, product_api_resp.content
+        available = [product['external_pk'] for product in as_json(product_api_resp)]
+        # Make sure products marked as being available didn't change
+        assert available == old_available
+
         if expected_status != 200:
             # Make sure nothing changed in case of failure
             assert old_products == self.get_products()
@@ -117,8 +109,11 @@ class WebhookTests(TestCase):
     def get_products(self):  # pylint: disable=no-self-use
         """
         Returns list of products in oscar.
+
+        Returns:
+            list: List of products from database
         """
-        return list(Product.objects.order_by('id').values())
+        return list(Product.objects.order_by('date_created'))
 
     def test_webhook_with_no_auth(self):
         """
@@ -127,7 +122,7 @@ class WebhookTests(TestCase):
         """
         data = {
             'action': 'update',
-            'type': self.COURSE_TYPE,
+            'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': self.COURSE_TITLE2,
                 'external_pk': self.COURSE_UUID2
@@ -138,7 +133,7 @@ class WebhookTests(TestCase):
             data=json.dumps(data),
             content_type="application/json"
         )
-        assert resp.status_code == 403
+        assert resp.status_code == 403, resp.content
         assert "Authentication credentials were not provided" in resp.content.decode('utf-8')
 
     def test_webhook_with_bad_auth(self):
@@ -148,7 +143,7 @@ class WebhookTests(TestCase):
         """
         data = {
             'action': 'update',
-            'type': self.COURSE_TYPE,
+            'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': self.COURSE_TITLE2,
                 'external_pk': self.COURSE_UUID2
@@ -164,7 +159,7 @@ class WebhookTests(TestCase):
             content_type="application/json",
             HTTP_X_CCXCON_SIGNATURE=signature
         )
-        assert resp.status_code == 403
+        assert resp.status_code == 403, resp.content
         assert "Authentication credentials were not provided" in resp.content.decode('utf-8')
 
     def test_add_course(self):
@@ -175,7 +170,7 @@ class WebhookTests(TestCase):
 
         self.post_webhook({
             'action': 'update',
-            'type': self.COURSE_TYPE,
+            'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': self.COURSE_TITLE2,
                 'external_pk': self.COURSE_UUID2
@@ -184,8 +179,8 @@ class WebhookTests(TestCase):
 
         products = self.get_products()
         assert len(products) == 3
-        assert products[2]['title'] == self.COURSE_TITLE2
-        assert products[2]['upc'] == make_upc(self.COURSE_TYPE, self.COURSE_UUID2)
+        assert products[2].title == self.COURSE_TITLE2
+        assert products[2].upc == make_upc(COURSE_PRODUCT_TYPE, self.COURSE_UUID2)
 
     def test_update_course(self):
         """
@@ -195,7 +190,7 @@ class WebhookTests(TestCase):
         new_title = "changed title"
         self.post_webhook({
             'action': 'update',
-            'type': self.COURSE_TYPE,
+            'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': new_title,
                 'external_pk': self.COURSE_UUID1
@@ -204,15 +199,15 @@ class WebhookTests(TestCase):
 
         products = self.get_products()
         assert len(products) == 2
-        assert products[0]['title'] == new_title
-        assert products[0]['upc'] == make_upc(self.COURSE_TYPE, self.COURSE_UUID1)
+        assert products[0].title == new_title
+        assert products[0].upc == make_upc(COURSE_PRODUCT_TYPE, self.COURSE_UUID1)
 
     def test_add_course_with_same_title(self):
         """Test adding a course with duplicate titles"""
         # When we change the external_pk it should create a new product.
         self.post_webhook({
             'action': 'update',
-            'type': self.COURSE_TYPE,
+            'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': self.COURSE_TITLE1,
                 'external_pk': self.COURSE_UUID2
@@ -221,10 +216,10 @@ class WebhookTests(TestCase):
 
         products = self.get_products()
         assert len(products) == 3
-        assert products[0]['title'] == self.COURSE_TITLE1
-        assert products[0]['upc'] == make_upc(self.COURSE_TYPE, self.COURSE_UUID1)
-        assert products[2]['title'] == self.COURSE_TITLE1
-        assert products[2]['upc'] == make_upc(self.COURSE_TYPE, self.COURSE_UUID2)
+        assert products[0].title == self.COURSE_TITLE1
+        assert products[0].upc == make_upc(COURSE_PRODUCT_TYPE, self.COURSE_UUID1)
+        assert products[2].title == self.COURSE_TITLE1
+        assert products[2].upc == make_upc(COURSE_PRODUCT_TYPE, self.COURSE_UUID2)
 
     def test_create_module_with_blank_uuid(self):
         """
@@ -232,7 +227,7 @@ class WebhookTests(TestCase):
         """
         self.post_webhook({
             'action': 'update',
-            'type': self.MODULE_TYPE,
+            'type': MODULE_PRODUCT_TYPE,
             'payload': {
                 'title': self.MODULE_TITLE2,
                 'external_pk': '',
@@ -247,7 +242,7 @@ class WebhookTests(TestCase):
         """
         self.post_webhook({
             'action': 'update',
-            'type': self.COURSE_TYPE,
+            'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': self.COURSE_TITLE1,
                 'external_pk': '',
@@ -258,7 +253,7 @@ class WebhookTests(TestCase):
         """Test update for type Module with Course UUID"""
         self.post_webhook({
             'action': 'update',
-            'type': self.MODULE_TYPE,
+            'type': MODULE_PRODUCT_TYPE,
             'payload': {
                 'title': self.COURSE_TITLE1,
                 'external_pk': self.COURSE_UUID1,
@@ -270,7 +265,7 @@ class WebhookTests(TestCase):
         # product type, this should work fine.
         products = self.get_products()
         assert len(products) == 3
-        assert products[2]['upc'] == make_upc(self.MODULE_TYPE, self.COURSE_UUID1)
+        assert products[2].upc == make_upc(MODULE_PRODUCT_TYPE, self.COURSE_UUID1)
 
     def test_update_course_with_module_uuid(self):
         """
@@ -278,7 +273,7 @@ class WebhookTests(TestCase):
         """
         self.post_webhook({
             'action': 'update',
-            'type': self.COURSE_TYPE,
+            'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': self.MODULE_TITLE1,
                 'external_pk': self.MODULE_UUID1
@@ -289,7 +284,7 @@ class WebhookTests(TestCase):
         # product type, this should work fine.
         products = self.get_products()
         assert len(products) == 3
-        assert products[2]['upc'] == make_upc(self.COURSE_TYPE, self.MODULE_UUID1)
+        assert products[2].upc == make_upc(COURSE_PRODUCT_TYPE, self.MODULE_UUID1)
 
     def test_update_course_empty_title(self):
         """
@@ -297,7 +292,7 @@ class WebhookTests(TestCase):
         """
         self.post_webhook({
             'action': 'update',
-            'type': self.COURSE_TYPE,
+            'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': '',
                 'external_pk': self.COURSE_UUID1
@@ -306,8 +301,8 @@ class WebhookTests(TestCase):
 
         products = self.get_products()
         assert len(products) == 2
-        assert products[0]['upc'] == make_upc(self.COURSE_TYPE, self.COURSE_UUID1)
-        assert products[0]['title'] == ''
+        assert products[0].upc == make_upc(COURSE_PRODUCT_TYPE, self.COURSE_UUID1)
+        assert products[0].title == ''
 
     def test_update_module_empty_title(self):
         """
@@ -315,7 +310,7 @@ class WebhookTests(TestCase):
         """
         self.post_webhook({
             'action': 'update',
-            'type': self.MODULE_TYPE,
+            'type': MODULE_PRODUCT_TYPE,
             'payload': {
                 'title': '',
                 'external_pk': self.MODULE_UUID1,
@@ -326,8 +321,8 @@ class WebhookTests(TestCase):
 
         products = self.get_products()
         assert len(products) == 2
-        assert products[1]['upc'] == make_upc(self.MODULE_TYPE, self.MODULE_UUID1)
-        assert products[1]['title'] == ''
+        assert products[1].upc == make_upc(MODULE_PRODUCT_TYPE, self.MODULE_UUID1)
+        assert products[1].title == ''
 
     def test_delete_module_with_course_uuid(self):
         """
@@ -335,7 +330,7 @@ class WebhookTests(TestCase):
         """
         self.post_webhook({
             'action': 'delete',
-            'type': self.MODULE_TYPE,
+            'type': MODULE_PRODUCT_TYPE,
             'payload': {
                 'external_pk': self.COURSE_UUID1
             }
@@ -349,7 +344,7 @@ class WebhookTests(TestCase):
         """
         self.post_webhook({
             'action': 'delete',
-            'type': self.COURSE_TYPE,
+            'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'external_pk': self.MODULE_UUID1,
             }
@@ -364,7 +359,7 @@ class WebhookTests(TestCase):
         # Missing uuid should not cause an error but not do anything either
         self.post_webhook({
             'action': 'delete',
-            'type': self.COURSE_TYPE,
+            'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'external_pk': self.COURSE_UUID2
             }
@@ -377,7 +372,7 @@ class WebhookTests(TestCase):
         """
         self.post_webhook({
             'action': 'delete',
-            'type': self.COURSE_TYPE,
+            'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'external_pk': self.COURSE_UUID1
             }
@@ -392,7 +387,7 @@ class WebhookTests(TestCase):
         new_title = "new_title"
         self.post_webhook({
             'action': 'update',
-            'type': self.MODULE_TYPE,
+            'type': MODULE_PRODUCT_TYPE,
             'payload': {
                 'title': new_title,
                 'external_pk': self.MODULE_UUID1,
@@ -407,7 +402,7 @@ class WebhookTests(TestCase):
         """
         self.post_webhook({
             'action': 'update',
-            'type': self.MODULE_TYPE,
+            'type': MODULE_PRODUCT_TYPE,
             'payload': {
                 'title': self.MODULE_TITLE1,
                 'external_pk': self.MODULE_UUID1,
@@ -423,7 +418,7 @@ class WebhookTests(TestCase):
         new_title = "new title"
         self.post_webhook({
             'action': 'update',
-            'type': self.MODULE_TYPE,
+            'type': MODULE_PRODUCT_TYPE,
             'payload': {
                 'title': new_title,
                 'external_pk': self.MODULE_UUID1,
@@ -435,14 +430,14 @@ class WebhookTests(TestCase):
         # Should be one module and one course
         products = self.get_products()
         assert len(products) == 2
-        assert products[1]['upc'] == make_upc(self.MODULE_TYPE, self.MODULE_UUID1)
-        assert products[1]['title'] == new_title
+        assert products[1].upc == make_upc(MODULE_PRODUCT_TYPE, self.MODULE_UUID1)
+        assert products[1].title == new_title
 
     def test_add_module(self):
         """Add a new module"""
         self.post_webhook({
             'action': 'update',
-            'type': self.MODULE_TYPE,
+            'type': MODULE_PRODUCT_TYPE,
             'payload': {
                 'title': self.MODULE_TITLE2,
                 'external_pk': self.MODULE_UUID2,
@@ -452,8 +447,8 @@ class WebhookTests(TestCase):
         })
         products = self.get_products()
         assert len(products) == 3
-        assert products[2]['upc'] == make_upc(self.MODULE_TYPE, self.MODULE_UUID2)
-        assert products[2]['title'] == self.MODULE_TITLE2
+        assert products[2].upc == make_upc(MODULE_PRODUCT_TYPE, self.MODULE_UUID2)
+        assert products[2].title == self.MODULE_TITLE2
 
     def test_add_module_as_parent(self):
         """
@@ -461,7 +456,7 @@ class WebhookTests(TestCase):
         """
         self.post_webhook({
             'action': 'update',
-            'type': self.MODULE_TYPE,
+            'type': MODULE_PRODUCT_TYPE,
             'payload': {
                 'title': "title",
                 'external_pk': self.MODULE_TITLE2,
@@ -479,20 +474,18 @@ class WebhookTests(TestCase):
         def parent_has_child(parent, child):
             """Assert parent/child relationship"""
             return (
-                parent['parent_id'] is None and
-                parent['structure'] == 'parent' and
-                child['parent_id'] == parent['id'] and
-                child['structure'] == 'child'
+                child.parent.upc == parent.upc and
+                parent.parent is None
             )
 
-        assert products[0]['upc'] == make_upc(self.COURSE_TYPE, self.COURSE_UUID1)
-        assert products[1]['upc'] == make_upc(self.MODULE_TYPE, self.MODULE_UUID1)
+        assert products[0].upc == make_upc(COURSE_PRODUCT_TYPE, self.COURSE_UUID1)
+        assert products[1].upc == make_upc(MODULE_PRODUCT_TYPE, self.MODULE_UUID1)
         assert parent_has_child(products[0], products[1])
 
         # Make another course module pair
         self.post_webhook({
             'action': 'update',
-            'type': self.COURSE_TYPE,
+            'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': self.COURSE_TITLE2,
                 'external_pk': self.COURSE_UUID2
@@ -500,7 +493,7 @@ class WebhookTests(TestCase):
         })
         self.post_webhook({
             'action': 'update',
-            'type': self.MODULE_TYPE,
+            'type': MODULE_PRODUCT_TYPE,
             'payload': {
                 'title': self.MODULE_TITLE2,
                 'external_pk': self.MODULE_UUID2,
@@ -511,13 +504,70 @@ class WebhookTests(TestCase):
 
         products = self.get_products()
         assert len(products) == 4
-        assert products[2]['upc'] == make_upc(self.COURSE_TYPE, self.COURSE_UUID2)
-        assert products[3]['upc'] == make_upc(self.MODULE_TYPE, self.MODULE_UUID2)
+        assert products[2].upc == make_upc(COURSE_PRODUCT_TYPE, self.COURSE_UUID2)
+        assert products[3].upc == make_upc(MODULE_PRODUCT_TYPE, self.MODULE_UUID2)
         parent1, child1, parent2, child2 = products
         assert parent_has_child(parent1, child1)
         assert not parent_has_child(parent1, child2)
         assert not parent_has_child(parent2, child1)
         assert parent_has_child(parent2, child2)
+
+    def test_course_becomes_parent(self):
+        """
+        Make sure Product status changes from STANDALONE to PARENT when a module is added.
+        """
+        # Create another course
+        self.post_webhook({
+            'action': 'update',
+            'type': COURSE_PRODUCT_TYPE,
+            'payload': {
+                'title': self.COURSE_TITLE2,
+                'external_pk': self.COURSE_UUID2
+            }
+        })
+        products = self.get_products()
+        assert products[2].upc == make_upc(COURSE_PRODUCT_TYPE, self.COURSE_UUID2)
+        assert products[2].structure == Product.STANDALONE
+
+        # Add module to course
+        self.post_webhook({
+            'action': 'update',
+            'type': MODULE_PRODUCT_TYPE,
+            'payload': {
+                'title': self.MODULE_TITLE2,
+                'external_pk': self.MODULE_UUID2,
+                'subchapters': [],
+                'course_external_pk': self.COURSE_UUID2
+            }
+        })
+        products = self.get_products()
+        assert products[2].upc == make_upc(COURSE_PRODUCT_TYPE, self.COURSE_UUID2)
+        assert products[2].structure == Product.PARENT
+
+    def test_change_parent(self):
+        """
+        Make sure a validation error is raised when we change the course_external_pk.
+        """
+        # Create another course
+        self.post_webhook({
+            'action': 'update',
+            'type': COURSE_PRODUCT_TYPE,
+            'payload': {
+                'title': self.COURSE_TITLE2,
+                'external_pk': self.COURSE_UUID2
+            }
+        })
+        # Update module1 to point to course2
+        self.post_webhook({
+            'action': 'update',
+            'type': MODULE_PRODUCT_TYPE,
+            'payload': {
+                'title': self.MODULE_TITLE1,
+                'external_pk': self.MODULE_UUID1,
+                'subchapters': [],
+                'course_external_pk': self.COURSE_UUID2
+            }
+        }, expected_status=400, expected_errors=['Invalid course_external_pk'])
 
     def test_add_module_with_same_title(self):
         """
@@ -525,7 +575,7 @@ class WebhookTests(TestCase):
         """
         self.post_webhook({
             'action': 'update',
-            'type': self.MODULE_TYPE,
+            'type': MODULE_PRODUCT_TYPE,
             'payload': {
                 'title': self.MODULE_TITLE1,
                 'external_pk': self.MODULE_UUID2,
@@ -535,8 +585,8 @@ class WebhookTests(TestCase):
         })
         products = self.get_products()
         assert len(products) == 3
-        assert products[2]['upc'] == make_upc(self.MODULE_TYPE, self.MODULE_UUID2)
-        assert products[2]['title'] == self.MODULE_TITLE1
+        assert products[2].upc == make_upc(MODULE_PRODUCT_TYPE, self.MODULE_UUID2)
+        assert products[2].title == self.MODULE_TITLE1
 
     def test_delete_module_with_missing_uuid(self):
         """
@@ -544,7 +594,7 @@ class WebhookTests(TestCase):
         """
         self.post_webhook({
             'action': 'delete',
-            'type': self.MODULE_TYPE,
+            'type': MODULE_PRODUCT_TYPE,
             'payload': {
                 'external_pk': self.MODULE_UUID2,
             }
@@ -557,14 +607,16 @@ class WebhookTests(TestCase):
         """
         self.post_webhook({
             'action': 'delete',
-            'type': self.MODULE_TYPE,
+            'type': MODULE_PRODUCT_TYPE,
             'payload': {
                 'external_pk': self.MODULE_UUID1,
             }
         })
         products = self.get_products()
         assert len(products) == 1
-        assert products[0]['upc'] == make_upc(self.COURSE_TYPE, self.COURSE_UUID1)
+        assert products[0].upc == make_upc(COURSE_PRODUCT_TYPE, self.COURSE_UUID1)
+        # Delete should change product type to standalone since it has no children anymore
+        assert products[0].structure == Product.STANDALONE
 
     def test_invalid_type(self):
         """Test invalid type"""
@@ -586,7 +638,7 @@ class WebhookTests(TestCase):
 
     def test_invalid_action(self):
         """Invalid action"""
-        for hook_type in (self.COURSE_TYPE, self.MODULE_TYPE):
+        for hook_type in (COURSE_PRODUCT_TYPE, MODULE_PRODUCT_TYPE):
             self.post_webhook({
                 'action': 'missing',
                 'type': hook_type,
@@ -598,7 +650,7 @@ class WebhookTests(TestCase):
 
     def test_missing_action(self):
         """Missing action"""
-        for hook_type in (self.COURSE_TYPE, self.MODULE_TYPE):
+        for hook_type in (COURSE_PRODUCT_TYPE, MODULE_PRODUCT_TYPE):
             self.post_webhook({
                 'type': hook_type,
                 'payload': {
@@ -609,7 +661,7 @@ class WebhookTests(TestCase):
 
     def test_payload_missing_title(self):
         """Payload missing title"""
-        for hook_type in (self.COURSE_TYPE, self.MODULE_TYPE):
+        for hook_type in (COURSE_PRODUCT_TYPE, MODULE_PRODUCT_TYPE):
             self.post_webhook({
                 'action': 'update',
                 'type': hook_type,
@@ -620,7 +672,7 @@ class WebhookTests(TestCase):
 
     def test_missing_payload(self):
         """Missing payload"""
-        for hook_type in (self.COURSE_TYPE, self.MODULE_TYPE):
+        for hook_type in (COURSE_PRODUCT_TYPE, MODULE_PRODUCT_TYPE):
             self.post_webhook({
                 'action': 'update',
                 'type': hook_type
@@ -628,7 +680,7 @@ class WebhookTests(TestCase):
 
     def test_payload_invalid_type(self):
         """Payload is a string"""
-        for hook_type in (self.COURSE_TYPE, self.MODULE_TYPE):
+        for hook_type in (COURSE_PRODUCT_TYPE, MODULE_PRODUCT_TYPE):
             self.post_webhook({
                 'action': 'update',
                 'type': hook_type,
@@ -637,7 +689,7 @@ class WebhookTests(TestCase):
 
     def test_missing_external_pk_on_delete(self):
         """Missing fields"""
-        for hook_type in (self.COURSE_TYPE, self.MODULE_TYPE):
+        for hook_type in (COURSE_PRODUCT_TYPE, MODULE_PRODUCT_TYPE):
             self.post_webhook({
                 'action': 'delete',
                 'type': hook_type,
@@ -655,7 +707,7 @@ class WebhookTests(TestCase):
             del payload_copy[key]
             self.post_webhook({
                 'action': 'update',
-                'type': self.COURSE_TYPE,
+                'type': COURSE_PRODUCT_TYPE,
                 'payload': payload_copy
             }, expected_errors=["Missing key {key}".format(key=key)], expected_status=400)
 
@@ -671,6 +723,38 @@ class WebhookTests(TestCase):
             del payload_copy[key]
             self.post_webhook({
                 'action': 'update',
-                'type': self.MODULE_TYPE,
+                'type': MODULE_PRODUCT_TYPE,
                 'payload': payload_copy
             }, expected_errors=["Missing key {key}".format(key=key)], expected_status=400)
+
+    def test_update_product_with_price(self):
+        """
+        Make sure we preserve price information on update.
+        """
+        module = Product.objects.filter(
+            upc=make_upc(MODULE_PRODUCT_TYPE, self.MODULE_UUID1)
+        ).first()
+
+        # Add price
+        new_price = Decimal('123.45')
+        StockRecord.objects.create(
+            product=module,
+            partner=Partner.objects.get(name='edX'),
+            partner_sku=module.upc,
+            price_currency="$",
+            price_excl_tax=new_price,
+        )
+
+        self.post_webhook({
+            'action': 'update',
+            'type': MODULE_PRODUCT_TYPE,
+            'payload': {
+                'title': self.MODULE_TITLE1,
+                'external_pk': self.MODULE_UUID1,
+                'subchapters': [],
+                'course_external_pk': self.COURSE_UUID1
+            }
+        })
+        assert len(self.get_products()) == 2
+        assert module.stockrecords.count() == 1
+        assert module.stockrecords.first().price_excl_tax == new_price
