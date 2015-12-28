@@ -1,14 +1,14 @@
 import { combineReducers } from 'redux';
 import {
-  courses,
   loginModal,
   authentication,
   registration,
   activation,
+  product,
 } from './index_page';
 
 export default combineReducers({
-  courses,
+  product,
   loginModal,
   authentication,
   registration,

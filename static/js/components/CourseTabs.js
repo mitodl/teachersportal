@@ -13,12 +13,12 @@ injectTapEventPlugin();
 
 class CourseTabs extends React.Component {
   render() {
-    const { course, modules } = this.props;
+    const { product } = this.props;
 
     return <Card id="course-tabs-card">
         <Tabs id="course-tabs">
             <Tab label="About" id="about" className="tab">
-                <AboutTab content={course.overview} />
+                <AboutTab content={product.info.overview} />
             </Tab>
             <Tab label="Content" id="content" className="tab">
                 <ChapterTab
@@ -29,7 +29,7 @@ class CourseTabs extends React.Component {
                   showRowHover={true}
                   deselectOnClickaway={true}
                   height={'auto'}
-                  modules={modules}
+                  product={product}
                  />
             </Tab>
             <Tab label="Reviews" id="reviews" className="tab">
@@ -44,7 +44,7 @@ class CourseTabs extends React.Component {
                   showRowHover={true}
                   deselectOnClickaway={true}
                   height={'auto'}
-                  modules={modules}
+                  product={product}
                 />
             </Tab>
         </Tabs>

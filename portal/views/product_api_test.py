@@ -4,77 +4,68 @@ Tests for Product API
 
 from __future__ import unicode_literals
 
-from django.test import TestCase
+import json
+from mock import patch
+from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.test.utils import override_settings
 from oscar.apps.catalogue.models import Product, ProductClass
 from oscar.apps.partner.models import Partner, StockRecord
+import requests_mock
 
+from portal.views.base import ProductTests
 from portal.views.util import as_json
 from portal.util import (
-    make_external_pk,
-    make_upc,
+    product_as_json,
+    get_external_pk,
     COURSE_PRODUCT_TYPE,
     MODULE_PRODUCT_TYPE,
 )
 
 
-class ProductAPITests(TestCase):
+FAKE_CCXCON_API = 'https://fakehost/api/'
+
+
+@override_settings(CCXCON_API=FAKE_CCXCON_API)
+class ProductAPITests(ProductTests):
     """
     Tests for product API
     """
 
     def setUp(self):
         """
-        Create parent and child Products with no StockRecords to start with.
+        Set up the products and also add a StockRecord to make it available to purchase.
         """
-        product_class = ProductClass.objects.get(name="Course")
-        self.parent_external_pk = "uuid"
-        parent_upc = make_upc(COURSE_PRODUCT_TYPE, self.parent_external_pk)
-        parent_title = "parent's title"
-        self.parent = Product.objects.create(
-            upc=parent_upc,
-            product_class=product_class,
-            structure=Product.PARENT,
-            parent=None,
-            title=parent_title
+        super(ProductAPITests, self).setUp()
+        partner = Partner.objects.first()
+        self.price = 123
+        StockRecord.objects.create(
+            product=self.child,
+            partner=partner,
+            partner_sku=self.child.upc,
+            price_currency="$",
+            price_excl_tax=self.price,
         )
 
-        self.child_external_pk = "uuid"
-        child_upc = make_upc(MODULE_PRODUCT_TYPE, self.child_external_pk)
-        child_title = "child's title"
-        self.child = Product.objects.create(
-            upc=child_upc,
-            product_class=None,
-            structure=Product.CHILD,
-            parent=self.parent,
-            title=child_title
-        )
+        credentials = {"username": "auser", "password": "apass"}
+        User.objects.create_user(**credentials)
+        self.client.login(**credentials)
 
-    def get_products(self):
+    def validate_product_api(self, products_from_api):  # pylint: disable=no-self-use
         """
         Helper function to verify 200 and return list of products.
         """
-        resp = self.client.get(reverse("product-list"))
-        assert resp.status_code == 200, resp.content
-        products_from_api = as_json(resp)
-
         for product_from_api in products_from_api:
             # Assert consistency between database and what API endpoint is returning.
             product_from_db = Product.objects.get(
-                upc=make_upc(
-                    product_from_api['product_type'],
-                    product_from_api['external_pk']
-                )
+                upc=product_from_api['upc']
             )
             assert product_from_db.title == product_from_api['title']
-            assert product_from_db.upc == make_upc(
-                product_from_api['product_type'],
-                product_from_api['external_pk'],
-            )
+            assert product_from_db.upc == product_from_api['upc']
 
             parent = product_from_db.parent
             if parent is None:
-                assert product_from_api['parent_external_pk'] is None
+                assert product_from_api['parent_upc'] is None
                 if product_from_db.children.count() == 0:
                     assert product_from_db.structure == Product.STANDALONE
                 else:
@@ -83,10 +74,7 @@ class ProductAPITests(TestCase):
                 assert product_from_db.product_class == ProductClass.objects.get(name="Course")
             else:
                 assert product_from_db.product_class is None
-                assert product_from_api['parent_external_pk'] == make_external_pk(
-                    str(parent.product_class),
-                    parent.upc
-                )
+                assert product_from_api['parent_upc'] == parent.upc
                 assert product_from_db.structure == Product.CHILD
 
                 # Make sure there's one StockRecord and SKU matches UPC
@@ -98,306 +86,200 @@ class ProductAPITests(TestCase):
         """
         Make sure API shows no products if none have StockRecords.
         """
-        assert self.get_products() == []
+        StockRecord.objects.all().delete()
+
+        resp = self.client.get(reverse("product-list"))
+        assert resp.status_code == 200, resp.content
+        products_from_api = as_json(resp)
+
+        self.validate_product_api(products_from_api)
+        assert products_from_api == []
 
     def test_one_stockrecord(self):
         """
         Make sure API returns this product since it has a StockRecord.
         """
-        partner = Partner.objects.first()
-        StockRecord.objects.create(
-            product=self.child,
-            partner=partner,
-            partner_sku=self.child.upc,
-            price_currency="$",
-            price_excl_tax=123,
-        )
-
         # API only shows products with StockRecords
-        assert self.get_products() == [
-            {
-                'external_pk': self.parent_external_pk,
-                'parent_external_pk': None,
-                'price_without_tax': None,
-                'product_type': COURSE_PRODUCT_TYPE,
-                'title': self.parent.title
-            },
-            {
-                'external_pk': self.child_external_pk,
-                'parent_external_pk': self.parent_external_pk,
-                'price_without_tax': '123.00',
-                'product_type': MODULE_PRODUCT_TYPE,
-                'title': self.child.title
-            },
+        resp = self.client.get(reverse("product-list"))
+        assert resp.status_code == 200, resp.content
+        products_from_api = as_json(resp)
+
+        self.validate_product_api(products_from_api)
+        assert products_from_api == [
+            product_as_json(self.parent, {}),
+            product_as_json(self.child, {}),
         ]
 
-    def test_parent_cant_have_price(self):
+    @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
+    @requests_mock.mock()
+    def test_product_detail_for_module(self, mock, fetch_mock):  # pylint: disable=unused-argument
         """
-        Make sure parent can't have a price.
+        Test that product detail for modules works properly.
         """
-        partner = Partner.objects.first()
-        StockRecord.objects.create(
-            product=self.parent,
-            partner=partner,
-            partner_sku=self.parent.upc,
-            price_currency="$",
-            price_excl_tax=123,
+        module_uuid = get_external_pk(self.child)
+        ccxcon_title = "ccxcon title"
+        subchapters = ["subchapter1", "subchapter2"]
+        fetch_mock.get("{base}v1/coursexs/{course_uuid}/modules/{module_uuid}/".format(
+            base=FAKE_CCXCON_API,
+            course_uuid=get_external_pk(self.child.parent),
+            module_uuid=module_uuid,
+        ), text=json.dumps(
+            {
+                "uuid": module_uuid,
+                "title": ccxcon_title,
+                "subchapters": subchapters,
+                "course": "https://example.com/",
+                "url": "https://example.com/"
+            }
+        ))
+        resp = self.client.get(
+            reverse("product-detail", kwargs={"uuid": self.child.upc})
         )
+        assert resp.status_code == 200
+        assert json.loads(resp.content.decode('utf-8')) == {
+            "info": {
+                "title": ccxcon_title,
+                "subchapters": subchapters
+            },
+            "parent_upc": self.parent.upc,
+            "product_type": MODULE_PRODUCT_TYPE,
+            "title": self.child.title,
+            "description": self.child.description,
+            "external_pk": get_external_pk(self.child),
+            "children": [],
+            "upc": self.child.upc,
+            "price_without_tax": self.price
+        }
+
+    @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
+    @requests_mock.mock()
+    def test_product_detail_for_course(self, mock, fetch_mock):  # pylint: disable=unused-argument
+        """
+        Test that product detail for courses works properly.
+        """
+        course_uuid = get_external_pk(self.parent)
+        module_uuid = get_external_pk(self.child)
+
+        ccxcon_course_title = "ccxcon course title"
+        ccxcon_module_title = "ccxcon module title"
+        ccxcon_description = "ccxcon description"
+        author = "author"
+        overview = "overview"
+        subchapters = ["subchapter1", "subchapter2"]
+        image_url = "http://youtube.com/"
+        fetch_mock.get("{base}v1/coursexs/{course_uuid}/".format(
+            base=FAKE_CCXCON_API,
+            course_uuid=course_uuid,
+        ), text=json.dumps(
+            {
+                "uuid": course_uuid,
+                "title": ccxcon_course_title,
+                "author_name": author,
+                "overview": overview,
+                "description": ccxcon_description,
+                "image_url": image_url,
+                "edx_instance": "http://mitx.edx.org",
+                "url": "https://example.com",
+                "modules": "https://example.com",
+                "instructors": [],
+                "course_id": "course_id"
+            }
+        ))
+        fetch_mock.get("{base}v1/coursexs/{course_uuid}/modules/".format(
+            base=FAKE_CCXCON_API,
+            course_uuid=course_uuid
+        ), text=json.dumps([
+            {
+                "uuid": module_uuid,
+                "title": ccxcon_module_title,
+                "subchapters": subchapters,
+                "course": "https://example.com/",
+                "url": "https://example.com/"
+            }
+        ]))
+
+        resp = self.client.get(
+            reverse("product-detail", kwargs={"uuid": self.parent.upc})
+        )
+        assert resp.status_code == 200
+        assert json.loads(resp.content.decode('utf-8')) == {
+            "info": {
+                "title": ccxcon_course_title,
+                "description": ccxcon_description,
+                "overview": overview,
+                "image_url": image_url,
+                "author_name": author
+            },
+            "parent_upc": None,
+            "product_type": COURSE_PRODUCT_TYPE,
+            "title": self.parent.title,
+            "description": self.parent.description,
+            "external_pk": course_uuid,
+            "children": [
+                {
+                    "info": {
+                        "title": ccxcon_module_title,
+                        "subchapters": subchapters
+                    },
+                    "parent_upc": self.parent.upc,
+                    "product_type": MODULE_PRODUCT_TYPE,
+                    "title": self.child.title,
+                    "description": self.child.description,
+                    "external_pk": module_uuid,
+                    "children": [],
+                    "upc": self.child.upc,
+                    "price_without_tax": self.price
+                }
+            ],
+            "upc": self.parent.upc,
+            "price_without_tax": None
+        }
+
+    def test_product_not_available(self):
+        """
+        Test that product detail returns a 404 if the product is not available.
+        """
+        # Make child unavailable for purchase
+        StockRecord.objects.all().delete()
+
+        resp = self.client.get(
+            reverse("product-detail", kwargs={"uuid": self.child.upc})
+        )
+        assert resp.status_code == 404, resp.content
+
+    def test_not_logged_in(self):
+        """
+        Test that product list and detail are only available to logged in users.
+        """
+        self.client.logout()
+        resp = self.client.get(
+            reverse("product-detail", kwargs={"uuid": self.child.upc})
+        )
+        assert resp.status_code == 403, resp.content
+
+        resp = self.client.get(reverse("product-list"))
+        assert resp.status_code == 403, resp.content
+
+    @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
+    @requests_mock.mock()
+    def test_ccxcon_connection_broken(self, mock, fetch_mock):  # pylint: disable=unused-argument
+        """
+        Test that if the CCXCon connection is broken an exception is raised
+        (producing a 500 error).
+        """
+        module_uuid = get_external_pk(self.child)
+        fetch_mock.get("{base}v1/coursexs/{course_uuid}/modules/{module_uuid}/".format(
+            base=FAKE_CCXCON_API,
+            course_uuid=get_external_pk(self.child.parent),
+            module_uuid=module_uuid,
+        ), status_code=500, text="{}")
 
         with self.assertRaises(Exception) as ex:
-            self.get_products()
-        assert ex.exception.args[0] == "Only CHILD products can have StockRecords"
-
-    def test_invalid_partner_sku(self):
-        """
-        Access API when a StockRecord's partner_sku doesn't match Product.upc.
-        """
-        price = 123
-        partner = Partner.objects.first()
-        StockRecord.objects.create(
-            product=self.child,
-            partner=partner,
-            partner_sku=make_upc(MODULE_PRODUCT_TYPE, "mismatched sku"),
-            price_currency="$",
-            price_excl_tax=price,
-        )
-
-        with self.assertRaises(Exception) as ex:
-            self.get_products()
-        assert ex.exception.args[0] == "StockRecord SKU does not match Product UPC"
-
-    def test_invalid_currency(self):
-        """
-        Make sure currency == "$".
-        """
-        price = 123
-        partner = Partner.objects.first()
-        StockRecord.objects.create(
-            product=self.child,
-            partner=partner,
-            partner_sku=self.child.upc,
-            price_currency="GBP",
-            price_excl_tax=price,
-        )
-
-        with self.assertRaises(Exception) as ex:
-            self.get_products()
-        assert ex.exception.args[0] == "StockRecord price_currency must be $"
-
-    def test_two_stockrecords(self):
-        """
-        Try creating a product with two StockRecords.
-        """
-        other_sku = make_upc(MODULE_PRODUCT_TYPE, "other sku")
-
-        price1, price2 = 123, 345
-        partner = Partner.objects.first()
-        StockRecord.objects.create(
-            product=self.child,
-            partner=partner,
-            partner_sku=other_sku,
-            price_currency="$",
-            price_excl_tax=price1,
-        )
-        StockRecord.objects.create(
-            product=self.child,
-            partner=partner,
-            partner_sku=self.child.upc,
-            price_currency="$",
-            price_excl_tax=price2,
-        )
-
-        with self.assertRaises(Exception) as ex:
-            self.get_products()
-        assert ex.exception.args[0] == "More than one StockRecords for a Product"
-
-    def test_child_without_parent(self):
-        """
-        Children must have parents.
-        """
-        with self.assertRaises(AttributeError) as ex:
-            Product.objects.create(
-                upc=make_upc(MODULE_PRODUCT_TYPE, "child"),
-                product_class=None,
-                structure=Product.CHILD,
-                parent=None,
-                title=self.child.title
+            self.client.get(
+                reverse("product-detail", kwargs={"uuid": self.child.upc})
             )
-        assert ex.exception.args[0] == "'NoneType' object has no attribute 'product_class'"
+        assert "CCXCon returned a non 200 status code 500" in ex.exception.args[0]
 
-    def test_child_has_no_children(self):
-        """
-        Children must not have children.
-        """
-        child = Product.objects.create(
-            upc=make_upc(MODULE_PRODUCT_TYPE, "parent child"),
-            product_class=self.parent.product_class,
-            structure=Product.CHILD,
-            parent=self.parent,
-            title="child of parent"
-        )
-        Product.objects.create(
-            upc=make_upc(MODULE_PRODUCT_TYPE, "child"),
-            product_class=self.parent.product_class,
-            structure=Product.CHILD,
-            parent=child,
-            title="child of child"
-        )
-        with self.assertRaises(Exception) as ex:
-            self.get_products()
-        assert ex.exception.args[0] == "Children cannot have product_class set"
-
-    def test_parent_has_children(self):
-        """
-        Parents must have children.
-        """
-        Product.objects.create(
-            upc=make_upc(COURSE_PRODUCT_TYPE, "parent"),
-            product_class=self.parent.product_class,
-            structure=Product.PARENT,
-            parent=None,
-            title=self.parent.title
-        )
-        with self.assertRaises(Exception) as ex:
-            self.get_products()
-        assert ex.exception.args[0] == "PARENT products must have children"
-
-    def test_standalone_has_no_children(self):
-        """
-        Standalone products must not have children.
-        """
-        parent = Product.objects.create(
-            upc=make_upc(COURSE_PRODUCT_TYPE, "parent"),
-            product_class=self.parent.product_class,
-            structure=Product.STANDALONE,
-            parent=None,
-            title=self.parent.title
-        )
-        Product.objects.create(
-            upc=make_upc(MODULE_PRODUCT_TYPE, "child"),
-            product_class=self.parent.product_class,
-            structure=Product.CHILD,
-            parent=parent,
-            title="child"
-        )
-        with self.assertRaises(Exception) as ex:
-            self.get_products()
-        assert ex.exception.args[0] == "STANDALONE products must not have children"
-
-    def test_parent_with_parent(self):
-        """
-        Parents must not have a parent.
-        """
-        Product.objects.create(
-            upc=make_upc(COURSE_PRODUCT_TYPE, "parent"),
-            product_class=self.parent.product_class,
-            structure=Product.PARENT,
-            parent=self.parent,
-            title=self.parent.title
-        )
-        with self.assertRaises(Exception) as ex:
-            self.get_products()
-        assert ex.exception.args[0] == "PARENT products must not have a parent"
-
-    def test_child_is_not_module(self):
-        """
-        Only modules can be children.
-        """
-        Product.objects.create(
-            upc=make_upc(COURSE_PRODUCT_TYPE, "child"),
-            product_class=None,
-            structure=Product.CHILD,
-            parent=self.parent,
-            title=self.child.title
-        )
-        with self.assertRaises(Exception) as ex:
-            self.get_products()
-        assert ex.exception.args[0] == "Modules may only be CHILD Products"
-
-    def test_parent_is_not_course(self):
-        """
-        Only courses can be parents.
-        """
-        Product.objects.create(
-            upc=make_upc(MODULE_PRODUCT_TYPE, "child"),
-            product_class=self.parent.product_class,
-            structure=Product.PARENT,
-            parent=None,
-            title=self.parent.title
-        )
-        with self.assertRaises(Exception) as ex:
-            self.get_products()
-        assert ex.exception.args[0] == "Courses may only be PARENT Products"
-
-    def test_standalone_is_not_course(self):
-        """
-        Only courses can be standalone.
-        """
-        Product.objects.create(
-            upc=make_upc(MODULE_PRODUCT_TYPE, "child"),
-            product_class=self.parent.product_class,
-            structure=Product.STANDALONE,
-            parent=None,
-            title=self.parent.title
-        )
-        with self.assertRaises(Exception) as ex:
-            self.get_products()
-        assert ex.exception.args[0] == "Courses may only be PARENT Products"
-
-    def test_invalid_upc(self):
-        """
-        UPC must be prefixed with product type
-        """
-        Product.objects.create(
-            upc=make_upc("other", "child"),
-            product_class=None,
-            structure=Product.CHILD,
-            parent=self.parent,
-            title=self.child.title
-        )
-        with self.assertRaises(Exception) as ex:
-            self.get_products()
-        assert ex.exception.args[0] == "Invalid product type"
-
-    def test_child_with_product_class(self):
-        """
-        Children can't have product_class set (it inherits from parent)
-        """
-        Product.objects.create(
-            upc=make_upc(MODULE_PRODUCT_TYPE, "child"),
-            product_class=self.parent.product_class,
-            structure=Product.CHILD,
-            parent=self.parent,
-            title=self.child.title
-        )
-        with self.assertRaises(Exception) as ex:
-            self.get_products()
-        assert ex.exception.args[0] == "Children cannot have product_class set"
-
-    def test_parent_product_class(self):
-        """
-        Parent product class must be set to Course.
-        """
-        with self.assertRaises(AttributeError) as ex:
-            Product.objects.create(
-                upc=make_upc(COURSE_PRODUCT_TYPE, "parent"),
-                product_class=None,
-                structure=Product.PARENT,
-                parent=None,
-                title=self.parent.title
-            )
-        assert ex.exception.args[0] == "'NoneType' object has no attribute 'attributes'"
-
-    def test_standalone_product_class(self):
-        """
-        Standalone product class must be set to Course.
-        """
-        with self.assertRaises(AttributeError) as ex:
-            Product.objects.create(
-                upc=make_upc(COURSE_PRODUCT_TYPE, "parent"),
-                product_class=None,
-                structure=Product.STANDALONE,
-                parent=None,
-                title=self.parent.title
-            )
-        assert ex.exception.args[0] == "'NoneType' object has no attribute 'attributes'"
+        # Product list API does not read from CCXCon so it should be unaffected
+        resp = self.client.get(reverse('product-list'))
+        assert resp.status_code == 200

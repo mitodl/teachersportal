@@ -16,14 +16,14 @@ class ChapterTab extends React.Component {
       showRowHover,
       deselectOnClickaway,
       height,
-      modules
+      product
     } = this.props;
 
     let rows = [];
 
-    if (modules) {
-      rows = modules.map((module, i) =>
-        <TableRow key={module.uuid}>
+    if (product) {
+      rows = product.children.map((module, i) =>
+        <TableRow key={module.upc}>
           <TableRowColumn>{i}: {module.title}</TableRowColumn>
         </TableRow>
       );

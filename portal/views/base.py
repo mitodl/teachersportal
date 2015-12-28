@@ -1,13 +1,19 @@
 """
-Utility functions for tests
+Base classes for test cases
 """
 
 from __future__ import unicode_literals
 
 from django.contrib.auth.models import User
 from django.test import TestCase
+from oscar.apps.catalogue.models import Product, ProductClass
 
 from portal.models import UserInfo
+from portal.util import (
+    make_upc,
+    COURSE_PRODUCT_TYPE,
+    MODULE_PRODUCT_TYPE,
+)
 
 
 class AuthenticationTestCase(TestCase):
@@ -67,4 +73,36 @@ class AuthenticationTestCase(TestCase):
         return (
             '_auth_user_id' in self.client.session and
             user.pk == int(self.client.session['_auth_user_id'])
+        )
+
+
+class ProductTests(TestCase):
+    """
+    Base class for tests dealing with products
+    """
+    def setUp(self):
+        """
+        Create parent and child Products with no StockRecords to start with.
+        """
+        product_class = ProductClass.objects.get(name="Course")
+        parent_upc = make_upc(COURSE_PRODUCT_TYPE, "parent-uuid")
+        parent_title = "parent's title"
+        self.parent = Product.objects.create(
+            upc=parent_upc,
+            description="Parent description",
+            product_class=product_class,
+            structure=Product.PARENT,
+            parent=None,
+            title=parent_title
+        )
+
+        child_upc = make_upc(MODULE_PRODUCT_TYPE, "child-uuid")
+        child_title = "child's title"
+        self.child = Product.objects.create(
+            upc=child_upc,
+            description="Child description",
+            product_class=None,
+            structure=Product.CHILD,
+            parent=self.parent,
+            title=child_title
         )

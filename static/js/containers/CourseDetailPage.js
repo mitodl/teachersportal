@@ -1,8 +1,7 @@
 import React from 'react';
 import CourseDetail from '../components/CourseDetail';
 import {
-  fetchCourse,
-  fetchModules,
+  fetchProduct,
   FETCH_FAILURE,
   FETCH_SUCCESS,
 } from '../actions/index_page';
@@ -11,17 +10,16 @@ import { connect } from 'react-redux';
 class CourseDetailPage extends React.Component {
 
   componentDidMount() {
-    this.fetchCoursesAndModules.call(this);
+    this.fetchProduct.call(this);
   }
 
   componentDidUpdate() {
-    this.fetchCoursesAndModules.call(this);
+    this.fetchProduct.call(this);
   }
 
-  fetchCoursesAndModules() {
+  fetchProduct() {
     const {
-      courseFetchStatus,
-      modulesFetchStatus,
+      product,
       authentication,
       dispatch,
       params: { uuid }
@@ -32,35 +30,27 @@ class CourseDetailPage extends React.Component {
       // yet, fetch them now. This might execute the fetch action twice if
       // this component is refreshed before action has a chance to dispatch,
       // but that shouldn't cause any problems
-      if (courseFetchStatus === undefined) {
-        dispatch(fetchCourse(uuid));
-      }
-      if (modulesFetchStatus === undefined) {
-        dispatch(fetchModules(uuid));
+      if (product.status === undefined) {
+        dispatch(fetchProduct("Course_" + uuid));
       }
     }
   }
 
   render() {
     const {
-      course,
-      modules,
-      courseFetchStatus,
-      modulesFetchStatus,
+      product,
       authentication,
-      } = this.props;
+    } = this.props;
 
     let error;
 
-    if (courseFetchStatus === FETCH_FAILURE) {
+    if (product.status === FETCH_FAILURE) {
       error = "An error occurred fetching information about this course.";
-    } else if (modulesFetchStatus === FETCH_FAILURE) {
-      error = "An error occurred fetching information about the course's modules.";
     } else if (!authentication.isAuthenticated) {
       error = "Please log in to view the course information.";
     }
 
-    let detail = <CourseDetail error={error} course={course} modules={modules} />;
+    let detail = <CourseDetail error={error} product={product.product} />;
 
     return <div>
       {detail}
@@ -72,10 +62,7 @@ class CourseDetailPage extends React.Component {
 
 const mapStateToProps = (state) => {
   return {
-    course: state.courses.course,
-    modules: state.courses.modules,
-    courseFetchStatus: state.courses.courseFetchStatus,
-    modulesFetchStatus: state.courses.modulesFetchStatus,
+    product: state.product,
     authentication: state.authentication,
   };
 };

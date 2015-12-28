@@ -7,7 +7,9 @@ from __future__ import unicode_literals
 from rest_framework.serializers import (
     Serializer,
     CharField,
-    DecimalField,
+    FloatField,
+    DictField,
+    ListField,
 )
 
 
@@ -15,8 +17,12 @@ from rest_framework.serializers import (
 class ProductSerializer(Serializer):
     """Serializer for Product"""
 
+    upc = CharField()
     title = CharField()
+    description = CharField()
     external_pk = CharField()
     product_type = CharField()
-    price_without_tax = DecimalField(max_digits=20, decimal_places=2)
-    parent_external_pk = CharField()
+    price_without_tax = FloatField()
+    parent_upc = CharField()
+    info = DictField()
+    children = ListField()

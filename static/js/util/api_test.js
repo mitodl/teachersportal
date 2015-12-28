@@ -7,100 +7,68 @@ import React from 'react';
 import jsdom from 'mocha-jsdom';
 import fetchMock from 'fetch-mock/src/server';
 import {
-  getCourse,
-  getModules,
+  getProduct,
   login,
   logout,
   register,
   activate,
 } from './api';
 
-const COURSE_RESPONSE = {
-  "uuid": "8cc92ca1-162d-4729-96fc-d1733ebc1a40",
-  "title": "Course UUqGwgbPUZHF",
-  "author_name": "Mr. Shannon Stoltenberg",
-  "overview": "Sequi expedita aperiam assumenda sit et magnam.",
-  "description": "At voluptatem et eveniet perspiciatis.",
-  "image_url": "",
-  "edx_instance": "https://edx.org/",
-  "url": "https://localhost:8077/api/v1/coursexs/8cc92ca1-162d-4729-96fc-d1733ebc1a40/",
-  "modules":
-    "https://localhost:8077/api/v1/coursexs/8cc92ca1-162d-4729-96fc-d1733ebc1a40/modules/",
-  "instructors": []
+const PRODUCT_RESPONSE = {
+  "upc": "Course_7560bd21-7b1d-4c2f-8103-acc93b6c40b1",
+  "title": "Course 7560bd21-7b1d-4c2f-8103-acc93b6c40b1",
+  "description": "Course description here",
+  "external_pk": "7560bd21-7b1d-4c2f-8103-acc93b6c40b1",
+  "product_type": "Course",
+  "price_without_tax": null,
+  "parent_upc": null,
+  "info": {
+    "overview": "overview",
+    "image_url": "http://youtube.com/",
+    "description": "description",
+    "author_name": "author",
+    "title": "title"
+  },
+  "children": [
+    {
+      "info": {
+        "subchapters": [],
+        "title": "other course"
+      },
+      "parent_upc": "Course_7560bd21-7b1d-4c2f-8103-acc93b6c40b1",
+      "product_type": "Module",
+      "title": "Module ed99737e-d5bf-4b95-a467-bf4ecf31f7b0",
+      "external_pk": "ed99737e-d5bf-4b95-a467-bf4ecf31f7b0",
+      "children": [],
+      "upc": "Module_ed99737e-d5bf-4b95-a467-bf4ecf31f7b0",
+      "price_without_tax": 33.0
+    }
+  ]
 };
 
-const MODULES_RESPONSE = [
-  {
-    "uuid": "74061e49-555f-4f66-91bd-80b1d1006f33",
-    "title": "Module TltWJyznIOOC",
-    "subchapters": [
-      "Magni repudiandae dolor officiis nam sit eos minima.",
-      "Est esse et nisi nostrum repudiandae temporibus quidem.",
-      "Et ut illo sunt pariatur ducimus architecto id.",
-      "Quasi ipsum quia eveniet nobis dolores fugit delectus.",
-      "Ut similique repellendus veritatis necessitatibus id ut.",
-      "Maiores laboriosam assumenda quia laudantium quis provident.",
-      "Tenetur ab nesciunt cumque.",
-      "Enim aut in debitis aliquam.",
-      "Voluptatum aut expedita quo est.",
-      "Harum nostrum inventore est eos eos sunt in.",
-      "Vel aliquam et sed similique dolor voluptates fuga."
-    ],
-    "course": "https://localhost:8077/api/v1/coursexs/8cc92ca1-162d-4729-96fc-d1733ebc1a40/",
-    "url": "https://localhost:8077/api/v1/coursexs/8cc92ca1-162d-4729-96fc-d1733ebc1a40" +
-      "/modules/74061e49-555f-4f66-91bd-80b1d1006f33/"
-  }
-];
 
 describe('common api functions', function() {
   jsdom();
 
-  it('gets a course', done => {
-    const { ccxconApi } = SETTINGS;
-    const uuid = COURSE_RESPONSE.uuid;
+  it('gets a product', done => {
+    const upc = PRODUCT_RESPONSE.upc;
 
-    fetchMock.mock(`${ccxconApi}v1/coursexs/${uuid}/`, COURSE_RESPONSE);
-    getCourse(uuid).then(receivedCourse => {
-      assert.deepEqual(receivedCourse, COURSE_RESPONSE);
+    fetchMock.mock(`/api/v1/products/${upc}/`, PRODUCT_RESPONSE);
+    getProduct(upc).then(receivedCourse => {
+      assert.deepEqual(receivedCourse, PRODUCT_RESPONSE);
 
       done();
     });
   });
 
-  it('fails to get a course', done => {
-    const { ccxconApi } = SETTINGS;
-    const uuid = COURSE_RESPONSE.uuid;
+  it('fails to get a product', done => {
+    const upc = PRODUCT_RESPONSE.upc;
 
-    fetchMock.mock(`${ccxconApi}v1/coursexs/${uuid}/`, {
-      body: COURSE_RESPONSE,
+    fetchMock.mock(`/api/v1/products/${upc}/`, {
+      body: PRODUCT_RESPONSE,
       status: 400
     });
-    getCourse(uuid).catch(() => {
-      done();
-    });
-  });
-
-  it('gets a course\'s modules', done => {
-    const { ccxconApi } = SETTINGS;
-    const uuid = COURSE_RESPONSE.uuid;
-
-    fetchMock.mock(`${ccxconApi}v1/coursexs/${uuid}/modules/`, MODULES_RESPONSE);
-    getModules(uuid).then(receivedModules => {
-      assert.deepEqual(receivedModules, MODULES_RESPONSE);
-
-      done();
-    });
-  });
-
-  it('fails to get modules', done => {
-    const { ccxconApi } = SETTINGS;
-    const uuid = COURSE_RESPONSE.uuid;
-
-    fetchMock.mock(`${ccxconApi}v1/coursexs/${uuid}/modules/`, {
-      body: MODULES_RESPONSE,
-      status: 400
-    });
-    getModules(uuid).catch(() => {
+    getProduct(upc).catch(() => {
       done();
     });
   });
