@@ -7,6 +7,9 @@ import {
   login,
   register,
   activate,
+  checkout,
+  addOrUpdateCartItem,
+  removeCartItem,
   fetchProduct,
   FETCH_FAILURE,
   FETCH_SUCCESS,
@@ -24,6 +27,7 @@ let loginStub;
 let logoutStub;
 let registerStub;
 let activateStub;
+let checkoutStub;
 let store;
 
 
@@ -34,6 +38,7 @@ describe('reducers', () => {
     loginStub = sinon.stub(api, 'login');
     registerStub = sinon.stub(api, 'register');
     activateStub = sinon.stub(api, 'activate');
+    checkoutStub = sinon.stub(api, 'checkout');
 
     store = configureStore();
   });
@@ -44,12 +49,12 @@ describe('reducers', () => {
     loginStub.restore();
     registerStub.restore();
     activateStub.restore();
+    checkoutStub.restore();
 
     store = null;
   });
 
   describe('product reducers', () => {
-    jsdom();
     /**
      * Helper function for dispatch and assert pattern
      */
@@ -89,7 +94,6 @@ describe('reducers', () => {
   });
 
   describe('loginModal reducers', () => {
-    jsdom();
     /**
      * Helper function for dispatch and assert pattern
      */
@@ -125,7 +129,6 @@ describe('reducers', () => {
   });
 
   describe('authentication reducers', () => {
-    jsdom();
     /**
      * Helper function for dispatch and assert pattern
      */
@@ -222,7 +225,6 @@ describe('reducers', () => {
   });
 
   describe('registration reducers', () => {
-    jsdom();
     /**
      * Helper function for dispatch and assert pattern
      */
@@ -256,7 +258,6 @@ describe('reducers', () => {
   });
 
   describe('activation reducers', () => {
-    jsdom();
     /**
      * Helper function for dispatch and assert pattern
      */
@@ -283,6 +284,112 @@ describe('reducers', () => {
         });
 
         done();
+      });
+    });
+  });
+
+  describe('cart reducers', () => {
+    /**
+     * Helper function for dispatch and assert pattern
+     */
+    let dispatchThen = createDispatchThen(() => store, state => state.cart);
+
+    it('adds to or updates the cart', done => {
+      dispatchThen(addOrUpdateCartItem('upc', 3), cartState => {
+        assert.deepEqual(cartState, {
+          cart: [{
+            upc: 'upc',
+            seats: 3
+          }]
+        });
+
+        dispatchThen(addOrUpdateCartItem('newUpc', 5), cartState => {
+          assert.deepEqual(cartState, {
+            cart: [{
+              upc: 'upc',
+              seats: 3
+            }, {
+              upc: 'newUpc',
+              seats: 5
+            }]
+          });
+
+          dispatchThen(addOrUpdateCartItem('upc', 4), cartState => {
+            assert.deepEqual(cartState, {
+              cart: [{
+                upc: 'upc',
+                seats: 4
+              }, {
+                upc: 'newUpc',
+                seats: 5
+              }]
+            });
+            done();
+          });
+        });
+      });
+    });
+
+    it('removes item from the cart', done => {
+      dispatchThen(addOrUpdateCartItem('upc', 5), cartState => {
+        assert.deepEqual(cartState, {
+          cart: [{
+            upc: 'upc',
+            seats: 5
+          }]
+        });
+
+        dispatchThen(removeCartItem('upc'), cartState => {
+          assert.deepEqual(cartState, {
+            cart: []
+          });
+
+          done();
+        });
+      });
+    });
+
+    it('checks out the cart', done => {
+      checkoutStub.returns(Promise.resolve());
+
+      dispatchThen(addOrUpdateCartItem('upc', 5), cartState => {
+        let expectedCart = [{
+          upc: 'upc',
+          seats: 5
+        }];
+        assert.deepEqual(cartState, {
+          cart: expectedCart
+        });
+
+        dispatchThen(checkout(expectedCart, "token"), 2, cartState => {
+          assert.deepEqual(cartState, {
+            cart: []
+          });
+
+          done();
+        });
+      });
+    });
+
+    it('fails to checkout the cart', done => {
+      checkoutStub.returns(Promise.reject());
+
+      dispatchThen(addOrUpdateCartItem('upc', 5), cartState => {
+        let expectedCart = [{
+          upc: 'upc',
+          seats: 5
+        }];
+        assert.deepEqual(cartState, {
+          cart: expectedCart
+        });
+
+        dispatchThen(checkout(expectedCart, "token"), cartState => {
+          assert.deepEqual(cartState, {
+            cart: expectedCart
+          });
+
+          done();
+        });
       });
     });
   });

@@ -14,6 +14,7 @@ from portal.views import (
     ProductListView,
     register_view,
     activate_view,
+    checkout_view,
     ProductDetailView,
 )
 
@@ -26,6 +27,7 @@ urlpatterns = [
     url(r'^api/v1/products/(?P<uuid>[-\w]+)/$', ProductDetailView.as_view(), name='product-detail'),
     url(r'^api/v1/register/$', register_view, name='register'),
     url(r'^api/v1/activate/$', activate_view, name='activate'),
+    url(r'^api/v1/checkout/$', checkout_view, name='checkout'),
 ]
 
 if settings.PORTAL_OSCAR_VISIBLE:

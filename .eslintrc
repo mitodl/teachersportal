@@ -7,6 +7,7 @@
     "new-cap": [0], // allows function calls like Immutable.Map(...)
     "max-len": [2, 120, 2], // 120 max line length, tabs count as 2 spaces
     "indent": [2, 2], // no tabs, indent is 2 spaces
+    "newline-after-var": [0],
     "react/jsx-indent-props": [2, 2], // no tabs, indent is two spaces
     "react/jsx-key": [2], // validate that key prop exists
     "react/jsx-no-undef": [2] // disallow undeclared variables in JSX
