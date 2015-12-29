@@ -53,3 +53,7 @@ class CourseTabs extends React.Component {
 }
 
 export default CourseTabs;
+
+CourseTabs.propTypes = {
+  product: React.PropTypes.object.isRequired
+};

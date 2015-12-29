@@ -19,3 +19,7 @@ class CourseImage extends Component {
 }
 
 export default CourseImage;
+
+CourseImage.propTypes = {
+  src: React.PropTypes.string.isRequired
+};

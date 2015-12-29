@@ -60,6 +60,13 @@ class CourseDetailPage extends React.Component {
 
 }
 
+CourseDetailPage.propTypes = {
+  product: React.PropTypes.object.isRequired,
+  authentication: React.PropTypes.object.isRequired,
+  dispatch: React.PropTypes.func.isRequired,
+  params: React.PropTypes.object.isRequired
+};
+
 const mapStateToProps = (state) => {
   return {
     product: state.product,

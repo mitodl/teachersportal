@@ -36,3 +36,16 @@ class Header extends React.Component {
 }
 
 export default Header;
+
+Header.propTypes = {
+  showSignIn: React.PropTypes.func.isRequired,
+  hideSignIn: React.PropTypes.func.isRequired,
+  loginModal: React.PropTypes.object.isRequired,
+  authentication: React.PropTypes.object.isRequired,
+  registration: React.PropTypes.object.isRequired,
+  onSignOut: React.PropTypes.func.isRequired,
+  signIn: React.PropTypes.func.isRequired,
+  register: React.PropTypes.func.isRequired,
+  reportLoginError: React.PropTypes.func.isRequired,
+  reportRegisterError: React.PropTypes.func.isRequired
+};

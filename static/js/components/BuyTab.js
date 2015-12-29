@@ -36,3 +36,8 @@ class BuyTab extends React.Component {
 }
 
 export default BuyTab;
+
+BuyTab.propTypes = {
+  product: React.PropTypes.object.isRequired,
+  selectable: React.PropTypes.bool.isRequired
+};

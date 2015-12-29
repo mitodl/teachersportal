@@ -24,4 +24,10 @@ class Navigation extends React.Component {
   }
 }
 
+Navigation.propTypes = {
+  onShowSignIn: React.PropTypes.func.isRequired,
+  onSignOut: React.PropTypes.func.isRequired,
+  authentication: React.PropTypes.object.isRequired
+};
+
 export default Navigation;
