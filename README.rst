@@ -29,6 +29,8 @@ user, etc.
 For OS X development
 ====================
 
+**docker-osx-dev keeps host FS changes synced to the docker machine**
+
 Install docker-osx-dev before starting.
 
 You can do that by typing `make` after you set up your docker
@@ -38,6 +40,42 @@ Subsequently, before you start up your docker container with
 docker-compose up, you would run: docker-osx-dev -m default -s ./
 (if your docker VM is called `default`, and your CWD is the
 root of the teachers portal source directory).
+
+**docker machine setup**
+
+1. Configuration setup
+
+Add this to your .bash_profile:
+
+export CCXCON_API="<url of your ccxcon instance>"
+export CCXCON_OAUTH_CLIENT_ID="<client id of your ccxcon oauth application>"
+export CCXCON_OAUTH_CLIENT_SECRET="<client secret of your ccxcon oauth application>"
+
+source ~/.bash_profile
+
+2. Create your docker machine
+
+- `docker-machine create default`
+- `docker-machine start default`
+- `docker-machine env default`
+- `eval "$(docker-machine env default)"`
+
+3. Create a user
+- run: `docker-compose run web python manage.py createsuperuser`, to create a user who has permission to view the course.
+
+4. Start the machine
+- `docker-compose up`
+- visit: http://192.168.99.100:8075/
+
+> **NB: your IP may vary depending on what docker assigns to your VM; if the IP above doesn't work:
+> - power down your docker-machine (`docker-machine stop default`)
+> - `docker-machine ssh default`
+> - once in the docker machine shell, run `ifconfig`, and look for the IP that begins with 192.168.99.xxx
+
+- click the login button on the TP UI and put in those credentials.
+- browse ccxcon-ci, and choose a course uuid, you can view that course in teachersportal: https://url.of.your.ccxcon/api/v1/coursexs/
+- Now visit: http://192.168.99.100:8075/courses/asdf-asdf-asdf-asdf (or whatever the uuid is that you selected).
+
 
 Dev Tools
 =========
@@ -142,7 +180,7 @@ specific course ids for populating the UI.
 In the instructor dashboard case (privileged, unpublished course
 listing), we validate they're a course owner on TP, then issue a fetch
 for their known course ids (using the mapping table we've generated on
-TP from them clicking the login links edX emailed them) on CCXCon. 
+TP from them clicking the login links edX emailed them) on CCXCon.
 
 .. image:: figures/course-listing.png
 
