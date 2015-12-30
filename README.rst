@@ -45,13 +45,13 @@ root of the teachers portal source directory).
 
 1. Configuration setup
 
-Add this to your .bash_profile:
+Copy the `.env.sample` file to `.env` and edit these values:
 
-export CCXCON_API="<url of your ccxcon instance>"
-export CCXCON_OAUTH_CLIENT_ID="<client id of your ccxcon oauth application>"
-export CCXCON_OAUTH_CLIENT_SECRET="<client secret of your ccxcon oauth application>"
-
-source ~/.bash_profile
+```
+CCXCON_API="<url of your ccxcon instance>"
+CCXCON_OAUTH_CLIENT_ID="<client id of your ccxcon oauth application>"
+CCXCON_OAUTH_CLIENT_SECRET="<client secret of your ccxcon oauth application>"
+```
 
 2. Create your docker machine
 

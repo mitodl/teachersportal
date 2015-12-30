@@ -17,13 +17,14 @@ web:
     PORT: 8075
     DATABASE_URL: postgres://postgres@db:5432/postgres
     PORTAL_DB_DISABLE_SSL: 'True'
-    CCXCON_API: "$CCXCON_API"
-    CCXCON_OAUTH_CLIENT_ID: "$CCXCON_OAUTH_CLIENT_ID"
-    CCXCON_OAUTH_CLIENT_SECRET: "$CCXCON_OAUTH_CLIENT_SECRET"
     PORTAL_OSCAR_VISIBLE: 'True'
     PORTAL_USE_WEBPACK_DEV_SERVER: 'True'
+    PORTAL_EMAIL_BACKEND: 'django.core.mail.backends.console.EmailBackend'
+  env_file: .env
   ports:
     - "8075:8075"
+  external_links:
+    - "ccxcon_web_1:localhost.daplie.com"
   links:
     - db
 watch:

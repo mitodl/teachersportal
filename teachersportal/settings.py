@@ -210,6 +210,7 @@ from oscar.defaults import *  # noqa
 PORTAL_OSCAR_VISIBLE = get_var('PORTAL_OSCAR_VISIBLE', False)
 
 # Configure e-mail settings
+EMAIL_BACKEND = get_var('PORTAL_EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = get_var('PORTAL_EMAIL_HOST', 'localhost')
 EMAIL_PORT = get_var('PORTAL_EMAIL_PORT', 25)
 EMAIL_HOST_USER = get_var('PORTAL_EMAIL_USER', '')
