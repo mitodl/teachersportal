@@ -19,7 +19,7 @@ from portal.util import (
     COURSE_PRODUCT_TYPE,
     MODULE_PRODUCT_TYPE,
 )
-from portal.tests.util import as_json
+from portal.views.util import as_json
 
 
 FAKE_SECRET = b'secret'

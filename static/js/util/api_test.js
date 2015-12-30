@@ -1,4 +1,5 @@
-import './global_init';
+/* global SETTINGS */
+import '../global_init';
 import assert from 'assert';
 import ReactTestUtils from 'react-addons-test-utils';
 import ReactDOM from 'react-dom';
@@ -12,7 +13,7 @@ import {
   logout,
   register,
   activate,
-} from '../static/js/util/api';
+} from './api';
 
 const COURSE_RESPONSE = {
   "uuid": "8cc92ca1-162d-4729-96fc-d1733ebc1a40",
@@ -51,7 +52,7 @@ const MODULES_RESPONSE = [
   }
 ];
 
-describe('common api functions', function () {
+describe('common api functions', function() {
   jsdom();
 
   it('gets a course', done => {
@@ -142,7 +143,7 @@ describe('common api functions', function () {
 
   it('registers successfully', done => {
     let expected = {
-      full_name: "full name",
+      "full_name": "full name",
       email: "email@example.com",
       password: "pass",
       organization: "org",
@@ -158,7 +159,7 @@ describe('common api functions', function () {
     });
 
     register(
-      expected.full_name,
+      expected["full_name"],
       expected.email,
       expected.organization,
       expected.password,
@@ -170,7 +171,7 @@ describe('common api functions', function () {
 
   it('fails to register', done => {
     let expected = {
-      full_name: "full name",
+      "full_name": "full name",
       email: "email@example.com",
       password: "pass",
       organization: "org",
@@ -185,7 +186,7 @@ describe('common api functions', function () {
     });
 
     register(
-      expected.full_name,
+      expected["full_name"],
       expected.email,
       expected.organization,
       expected.password,
