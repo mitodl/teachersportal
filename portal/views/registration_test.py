@@ -11,7 +11,7 @@ from django.core import mail
 from django.core.urlresolvers import reverse
 from six.moves.urllib.parse import quote_plus  # pylint: disable=import-error
 
-from portal.tests.base import AuthenticationTestCase
+from portal.views.base import AuthenticationTestCase
 
 
 class RegistrationTests(AuthenticationTestCase):

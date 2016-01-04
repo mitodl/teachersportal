@@ -1,7 +1,7 @@
 // Create a store for running tests against
 import { createStore, applyMiddleware } from 'redux';
 import thunkMiddleware from 'redux-thunk';
-import rootReducer from '../static/js/reducers';
+import rootReducer from '../reducers';
 
 const createStoreWithMiddleware = applyMiddleware(
   thunkMiddleware

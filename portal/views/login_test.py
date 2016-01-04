@@ -7,7 +7,7 @@ import json
 
 from django.core.urlresolvers import reverse
 
-from portal.tests.base import AuthenticationTestCase
+from portal.views.base import AuthenticationTestCase
 
 
 class LoginTests(AuthenticationTestCase):

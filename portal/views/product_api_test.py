@@ -9,7 +9,7 @@ from django.core.urlresolvers import reverse
 from oscar.apps.catalogue.models import Product, ProductClass
 from oscar.apps.partner.models import Partner, StockRecord
 
-from portal.tests.util import as_json
+from portal.views.util import as_json
 from portal.util import (
     make_external_pk,
     make_upc,

@@ -9,11 +9,11 @@ import {
   activate,
   FETCH_FAILURE,
   FETCH_SUCCESS,
-} from '../static/js/actions/index_page';
-import * as api from '../static/js/util/api';
+} from '../actions/index_page';
+import * as api from '../util/api';
 import { createDispatchThen } from './util';
 
-import configureStore from './store';
+import configureStore from '../store/configureStore_test';
 import assert from 'assert';
 import sinon from 'sinon';
 import jsdom from 'mocha-jsdom';
