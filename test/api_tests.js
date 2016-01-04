@@ -5,7 +5,14 @@ import ReactDOM from 'react-dom';
 import React from 'react';
 import jsdom from 'mocha-jsdom';
 import fetchMock from 'fetch-mock/src/server';
-import { getCourse, getModules, login, logout } from '../static/js/util/api';
+import {
+  getCourse,
+  getModules,
+  login,
+  logout,
+  register,
+  activate,
+} from '../static/js/util/api';
 
 const COURSE_RESPONSE = {
   "uuid": "8cc92ca1-162d-4729-96fc-d1733ebc1a40",
@@ -129,6 +136,94 @@ describe('common api functions', function () {
       status: 400
     });
     logout().catch(() => {
+      done();
+    });
+  });
+
+  it('registers successfully', done => {
+    let expected = {
+      full_name: "full name",
+      email: "email@example.com",
+      password: "pass",
+      organization: "org",
+      redirect: "redirect"
+    };
+
+    fetchMock.mock(`/api/v1/register/`, function(url, opts) {
+      assert.deepEqual(JSON.parse(opts.body), expected);
+      return {
+        body: {},
+        status: 200
+      };
+    });
+
+    register(
+      expected.full_name,
+      expected.email,
+      expected.organization,
+      expected.password,
+      expected.redirect
+    ).then(() => {
+      done();
+    });
+  });
+
+  it('fails to register', done => {
+    let expected = {
+      full_name: "full name",
+      email: "email@example.com",
+      password: "pass",
+      organization: "org",
+      redirect: "redirect"
+    };
+
+    fetchMock.mock(`/api/v1/register/`, function(url, opts) {
+      assert.deepEqual(JSON.parse(opts.body), expected);
+      return {
+        status: 400
+      };
+    });
+
+    register(
+      expected.full_name,
+      expected.email,
+      expected.organization,
+      expected.password,
+      expected.redirect
+    ).catch(() => {
+      done();
+    });
+  });
+
+  it('activates successfully', done => {
+    let expected = {
+      token: "token"
+    };
+
+    fetchMock.mock(`/api/v1/activate/`, function(url, opts) {
+      assert.deepEqual(JSON.parse(opts.body), expected);
+      return {
+        body: {},
+        status: 200
+      };
+    });
+    activate(expected.token).then(() => {
+      done();
+    });
+  });
+
+  it('fails to activate', done => {
+    let expected = {
+      token: "token"
+    };
+
+    fetchMock.mock(`/api/v1/activate/`, function(url, opts) {
+      assert.deepEqual(JSON.parse(opts.body), expected);
+      return {
+        status: 400
+      };
+    });
+    activate(expected.token).catch(() => {
       done();
     });
   });

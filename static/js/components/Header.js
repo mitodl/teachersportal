@@ -9,8 +9,12 @@ class Header extends React.Component {
       hideSignIn,
       loginModal,
       authentication,
+      registration,
       onSignOut,
       signIn,
+      register,
+      reportLoginError,
+      reportRegisterError,
     } = this.props;
 
     return <div id="header">
@@ -21,7 +25,11 @@ class Header extends React.Component {
         isOpen={loginModal.visible}
         onHideLoginModal={hideSignIn}
         signIn={signIn}
-        error={authentication.error}
+        register={register}
+        reportLoginError={reportLoginError}
+        reportRegisterError={reportRegisterError}
+        loginError={authentication.error}
+        registerError={registration.error}
       />
       </div>;
   }

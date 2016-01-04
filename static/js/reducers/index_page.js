@@ -16,6 +16,12 @@ import {
   LOGIN_SUCCESS,
   LOGOUT,
   CLEAR_AUTHENTICATION_ERROR,
+  CLEAR_REGISTRATION_ERROR,
+  REGISTER_SUCCESS,
+  REGISTER_FAILURE,
+  ACTIVATE_SUCCESS,
+  ACTIVATE_FAILURE,
+  ACTIVATE,
 } from '../actions/index_page';
 
 export function courses(state = {}, action) {
@@ -85,7 +91,7 @@ export function authentication(state = INITIAL_AUTHENTICATION_STATE, action) {
   case LOGIN_FAILURE:
     return Object.assign({}, state, {
       isAuthenticated: false,
-      error: "Unable to log in"
+      error: action.error
     });
   case LOGIN_SUCCESS:
     return Object.assign({}, state, {
@@ -100,6 +106,48 @@ export function authentication(state = INITIAL_AUTHENTICATION_STATE, action) {
   case CLEAR_AUTHENTICATION_ERROR:
     return Object.assign({}, state, {
       error: ""
+    });
+  default:
+    return state;
+  }
+}
+
+const INITIAL_REGISTRATION_STATE = {
+  error: ""
+};
+
+export function registration(state = INITIAL_REGISTRATION_STATE, action) {
+  switch (action.type) {
+  case REGISTER_SUCCESS:
+    return Object.assign({}, state, {
+      error: "",
+      status: FETCH_SUCCESS
+    });
+  case REGISTER_FAILURE:
+    return Object.assign({}, state, {
+      error: action.error,
+      status: FETCH_FAILURE
+    });
+  case CLEAR_REGISTRATION_ERROR:
+    return Object.assign({}, state, {
+      error: ""
+    });
+  default:
+    return state;
+  }
+}
+
+const INITIAL_ACTIVATION_STATE = {};
+
+export function activation(state = INITIAL_ACTIVATION_STATE, action) {
+  switch (action.type) {
+  case ACTIVATE_SUCCESS:
+    return Object.assign({}, state, {
+      status: FETCH_SUCCESS
+    });
+  case ACTIVATE_FAILURE:
+    return Object.assign({}, state, {
+      status: FETCH_FAILURE
     });
   default:
     return state;

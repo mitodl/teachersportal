@@ -11,7 +11,7 @@ class Navigation extends React.Component {
     if (authentication.isAuthenticated) {
       loginButton = <RaisedButton label="Sign Out" onClick={onSignOut} secondary={true}/>;
     } else {
-      loginButton = <RaisedButton label="Sign In" onClick={onShowSignIn} secondary={true}/>;
+      loginButton = <RaisedButton label="Sign In or Register" onClick={onShowSignIn} secondary={true}/>;
     }
 
     return <div id="navigation">

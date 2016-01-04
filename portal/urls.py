@@ -13,6 +13,8 @@ from portal.views import (
     LoginView,
     logout_view,
     ProductListView,
+    register_view,
+    activate_view,
 )
 
 urlpatterns = [
@@ -22,6 +24,8 @@ urlpatterns = [
     url(r'^api/v1/login/$', LoginView.as_view(), name='login'),
     url(r'^api/v1/logout/$', logout_view, name='logout'),
     url(r'^api/v1/products/$', ProductListView.as_view(), name='product-list'),
+    url(r'^api/v1/register/$', register_view, name='register'),
+    url(r'^api/v1/activate/$', activate_view, name='activate'),
 ]
 
 if settings.PORTAL_OSCAR_VISIBLE:

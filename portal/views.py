@@ -5,11 +5,15 @@ Views for teachersportal.
 from __future__ import unicode_literals
 
 import json
-from six.moves.urllib.parse import urlparse, urlunparse  # pylint: disable=import-error
+import uuid
+from six.moves.urllib.parse import urlparse, urlunparse, quote_plus  # pylint: disable=import-error
 from wsgiref.util import is_hop_by_hop  # pylint: disable=wrong-import-order
 
 from django.conf import settings
+from django.db import transaction
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
 from django.shortcuts import render, HttpResponse
 from django.template import RequestContext
 from django.views.decorators.http import require_http_methods
@@ -22,6 +26,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
 
+from portal.models import UserInfo
 from portal.permissions import HmacPermission
 from portal.templatetags.webpack import webpack_bundle  # pylint: disable=unused-import
 from portal.serializers import ProductSerializer
@@ -228,3 +233,103 @@ class ProductListView(ListAPIView):
             for product in Product.objects.order_by("date_created")
             if is_available_to_buy(product)
         )
+
+
+@api_view(["POST"])
+def register_view(request):
+    """
+    Register a new user.
+
+    Args:
+        request (rest_framework.request.Request)
+    Returns:
+        rest_framework.response.Response
+    """
+    if request.user.is_authenticated():
+        return Response(status=403)
+
+    try:
+        for key in ('full_name', 'organization', 'email', 'password', 'redirect'):
+            if str(request.data[key]) == '':
+                raise ValidationError("Empty value for {key}".format(key=key))
+
+        full_name = str(request.data['full_name'])
+        organization = str(request.data['organization'])
+        email = str(request.data['email'])
+        password = str(request.data['password'])
+        redirect = str(request.data['redirect'])
+    except KeyError as ex:
+        raise ValidationError("Missing key {}".format(ex.args[0]))
+    except TypeError:
+        raise ValidationError("Invalid JSON")
+
+    if User.objects.filter(username=email).exists():
+        raise ValidationError("Email {email} is already in use".format(
+            email=email
+        ))
+
+    token = str(uuid.uuid4())
+
+    # Send email before creating user so that on error we don't have inconsistent data
+    send_mail(
+        "Teacher's Portal Registration",
+        "Click here to activate your account: "
+        "{scheme}://{host}/activate/?token={token}&redirect={redirect}".format(
+            scheme=request.scheme,
+            host=request.get_host(),
+            token=quote_plus(token),
+            redirect=quote_plus(redirect)
+        ),
+        settings.DEFAULT_FROM_EMAIL,
+        [email]
+    )
+    with transaction.atomic():
+        user = User.objects.create_user(
+            username=email,
+            email=email,
+            password=password
+        )
+        user.is_active = False
+        user.save()
+        UserInfo.objects.create(
+            user=user,
+            organization=organization,
+            full_name=full_name,
+            registration_token=token,
+        )
+
+    return Response(status=200)
+
+
+@api_view(["POST"])
+def activate_view(request):
+    """
+    Register token to activate user
+
+    Args:
+        request (rest_framework.request.Request)
+    Returns:
+        rest_framework.response.Response
+    """
+    if request.user.is_authenticated():
+        return Response(status=403)
+
+    try:
+        token = str(request.data['token'])
+    except KeyError as ex:
+        raise ValidationError("Missing key {}".format(ex.args[0]))
+    except TypeError:
+        raise ValidationError("Invalid JSON")
+
+    if token == "":
+        raise ValidationError("token is empty")
+
+    try:
+        userinfo = UserInfo.objects.get(registration_token=token)
+    except UserInfo.DoesNotExist:
+        return Response(status=403)
+
+    user = userinfo.user
+    user.is_active = True
+    user.save()
+    return Response(status=200)
