@@ -47,8 +47,9 @@ class WebhookTests(TestCase):
         """
         Create a user to use with django-oscar-api
         """
-        self.user = User.objects.create(username='user', password='pass')
-        self.client.login(username=self.user.username, password=self.user.password)
+        credentials = {"username": 'user', "password": 'pass'}
+        self.user = User.objects.create_user(**credentials)
+        self.client.login(**credentials)
 
         # Create course and module
         self.post_webhook({
@@ -134,7 +135,7 @@ class WebhookTests(TestCase):
             content_type="application/json"
         )
         assert resp.status_code == 403, resp.content
-        assert "Authentication credentials were not provided" in resp.content.decode('utf-8')
+        assert "You do not have permission to perform this action." in resp.content.decode('utf-8')
 
     def test_webhook_with_bad_auth(self):
         """
@@ -160,7 +161,7 @@ class WebhookTests(TestCase):
             HTTP_X_CCXCON_SIGNATURE=signature
         )
         assert resp.status_code == 403, resp.content
-        assert "Authentication credentials were not provided" in resp.content.decode('utf-8')
+        assert "You do not have permission to perform this action." in resp.content.decode('utf-8')
 
     def test_add_course(self):
         """

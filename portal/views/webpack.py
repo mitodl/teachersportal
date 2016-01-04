@@ -21,7 +21,6 @@ def index_view(request):
     host = request.get_host().split(":")[0]
     js_settings = {
         "host": host,
-        "ccxconApi": "/ccxcon/",
         "isAuthenticated": request.user.is_authenticated()
     }
 

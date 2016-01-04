@@ -1,12 +1,9 @@
 /* global SETTINGS:false */
 import {
-  RECEIVE_COURSE_SUCCESS,
-  RECEIVE_COURSE_FAILURE,
-  REQUEST_COURSE,
-  RECEIVE_MODULES_SUCCESS,
-  RECEIVE_MODULES_FAILURE,
-  REQUEST_MODULES,
-  CLEAR_COURSES_AND_MODULES,
+  RECEIVE_PRODUCT_SUCCESS,
+  RECEIVE_PRODUCT_FAILURE,
+  REQUEST_PRODUCT,
+  CLEAR_PRODUCT,
   SHOW_LOGIN,
   HIDE_LOGIN,
   FETCH_FAILURE,
@@ -24,37 +21,24 @@ import {
   ACTIVATE,
 } from '../actions/index_page';
 
-export function courses(state = {}, action) {
+export function product(state = {}, action) {
   switch (action.type) {
 
-  case REQUEST_COURSE:
+  case REQUEST_PRODUCT:
     return Object.assign({}, state, {
-      courseFetchStatus: FETCH_PROCESSING
+      status: FETCH_PROCESSING
     });
-  case RECEIVE_COURSE_SUCCESS:
+  case RECEIVE_PRODUCT_SUCCESS:
     return Object.assign({}, state, {
-      courseFetchStatus: FETCH_SUCCESS,
-      course: action.course
+      status: FETCH_SUCCESS,
+      product: action.product
     });
-  case RECEIVE_COURSE_FAILURE:
+  case RECEIVE_PRODUCT_FAILURE:
     return Object.assign({}, state, {
-      courseFetchStatus: FETCH_FAILURE
+      status: FETCH_FAILURE
     });
 
-  case REQUEST_MODULES:
-    return Object.assign({}, state, {
-      modulesFetchStatus: FETCH_PROCESSING
-    });
-  case RECEIVE_MODULES_SUCCESS:
-    return Object.assign({}, state, {
-      modulesFetchStatus: FETCH_SUCCESS,
-      modules: action.modules
-    });
-  case RECEIVE_MODULES_FAILURE:
-    return Object.assign({}, state, {
-      modulesFetchStatus: FETCH_FAILURE
-    });
-  case CLEAR_COURSES_AND_MODULES:
+  case CLEAR_PRODUCT:
     return {};
 
   default:

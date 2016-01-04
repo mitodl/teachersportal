@@ -2,7 +2,6 @@
 // For mocking purposes we need to use 'fetch' defined as a global instead of importing as a local.
 import 'isomorphic-fetch';
 import _ from 'lodash';
-const { ccxconApi } = SETTINGS;
 
 function getCookie(name) {
   let cookieValue = null;
@@ -77,12 +76,8 @@ function fetchJSONWithCSRF(input, init) {
   });
 }
 
-export function getCourse(courseUuid) {
-  return fetchJSONWithCSRF(`${ccxconApi}v1/coursexs/${courseUuid}/`);
-}
-
-export function getModules(courseUuid) {
-  return fetchJSONWithCSRF(`${ccxconApi}v1/coursexs/${courseUuid}/modules/`);
+export function getProduct(upc) {
+  return fetchJSONWithCSRF(`/api/v1/products/${upc}/`);
 }
 
 export function login(username, password) {

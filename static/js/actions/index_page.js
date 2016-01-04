@@ -1,13 +1,10 @@
 import * as api from '../util/api';
 
 // action type constants
-export const REQUEST_COURSE = 'REQUEST_COURSE';
-export const RECEIVE_COURSE_SUCCESS = 'RECEIVE_COURSE_SUCCESS';
-export const RECEIVE_COURSE_FAILURE = 'RECEIVE_COURSE_FAILURE';
-export const REQUEST_MODULES = 'REQUEST_MODULES';
-export const RECEIVE_MODULES_SUCCESS = 'RECEIVE_MODULES_SUCCESS';
-export const RECEIVE_MODULES_FAILURE = 'RECEIVE_MODULES_FAILURE';
-export const CLEAR_COURSES_AND_MODULES = 'CLEAR_COURSES_AND_MODULES';
+export const REQUEST_PRODUCT = 'REQUEST_PRODUCT';
+export const RECEIVE_PRODUCT_SUCCESS = 'RECEIVE_PRODUCT_SUCCESS';
+export const RECEIVE_PRODUCT_FAILURE = 'RECEIVE_PRODUCT_FAILURE';
+export const CLEAR_PRODUCT = 'CLEAR_PRODUCT';
 
 export const SHOW_LOGIN = 'SHOW_LOGIN';
 export const HIDE_LOGIN = 'HIDE_LOGIN';
@@ -30,41 +27,22 @@ export const FETCH_FAILURE = 'FETCH_FAILURE';
 export const FETCH_SUCCESS = 'FETCH_SUCCESS';
 export const FETCH_PROCESSING = 'FETCH_PROCESSING';
 
-function requestCourse() {
+function requestProduct() {
   return {
-    type: REQUEST_COURSE
+    type: REQUEST_PRODUCT
   };
 }
 
-function receiveCourseSuccess(json) {
+function receiveProductSuccess(json) {
   return {
-    type: RECEIVE_COURSE_SUCCESS,
-    course: json
+    type: RECEIVE_PRODUCT_SUCCESS,
+    product: json
   };
 }
 
-function receiveCourseFailure() {
+function receiveProductFailure() {
   return {
-    type: RECEIVE_COURSE_FAILURE
-  };
-}
-
-function requestModules() {
-  return {
-    type: REQUEST_MODULES
-  };
-}
-
-function receiveModulesSuccess(json) {
-  return {
-    type: RECEIVE_MODULES_SUCCESS,
-    modules: json
-  };
-}
-
-function receiveModulesFailure() {
-  return {
-    type: RECEIVE_MODULES_FAILURE
+    type: RECEIVE_PRODUCT_FAILURE
   };
 }
 
@@ -88,21 +66,12 @@ export function hideLogin() {
   };
 }
 
-export function fetchCourse(courseUuid) {
+export function fetchProduct(upc) {
   return dispatch => {
-    dispatch(requestCourse());
-    return api.getCourse(courseUuid).
-      then(json => dispatch(receiveCourseSuccess(json))).
-      catch(() => dispatch(receiveCourseFailure()));
-  };
-}
-
-export function fetchModules(courseUuid) {
-  return dispatch => {
-    dispatch(requestModules());
-    return api.getModules(courseUuid).
-      then(json => dispatch(receiveModulesSuccess(json))).
-      catch(() => dispatch(receiveModulesFailure()));
+    dispatch(requestProduct());
+    return api.getProduct(upc).
+      then(json => dispatch(receiveProductSuccess(json))).
+      catch(() => dispatch(receiveProductFailure()));
   };
 }
 
@@ -126,7 +95,7 @@ export function logout() {
         type: LOGOUT
       });
       dispatch({
-        type: CLEAR_COURSES_AND_MODULES
+        type: CLEAR_PRODUCT
       });
     });
   };

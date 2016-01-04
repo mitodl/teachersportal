@@ -190,3 +190,33 @@ def is_available_to_buy(product):
         return info.availability.is_available_to_buy
     else:
         raise Exception("Unexpected structure")
+
+
+def product_as_json(product, ccxcon_info):
+    """
+    Serialize product to JSON
+    Args:
+        product (Product): A Product
+        ccxcon_info (dict): Information fetched from CCXCon
+
+    Returns:
+        dict: The product as a dictionary
+    """
+    parent_upc = None
+    if product.parent is not None:
+        parent_upc = product.parent.upc
+    return {
+        "upc": product.upc,
+        "title": product.title,
+        "description": product.description,
+        "external_pk": get_external_pk(product),
+        "product_type": get_product_type(product),
+        "price_without_tax": get_price_without_tax(product),
+        "parent_upc": parent_upc,
+        "info": ccxcon_info.get(product.upc),
+        "children": [
+            product_as_json(child, ccxcon_info)
+            for child in product.children.order_by('date_created')
+            if is_available_to_buy(child)
+        ],
+    }

@@ -13,28 +13,28 @@ import CardTitle from 'material-ui/lib/card/card-title';
 
 class CourseDetail extends Component {
     render() {
-      const { course, modules, error } = this.props;
+      const { product, error } = this.props;
 
       let content;
 
       if (error !== undefined) {
         content = <CardText>{error}</CardText>;
-      } else if (course === undefined) {
+      } else if (product === undefined) {
         content = <div>
         </div>;
       } else {
 
         content = <div>
           <CardTitle
-            title={course.title}
-            subtitle={course.author}
+            title={product.title}
+            subtitle={product.info.author_name}
             id="course-title"
           />
-          <CourseImage src={course.image_url} />
+          <CourseImage src={product.info.image_url} />
           <CardText id="course-description">
-              {course.description}
+              {product.description}
           </CardText>
-          <CourseTabs course={course} modules={modules} />
+          <CourseTabs product={product} />
         </div>;
       }
 
@@ -48,8 +48,7 @@ class CourseDetail extends Component {
   }
 
 CourseDetail.propTypes = {
-  course: React.PropTypes.object,
-  modules: React.PropTypes.array,
+  product: React.PropTypes.object,
   error: React.PropTypes.string
 };
 

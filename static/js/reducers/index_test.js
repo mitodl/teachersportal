@@ -7,6 +7,7 @@ import {
   login,
   register,
   activate,
+  fetchProduct,
   FETCH_FAILURE,
   FETCH_SUCCESS,
 } from '../actions/index_page';
@@ -18,6 +19,7 @@ import assert from 'assert';
 import sinon from 'sinon';
 import jsdom from 'mocha-jsdom';
 
+let productStub;
 let loginStub;
 let logoutStub;
 let registerStub;
@@ -27,6 +29,7 @@ let store;
 
 describe('reducers', () => {
   beforeEach(() => {
+    productStub = sinon.stub(api, 'getProduct');
     logoutStub = sinon.stub(api, 'logout');
     loginStub = sinon.stub(api, 'login');
     registerStub = sinon.stub(api, 'register');
@@ -36,12 +39,53 @@ describe('reducers', () => {
   });
 
   afterEach(() => {
+    productStub.restore();
     logoutStub.restore();
     loginStub.restore();
     registerStub.restore();
     activateStub.restore();
 
     store = null;
+  });
+
+  describe('product reducers', () => {
+    jsdom();
+    /**
+     * Helper function for dispatch and assert pattern
+     */
+    let dispatchThen = createDispatchThen(() => store, state => state.product);
+
+    it('should have an empty default state', done => {
+      dispatchThen({type: 'unknown'}, state => {
+        assert.deepEqual(state, {});
+        done();
+      });
+    });
+
+    it('should fetch products successfully', done => {
+      productStub.returns(Promise.resolve("data"));
+
+      dispatchThen(fetchProduct("upc"), 2, productState => {
+        assert.deepEqual(productState, {
+          product: "data",
+          status: FETCH_SUCCESS
+        });
+
+        done();
+      });
+    });
+
+    it('should fail to fetch products', done => {
+      productStub.returns(Promise.reject());
+
+      dispatchThen(fetchProduct("upc"), 2, productState => {
+        assert.deepEqual(productState, {
+          status: FETCH_FAILURE
+        });
+
+        done();
+      });
+    });
   });
 
   describe('loginModal reducers', () => {
