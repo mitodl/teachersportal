@@ -47,7 +47,7 @@ def checkout_view(request):
                 amount=amount_in_cents,
                 currency="usd",
                 source=token,
-                description="Course purchase for Teacher's Portal",
+                description="Course purchase for MIT Teacher's Portal",
                 metadata={
                     "order_id": order.id
                 }

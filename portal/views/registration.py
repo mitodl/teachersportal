@@ -54,7 +54,7 @@ def register_view(request):
 
     # Send email before creating user so that on error we don't have inconsistent data
     send_mail(
-        "Teacher's Portal Registration",
+        "MIT Teacher's Portal Registration",
         "Click here to activate your account: "
         "{scheme}://{host}/activate/?token={token}&redirect={redirect}".format(
             scheme=request.scheme,
