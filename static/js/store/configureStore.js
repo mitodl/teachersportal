@@ -3,15 +3,17 @@ import { compose, createStore, applyMiddleware } from 'redux';
 import thunkMiddleware from 'redux-thunk';
 import createLogger from 'redux-logger';
 import rootReducer from '../reducers';
-import {persistState, devTools} from 'redux-devtools';
+import { persistState as devToolsPersistState, devTools } from 'redux-devtools';
+import localStoragePersistState from 'redux-localstorage';
 
 const createStoreWithMiddleware = compose(
   applyMiddleware(
     thunkMiddleware,
     createLogger()
   ),
+  localStoragePersistState("cart"),
   devTools(),
-  persistState(window.location.href.match(/[?&]debug_session=([^&]+)\b/))
+  devToolsPersistState(window.location.href.match(/[?&]debug_session=([^&]+)\b/))
 )(createStore);
 
 export default function configureStore(initialState) {
