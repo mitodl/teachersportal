@@ -60,3 +60,14 @@ class ChapterTab extends React.Component {
 }
 
 export default ChapterTab;
+
+ChapterTab.propTypes = {
+  selectable: React.PropTypes.bool.isRequired,
+  fixedHeader: React.PropTypes.bool,
+  fixedFooter: React.PropTypes.bool,
+  stripedRows: React.PropTypes.bool,
+  showRowHover: React.PropTypes.bool,
+  deselectOnClickaway: React.PropTypes.bool,
+  height: React.PropTypes.string,
+  product: React.PropTypes.object.isRequired
+};
