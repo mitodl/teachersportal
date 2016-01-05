@@ -8,9 +8,11 @@ import {
   register,
   activate,
   checkout,
-  addOrUpdateCartItem,
-  removeCartItem,
+  updateCartItems,
   fetchProduct,
+  updateCartVisibility,
+  updateSeatCount,
+  updateSelectedChapters,
   FETCH_FAILURE,
   FETCH_SUCCESS,
 } from '../actions/index_page';
@@ -294,34 +296,38 @@ describe('reducers', () => {
      */
     let dispatchThen = createDispatchThen(() => store, state => state.cart);
 
-    it('adds to or updates the cart', done => {
-      dispatchThen(addOrUpdateCartItem('upc', 3), cartState => {
+    it('updates the cart', done => {
+      // Add item to empty cart
+      dispatchThen(updateCartItems(['upc'], 3, 'courseUpc'), cartState => {
         assert.deepEqual(cartState, {
           cart: [{
             upc: 'upc',
-            seats: 3
+            seats: 3,
+            courseUpc: 'courseUpc'
           }]
         });
 
-        dispatchThen(addOrUpdateCartItem('newUpc', 5), cartState => {
+        // Update cart with item in it, which removes the other items in cart
+        dispatchThen(updateCartItems(['newUpc'], 5, 'courseUpc'), cartState => {
           assert.deepEqual(cartState, {
             cart: [{
-              upc: 'upc',
-              seats: 3
-            }, {
               upc: 'newUpc',
-              seats: 5
+              seats: 5,
+              courseUpc: 'courseUpc'
             }]
           });
 
-          dispatchThen(addOrUpdateCartItem('upc', 4), cartState => {
+          // Update cart with a different courseUpc, ignoring existing items with a different courseUpc
+          dispatchThen(updateCartItems(['upc'], 4, 'othercourseUpc'), cartState => {
             assert.deepEqual(cartState, {
               cart: [{
-                upc: 'upc',
-                seats: 4
-              }, {
                 upc: 'newUpc',
-                seats: 5
+                seats: 5,
+                courseUpc: 'courseUpc'
+              }, {
+                upc: 'upc',
+                seats: 4,
+                courseUpc: 'othercourseUpc'
               }]
             });
             done();
@@ -330,32 +336,14 @@ describe('reducers', () => {
       });
     });
 
-    it('removes item from the cart', done => {
-      dispatchThen(addOrUpdateCartItem('upc', 5), cartState => {
-        assert.deepEqual(cartState, {
-          cart: [{
-            upc: 'upc',
-            seats: 5
-          }]
-        });
-
-        dispatchThen(removeCartItem('upc'), cartState => {
-          assert.deepEqual(cartState, {
-            cart: []
-          });
-
-          done();
-        });
-      });
-    });
-
     it('checks out the cart', done => {
       checkoutStub.returns(Promise.resolve());
 
-      dispatchThen(addOrUpdateCartItem('upc', 5), cartState => {
+      dispatchThen(updateCartItems(['upc'], 5, 'courseUpc'), cartState => {
         let expectedCart = [{
           upc: 'upc',
-          seats: 5
+          seats: 5,
+          courseUpc: 'courseUpc'
         }];
         assert.deepEqual(cartState, {
           cart: expectedCart
@@ -374,10 +362,11 @@ describe('reducers', () => {
     it('fails to checkout the cart', done => {
       checkoutStub.returns(Promise.reject());
 
-      dispatchThen(addOrUpdateCartItem('upc', 5), cartState => {
+      dispatchThen(updateCartItems(['upc'], 5, 'courseUpc'), cartState => {
         let expectedCart = [{
           upc: 'upc',
-          seats: 5
+          seats: 5,
+          courseUpc: 'courseUpc'
         }];
         assert.deepEqual(cartState, {
           cart: expectedCart
@@ -390,6 +379,39 @@ describe('reducers', () => {
 
           done();
         });
+      });
+    });
+  });
+
+  describe('buyTab reducers', () => {
+    let dispatchThen = createDispatchThen(() => store, state => state.buyTab);
+
+    it('sets cart visibility', done => {
+      assert.equal(store.getState().buyTab.cartVisibility, false);
+      dispatchThen(updateCartVisibility(true), cartState => {
+        assert.equal(cartState.cartVisibility, true);
+        done();
+      });
+    });
+
+    it('updates selected chapters', done => {
+      assert.deepEqual(store.getState().buyTab.selectedChapters, []);
+      assert.equal(store.getState().buyTab.allRowsSelected, false);
+
+      dispatchThen(updateSelectedChapters(['a', 'b', 'c'], true), cartState => {
+        assert.deepEqual(cartState.selectedChapters, ['a', 'b', 'c']);
+        assert.equal(cartState.allRowsSelected, true);
+
+        done();
+      });
+    });
+
+    it('updates seat count', done => {
+      assert.equal(store.getState().buyTab.seats, 20);
+
+      dispatchThen(updateSeatCount(200), cartState => {
+        assert.equal(cartState.seats, 200);
+        done();
       });
     });
   });

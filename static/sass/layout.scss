@@ -86,20 +86,97 @@ body {
           line-height: 2em;
         }
 
-        #course-purchase-selector {
-          #number-of-seats, h3 {
-            padding: 40px;
-            display:inline-block;
-            vertical-align: middle;
+
+        .shopping-cart {
+          .cart-total {
+            color: 'green';
+            font-size: 2em;
+            text-align: center;
+            .cart-total-label {
+              font-size: 0.5em;
+              text-align: center;
+              font-variant: small-caps;
+            }
           }
         }
+
+        .course-purchase-selector {
+          .seat-number-selector {
+            padding: 40px 20px;
+            @include clearfix;
+
+            .slider-label {
+              @include span-columns(1);
+              vertical-align: top;
+              font-size: 1.5em;
+              text-align: right;
+            }
+
+            .scaled-slider {
+              @include span-columns(5);
+              .left {
+                @include span-columns(1 of 5);
+                text-align: left;
+              }
+              .left-quarter {
+                @include span-columns(1 of 5);
+                text-align: left;
+              }
+              .middle {
+                @include span-columns(1 of 5);
+                text-align: center;
+              }
+              .right-quarter {
+                @include span-columns(1 of 5);
+                text-align: right;
+              }
+              .right {
+                @include span-columns(1 of 5);
+                text-align: right;
+              }
+            }
+            .seatCount {
+              @include span-columns(2);
+              font-size: 2em;
+              text-align: center;
+              font-weight: 700;
+
+              .seatCountLabel {
+                font-size: 0.5em;
+                text-align: center;
+              }
+            }
+            .selectionTotal {
+              @include span-columns(2);
+              color: green;
+              font-size: 2em;
+              font-weight: 700;
+              text-align: center;
+              .selectionTotalLabel {
+                font-size: 0.5em;
+                text-align: center;
+              }
+            }
+            .add-to-cart {
+              @include span-columns(2);
+            }
+          }
+          .chapter-label {
+            @include pad($block-padding);
+            padding-bottom: 0;
+            font-size: 1.5em;
+            text-align: left;
+          }
+          .moduleSelector {
+            @include clearfix;
+          }
+        }
+
 
         #course-tabs-card {
           margin-top: 20px;
           #course-tabs {
             font-size: 14px;
-
-
 
             .mui-table-header-column {
               width:100px;

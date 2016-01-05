@@ -22,11 +22,14 @@ export const ACTIVATE_SUCCESS = 'ACTIVATE_SUCCESS';
 export const ACTIVATE_FAILURE = 'ACTIVATE_FAILURE';
 export const ACTIVATE = 'ACTIVATE';
 
-export const ADD_OR_UPDATE_CART_ITEM = 'ADD_OR_UPDATE_CART_ITEM';
-export const REMOVE_CART_ITEM = 'REMOVE_CART_ITEM';
+export const UPDATE_CART_ITEMS = 'UPDATE_CART_ITEMS';
 export const CLEAR_CART = 'CLEAR_CART';
 export const CHECKOUT_SUCCESS = 'CHECKOUT_SUCCESS';
 export const CHECKOUT_FAILURE = 'CHECKOUT_FAILURE';
+
+export const UPDATE_SELECTED_CHAPTERS = 'UPDATE_SELECTED_CHAPTERS';
+export const UPDATE_SEAT_COUNT = 'UPDATE_SEAT_COUNT';
+export const UPDATE_CART_VISIBILITY = 'UPDATE_CART_VISIBILITY';
 
 // constants for fetch status (these are not action types)
 export const FETCH_FAILURE = 'FETCH_FAILURE';
@@ -69,6 +72,13 @@ export function hideLogin() {
     dispatch({
       type: CLEAR_REGISTRATION_ERROR
     });
+  };
+}
+
+export function updateCartVisibility(visibility) {
+  return {
+    type: UPDATE_CART_VISIBILITY,
+    visibility
   };
 }
 
@@ -175,18 +185,12 @@ export function activate(token) {
   };
 }
 
-export function addOrUpdateCartItem(upc, seats) {
+export function updateCartItems(upcs, seats, courseUpc) {
   return {
-    type: ADD_OR_UPDATE_CART_ITEM,
-    upc,
-    seats
-  };
-}
-
-export function removeCartItem(upc) {
-  return {
-    type: REMOVE_CART_ITEM,
-    upc
+    type: UPDATE_CART_ITEMS,
+    upcs,
+    seats,
+    courseUpc
   };
 }
 
@@ -219,5 +223,20 @@ export function checkout(cart, token) {
         dispatch(checkoutFailure());
         return Promise.reject(e);
       });
+  };
+}
+
+export function updateSelectedChapters(upcs, allRowsSelected) {
+  return {
+    type: UPDATE_SELECTED_CHAPTERS,
+    upcs,
+    allRowsSelected
+  };
+}
+
+export function updateSeatCount(seats) {
+  return {
+    type: UPDATE_SEAT_COUNT,
+    seats
   };
 }

@@ -20,8 +20,10 @@ import {
   ACTIVATE_FAILURE,
   ACTIVATE,
   CLEAR_CART,
-  ADD_OR_UPDATE_CART_ITEM,
-  REMOVE_CART_ITEM,
+  UPDATE_CART_ITEMS,
+  UPDATE_SELECTED_CHAPTERS,
+  UPDATE_SEAT_COUNT,
+  UPDATE_CART_VISIBILITY,
 } from '../actions/index_page';
 
 export function product(state = {}, action) {
@@ -146,37 +148,50 @@ const INITIAL_CART_STATE = {
 };
 export function cart(state = INITIAL_CART_STATE, action) {
   switch (action.type) {
-  case ADD_OR_UPDATE_CART_ITEM:
-    const newItem = {
-      upc: action.upc,
-      seats: action.seats
-    };
-    let cart = state.cart;
+  case UPDATE_CART_ITEMS:
+    const { upcs, seats, courseUpc } = action;
+    // Remove all items for this particular course
+    let newCart = state.cart.filter(item => item.courseUpc !== courseUpc);
+    let newItems = upcs.map(upc => ({
+      upc: upc,
+      seats: seats,
+      courseUpc: courseUpc
+    }));
+    newCart = newCart.concat(newItems);
 
-    // Replace old item with new item, or add it to the end if it doesn't already exist
-    let existingItem = cart.find(item => item.upc === newItem.upc);
-    if (existingItem !== undefined) {
-      cart = cart.map(item => {
-        if (item.upc === newItem.upc) {
-          return newItem;
-        } else {
-          return item;
-        }
-      });
-    } else {
-      cart = cart.concat(newItem);
-    }
     return Object.assign({}, state, {
-      cart: cart
-    });
-  case REMOVE_CART_ITEM:
-    return Object.assign({}, state, {
-      // Remove item with given upc from cart
-      cart: state.cart.filter(item => item.upc !== action.upc)
+      cart: newCart
     });
   case CLEAR_CART:
     return Object.assign({}, state, {
       cart: []
+    });
+  default:
+    return state;
+  }
+}
+
+const INITIAL_BUYTAB_STATE = {
+  seats: 20,
+  allRowsSelected: false,
+  selectedChapters: [],
+  cartVisibility: false
+};
+
+export function buyTab(state = INITIAL_BUYTAB_STATE, action) {
+  switch (action.type) {
+  case UPDATE_SELECTED_CHAPTERS:
+    return Object.assign({}, state, {
+      selectedChapters: action.upcs,
+      allRowsSelected: action.allRowsSelected
+    });
+  case UPDATE_SEAT_COUNT:
+    return Object.assign({}, state, {
+      seats: action.seats
+    });
+  case UPDATE_CART_VISIBILITY:
+    return Object.assign({}, state, {
+      cartVisibility: action.visibility
     });
   default:
     return state;

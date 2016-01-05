@@ -29,3 +29,9 @@ export const PRODUCT_RESPONSE = {
     }
   ]
 };
+
+export const CART_WITH_ITEM = [{
+  upc: PRODUCT_RESPONSE.children[0].upc,
+  seats: 3,
+  parentUpc: PRODUCT_RESPONSE.upc
+}];
