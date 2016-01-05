@@ -117,3 +117,13 @@ export function activate(token) {
     })
   });
 }
+
+export function checkout(cart, token) {
+  return fetchJSONWithCSRF('/api/v1/checkout/', {
+    method: 'POST',
+    body: JSON.stringify({
+      cart: cart,
+      token: token
+    })
+  });
+}

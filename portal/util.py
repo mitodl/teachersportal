@@ -4,9 +4,11 @@ Helper functions which may be generally useful.
 
 from __future__ import unicode_literals
 
+from rest_framework.exceptions import ValidationError
 from oscar.apps.catalogue.models import Product
 from oscar.apps.partner.strategy import Selector
 
+from portal.models import Order, OrderLine
 
 MODULE_PRODUCT_TYPE = "Module"
 COURSE_PRODUCT_TYPE = "Course"
@@ -220,3 +222,87 @@ def product_as_json(product, ccxcon_info):
             if is_available_to_buy(child)
         ],
     }
+
+
+def calculate_cart_subtotal(cart):
+    """
+    Calculate total of a cart.
+    Args:
+        cart (list): A list of items in cart
+    Returns:
+        float: Total price of cart
+    """
+    return sum(calculate_cart_item_total(item) for item in cart)
+
+
+def calculate_cart_item_total(item):
+    """
+    Calculate total for a particular line.
+    Args:
+        item (dict): An item in the cart
+    Returns:
+        float: Product price times number of seats
+    """
+    product = Product.objects.get(upc=item['upc'])
+    num_seats = int(item['seats'])
+    return get_price_without_tax(product) * num_seats
+
+
+def validate_cart(cart):
+    """
+    Validate cart contents.
+    Args:
+        cart (list): A list of items in cart
+    """
+    items_in_cart = set()
+
+    for item in cart:
+        try:
+            product = Product.objects.get(upc=item['upc'])
+            seats = int(item['seats'])
+        except Product.DoesNotExist:
+            raise ValidationError("One or more products are unavailable")
+        except KeyError as ex:
+            raise ValidationError("Missing key {}".format(ex.args[0]))
+
+        if get_product_type(product) == COURSE_PRODUCT_TYPE:
+            raise ValidationError("Cannot purchase a Course")
+        if not is_available_to_buy(product):
+            raise ValidationError("One or more products are unavailable")
+
+        if seats == 0:
+            raise ValidationError("Number of seats is zero")
+
+        if item['upc'] in items_in_cart:
+            raise ValidationError("Duplicate item in cart")
+
+        items_in_cart.add(item['upc'])
+
+
+def create_order(cart, user):
+    """
+    Create an order given a cart's contents.
+    Args:
+        cart: (list): A list of items in cart.
+        user: (django.contrib.auth.models.User): A user
+    Returns:
+        Order: A newly created order
+    """
+    validate_cart(cart)
+
+    subtotal = calculate_cart_subtotal(cart)
+    order = Order.objects.create(
+        purchaser=user,
+        subtotal=subtotal,
+        total_paid=subtotal,
+    )
+    for item in cart:
+        product = Product.objects.get(upc=item['upc'])
+        OrderLine.objects.create(
+            order=order,
+            seats=int(item['seats']),
+            product=product,
+            price_without_tax=get_price_without_tax(product),
+            line_total=calculate_cart_item_total(item)
+        )
+    return order

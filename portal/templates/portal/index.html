@@ -12,6 +12,11 @@
     <script type="text/javascript">
     var SETTINGS = {{ js_settings_json|safe }};
     </script>
+    <script type="text/javascript" src="https://checkout.stripe.com/checkout.js">
+    </script>
+    <script type="text/javascript">
+      var StripeHandler;
+    </script>
     <script type="text/javascript" src="{% webpack_bundle "index_page.js" %}">
     </script>
   </body>

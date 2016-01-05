@@ -5,6 +5,7 @@ import {
   registration,
   activation,
   product,
+  cart,
 } from './index_page';
 
 export default combineReducers({
@@ -13,4 +14,5 @@ export default combineReducers({
   authentication,
   registration,
   activation,
+  cart,
 });

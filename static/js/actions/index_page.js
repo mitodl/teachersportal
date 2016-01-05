@@ -22,6 +22,12 @@ export const ACTIVATE_SUCCESS = 'ACTIVATE_SUCCESS';
 export const ACTIVATE_FAILURE = 'ACTIVATE_FAILURE';
 export const ACTIVATE = 'ACTIVATE';
 
+export const ADD_OR_UPDATE_CART_ITEM = 'ADD_OR_UPDATE_CART_ITEM';
+export const REMOVE_CART_ITEM = 'REMOVE_CART_ITEM';
+export const CLEAR_CART = 'CLEAR_CART';
+export const CHECKOUT_SUCCESS = 'CHECKOUT_SUCCESS';
+export const CHECKOUT_FAILURE = 'CHECKOUT_FAILURE';
+
 // constants for fetch status (these are not action types)
 export const FETCH_FAILURE = 'FETCH_FAILURE';
 export const FETCH_SUCCESS = 'FETCH_SUCCESS';
@@ -164,6 +170,53 @@ export function activate(token) {
       }).catch(e => {
         dispatch(activateFailure());
         // let anything afterwards catch the error too
+        return Promise.reject(e);
+      });
+  };
+}
+
+export function addOrUpdateCartItem(upc, seats) {
+  return {
+    type: ADD_OR_UPDATE_CART_ITEM,
+    upc,
+    seats
+  };
+}
+
+export function removeCartItem(upc) {
+  return {
+    type: REMOVE_CART_ITEM,
+    upc
+  };
+}
+
+export function clearCart() {
+  return {
+    type: CLEAR_CART
+  };
+}
+
+export function checkoutSuccess() {
+  return {
+    type: CHECKOUT_SUCCESS
+  };
+}
+
+export function checkoutFailure() {
+  return {
+    type: CHECKOUT_FAILURE
+  };
+}
+
+export function checkout(cart, token) {
+  return dispatch => {
+    return api.checkout(cart, token).
+      then(() => {
+        dispatch(checkoutSuccess());
+        dispatch(clearCart());
+      }).
+      catch(e => {
+        dispatch(checkoutFailure());
         return Promise.reject(e);
       });
   };
