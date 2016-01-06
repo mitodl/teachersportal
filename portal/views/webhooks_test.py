@@ -80,7 +80,7 @@ class WebhookTests(TestCase):
 
         # Only products marked is_available should show up in this list
         resp = self.client.get(reverse("product-list"))
-        assert resp.status_code == 200, resp.content
+        assert resp.status_code == 200, resp.content.decode('utf-8')
         old_available = [product['external_pk'] for product in as_json(resp)]
 
         old_products = self.get_products()
@@ -90,7 +90,7 @@ class WebhookTests(TestCase):
             content_type="application/json",
             HTTP_X_CCXCON_SIGNATURE=signature
         )
-        assert resp.status_code == expected_status, resp.content
+        assert resp.status_code == expected_status, resp.content.decode('utf-8')
 
         product_api_resp = self.client.get(reverse("product-list"))
         assert product_api_resp.status_code == 200, product_api_resp.content
@@ -134,7 +134,7 @@ class WebhookTests(TestCase):
             data=json.dumps(data),
             content_type="application/json"
         )
-        assert resp.status_code == 403, resp.content
+        assert resp.status_code == 403, resp.content.decode('utf-8')
         assert "You do not have permission to perform this action." in resp.content.decode('utf-8')
 
     def test_webhook_with_bad_auth(self):
@@ -160,7 +160,7 @@ class WebhookTests(TestCase):
             content_type="application/json",
             HTTP_X_CCXCON_SIGNATURE=signature
         )
-        assert resp.status_code == 403, resp.content
+        assert resp.status_code == 403, resp.content.decode('utf-8')
         assert "You do not have permission to perform this action." in resp.content.decode('utf-8')
 
     def test_add_course(self):
