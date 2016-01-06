@@ -15,10 +15,6 @@ class Navigation extends React.Component {
     }
 
     return <div id="navigation">
-        <FlatButton label="Courses" />
-        <FlatButton label="MIT's Pedagogy" />
-        <FlatButton label="Resources and Teaching Guides" />
-        <FlatButton label="About" />
       {loginButton}
       </div>;
   }
