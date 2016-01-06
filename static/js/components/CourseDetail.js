@@ -15,6 +15,7 @@ class CourseDetail extends Component {
   render() {
     const {
       product,
+      productList,
       error,
       cart
     } = this.props;
@@ -41,6 +42,7 @@ class CourseDetail extends Component {
         />
         <CourseTabs
           product={product}
+          productList={productList}
           cart={cart}
         />
       </div>;
@@ -57,6 +59,7 @@ class CourseDetail extends Component {
 
 CourseDetail.propTypes = {
   product: React.PropTypes.object,
+  productList: React.PropTypes.array.isRequired,
   error: React.PropTypes.string
 };
 

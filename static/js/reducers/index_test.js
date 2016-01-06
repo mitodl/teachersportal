@@ -10,6 +10,7 @@ import {
   checkout,
   updateCartItems,
   fetchProduct,
+  fetchProductList,
   updateCartVisibility,
   updateSeatCount,
   updateSelectedChapters,
@@ -25,6 +26,7 @@ import sinon from 'sinon';
 import jsdom from 'mocha-jsdom';
 
 let productStub;
+let productListStub;
 let loginStub;
 let logoutStub;
 let registerStub;
@@ -36,6 +38,7 @@ let store;
 describe('reducers', () => {
   beforeEach(() => {
     productStub = sinon.stub(api, 'getProduct');
+    productListStub = sinon.stub(api, 'getProductList');
     logoutStub = sinon.stub(api, 'logout');
     loginStub = sinon.stub(api, 'login');
     registerStub = sinon.stub(api, 'register');
@@ -47,6 +50,7 @@ describe('reducers', () => {
 
   afterEach(() => {
     productStub.restore();
+    productListStub.restore();
     logoutStub.restore();
     loginStub.restore();
     registerStub.restore();
@@ -64,31 +68,50 @@ describe('reducers', () => {
 
     it('should have an empty default state', done => {
       dispatchThen({type: 'unknown'}, state => {
-        assert.deepEqual(state, {});
+        assert.deepEqual(state, {
+          productList: []
+        });
         done();
       });
     });
 
-    it('should fetch products successfully', done => {
+    it('should fetch a product successfully', done => {
       productStub.returns(Promise.resolve("data"));
 
       dispatchThen(fetchProduct("upc"), 2, productState => {
-        assert.deepEqual(productState, {
-          product: "data",
-          status: FETCH_SUCCESS
-        });
+        assert.equal(productState.product, "data");
+        assert.equal(productState.productStatus, FETCH_SUCCESS);
 
         done();
       });
     });
 
-    it('should fail to fetch products', done => {
+    it('should fail to fetch a product', done => {
       productStub.returns(Promise.reject());
 
       dispatchThen(fetchProduct("upc"), 2, productState => {
-        assert.deepEqual(productState, {
-          status: FETCH_FAILURE
-        });
+        assert.equal(productState.productStatus, FETCH_FAILURE);
+
+        done();
+      });
+    });
+
+    it('should fetch a list of products successfully', done => {
+      productListStub.returns(Promise.resolve(["data"]));
+
+      dispatchThen(fetchProductList(), 2, productState => {
+        assert.deepEqual(productState.productList, ["data"]);
+        assert.equal(productState.productListStatus, FETCH_SUCCESS);
+
+        done();
+      });
+    });
+
+    it('should fail to fetch a list of products', done => {
+      productListStub.returns(Promise.reject());
+
+      dispatchThen(fetchProductList(), 2, productState => {
+        assert.equal(productState.productListStatus, FETCH_FAILURE);
 
         done();
       });
