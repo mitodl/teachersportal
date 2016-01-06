@@ -29,6 +29,7 @@ class BuyTab extends React.Component {
     const {
       selectable,
       product,
+      productList,
       cart,
       buyTab,
       updateSelectedChapters,
@@ -39,7 +40,7 @@ class BuyTab extends React.Component {
     if (cart.cart.length > 0) {
       cartContents = cart.cart.map((module, i) =>
         <MenuItem
-          key={module.upc}>{i}: {getProduct(module.upc, [product]).title}:
+          key={module.upc}>{i}: {getProduct(module.upc, productList).title}:
           Seats: {module.seats}
         </MenuItem>
       );
@@ -147,6 +148,7 @@ export default BuyTab;
 
 BuyTab.propTypes = {
   product: React.PropTypes.object.isRequired,
+  productList: React.PropTypes.array.isRequired,
   selectable: React.PropTypes.bool.isRequired,
   cart: React.PropTypes.object.isRequired,
   buyTab: React.PropTypes.object.isRequired,
