@@ -39,7 +39,7 @@ class RegistrationTests(AuthenticationTestCase):
             }),
             content_type="application/json"
         )
-        assert resp.status_code == 200, resp.content
+        assert resp.status_code == 200, resp.content.decode('utf-8')
         assert resp.content.decode('utf-8') == ""
 
         user = User.objects.get(email=email)
@@ -76,7 +76,7 @@ class RegistrationTests(AuthenticationTestCase):
                 json.dumps(data),
                 content_type="application/json"
             )
-            assert resp.status_code == 400, resp.content
+            assert resp.status_code == 400, resp.content.decode('utf-8')
             assert "Missing key {key}".format(key=key) in resp.content.decode('utf-8')
 
     def test_empty_key(self):
@@ -97,7 +97,7 @@ class RegistrationTests(AuthenticationTestCase):
                 json.dumps(data),
                 content_type="application/json"
             )
-            assert resp.status_code == 400, resp.content
+            assert resp.status_code == 400, resp.content.decode('utf-8')
             assert "Empty value for {key}".format(key=key) in resp.content.decode('utf-8')
 
     def test_invalid_data(self):
@@ -109,7 +109,7 @@ class RegistrationTests(AuthenticationTestCase):
             "{",
             content_type="application/json"
         )
-        assert resp.status_code == 400, resp.content
+        assert resp.status_code == 400, resp.content.decode('utf-8')
         assert "JSON parse error" in resp.content.decode('utf-8')
 
     def test_duplicate_email(self):
@@ -128,7 +128,7 @@ class RegistrationTests(AuthenticationTestCase):
             }),
             content_type="application/json"
         )
-        assert resp.status_code == 200, resp.content
+        assert resp.status_code == 200, resp.content.decode('utf-8')
 
         resp = self.client.post(
             reverse('register'),
@@ -141,7 +141,7 @@ class RegistrationTests(AuthenticationTestCase):
             }),
             content_type="application/json"
         )
-        assert resp.status_code == 400, resp.content
+        assert resp.status_code == 400, resp.content.decode('utf-8')
         assert "Email testuser@mit.edu is already in use" in resp.content.decode('utf-8')
 
     def test_user_already_exists(self):
@@ -166,7 +166,7 @@ class RegistrationTests(AuthenticationTestCase):
             }),
             content_type="application/json"
         )
-        assert resp.status_code == 400, resp.content
+        assert resp.status_code == 400, resp.content.decode('utf-8')
         assert "Email testuser@mit.edu is already in use" in resp.content.decode('utf-8')
 
     def test_user_logged_in(self):
@@ -193,4 +193,4 @@ class RegistrationTests(AuthenticationTestCase):
             }),
             content_type="application/json"
         )
-        assert resp.status_code == 403, resp.content
+        assert resp.status_code == 403, resp.content.decode('utf-8')
