@@ -32,9 +32,6 @@ class CourseTabs extends React.Component {
                   product={product}
                  />
             </Tab>
-            <Tab label="Reviews" id="reviews" className="tab">
-                <ReviewsTab />
-            </Tab>
             <Tab label="Buy" id="buy" className="tab">
                 <BuyTab
                   selectable={true}
