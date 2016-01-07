@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 from django.contrib.auth.models import User
 from mock import patch
-from oscar.apps.catalogue.models import Product
+from oscar.apps.catalogue.models import Category, Product, ProductCategory
 from oscar.apps.partner.models import Partner, StockRecord
 from rest_framework.exceptions import ValidationError
 
@@ -387,6 +387,61 @@ class ProductValidationTests(ProductTests):
         with self.assertRaises(Exception) as ex:
             self.validate_products()
         assert ex.exception.args[0] == "Children cannot have product_class set"
+
+    def test_parent_has_category(self):
+        """
+        Parent must have category which is assigned to "Course"
+        """
+        parent = Product.objects.create(
+            upc=make_upc(COURSE_PRODUCT_TYPE, "parent2"),
+            product_class=self.parent.product_class,
+            structure=Product.PARENT,
+            parent=None,
+            title=self.parent.title
+        )
+        Product.objects.create(
+            upc=make_upc(MODULE_PRODUCT_TYPE, "child2"),
+            structure=Product.CHILD,
+            parent=parent,
+            title="child"
+        )
+        with self.assertRaises(Exception) as ex:
+            self.validate_products()
+        assert ex.exception.args[0] == "STANDALONE and PARENT products must have a category"
+
+    def test_standalone_has_category(self):
+        """
+        Standalone product has category which is assigned to "Course"
+        """
+        Product.objects.create(
+            upc=make_upc(COURSE_PRODUCT_TYPE, "standalone"),
+            product_class=self.parent.product_class,
+            structure=Product.STANDALONE,
+            parent=None,
+            title="standalone"
+        )
+        with self.assertRaises(Exception) as ex:
+            self.validate_products()
+        assert ex.exception.args[0] == "STANDALONE and PARENT products must have a category"
+
+    def test_child_has_category(self):
+        """
+        Child must not have category which is assigned to "Course"
+        """
+        product = Product.objects.create(
+            upc=make_upc(MODULE_PRODUCT_TYPE, "child"),
+            structure=Product.CHILD,
+            parent=self.parent,
+            title=self.child.title
+        )
+        ProductCategory.objects.create(
+            product=product,
+            category=Category.objects.get(name="Course")
+        )
+
+        with self.assertRaises(Exception) as ex:
+            self.validate_products()
+        assert ex.exception.args[0] == "CHILD products can't have categories"
 
     def test_parent_product_class(self):
         """
