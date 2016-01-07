@@ -53,7 +53,7 @@ class PyTest(testcommand):
 
 setup(
     name='portal',
-    version='0.0.0',
+    version='0.1.0',
     license='AGPLv3',
     author='MIT ODL Engineering',
     author_email='odl-engineering@mit.edu',

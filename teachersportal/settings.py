@@ -21,7 +21,7 @@ import stripe
 
 from oscar import get_core_apps, OSCAR_MAIN_TEMPLATE_DIR
 
-VERSION = "0.0.0"
+VERSION = "0.1.0"
 
 CONFIG_PATHS = [
     os.environ.get('TEACHERSPORTAL_CONFIG', ''),
