@@ -108,6 +108,8 @@ def validate_product(product):
             raise Exception("CHILD products must not have children")
         if get_product_type(product) != MODULE_PRODUCT_TYPE:
             raise Exception("Modules may only be CHILD Products")
+        if product.categories.count() != 0:
+            raise Exception("CHILD products can't have categories")
     elif product.structure == Product.PARENT or product.structure == Product.STANDALONE:
         if product.product_class.name != "Course":
             raise Exception("Only Course ProductClass may be set")
@@ -119,6 +121,8 @@ def validate_product(product):
             raise Exception("PARENT products must have children")
         if product.structure == Product.STANDALONE and product.children.count() > 0:
             raise Exception("STANDALONE products must not have children")
+        if product.categories.count() == 0:
+            raise Exception("STANDALONE and PARENT products must have a category")
 
     stockrecords = product.stockrecords.all()
     if stockrecords.count() > 0:

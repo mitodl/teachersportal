@@ -6,7 +6,12 @@ from __future__ import unicode_literals
 
 from django.contrib.auth.models import User
 from django.test import TestCase
-from oscar.apps.catalogue.models import Product, ProductClass
+from oscar.apps.catalogue.models import (
+    Category,
+    Product,
+    ProductClass,
+    ProductCategory,
+)
 
 from portal.models import UserInfo
 from portal.util import (
@@ -94,6 +99,11 @@ class ProductTests(TestCase):
             structure=Product.PARENT,
             parent=None,
             title=parent_title
+        )
+        # Assign category to parent
+        ProductCategory.objects.create(
+            product=self.parent,
+            category=Category.objects.get(name="Course")
         )
 
         child_upc = make_upc(MODULE_PRODUCT_TYPE, "child-uuid")
