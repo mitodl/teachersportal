@@ -2,10 +2,10 @@ import React from 'react';
 import Card from 'material-ui/lib/card/card';
 import Tabs from 'material-ui/lib/tabs/tabs';
 import Tab from 'material-ui/lib/tabs/tab';
-import ChapterTab from '../components/ChapterTab';
-import AboutTab from '../components/AboutTab';
-import ReviewsTab from '../components/ReviewsTab';
-import BuyTab from '../components/BuyTab';
+import ChapterTab from './ChapterTab';
+import AboutTab from './AboutTab';
+import ReviewsTab from './ReviewsTab';
+import BuyTabContainer from '../containers/BuyTabContainer';
 
 // Required for material ui tabs
 import injectTapEventPlugin from "react-tap-event-plugin";
@@ -13,7 +13,8 @@ injectTapEventPlugin();
 
 class CourseTabs extends React.Component {
   render() {
-    const { product, cart, addToCart, onCheckout } = this.props;
+
+    const { product } = this.props;
 
     return <Card id="course-tabs-card">
         <Tabs id="course-tabs">
@@ -33,7 +34,7 @@ class CourseTabs extends React.Component {
                  />
             </Tab>
             <Tab label="Buy" id="buy" className="tab">
-                <BuyTab
+                <BuyTabContainer
                   selectable={true}
                   fixedHeader={true}
                   fixedFooter={true}
@@ -42,9 +43,6 @@ class CourseTabs extends React.Component {
                   deselectOnClickaway={true}
                   height={'auto'}
                   product={product}
-                  cart={cart}
-                  addToCart={addToCart}
-                  onCheckout={onCheckout}
                 />
             </Tab>
         </Tabs>
@@ -55,8 +53,5 @@ class CourseTabs extends React.Component {
 export default CourseTabs;
 
 CourseTabs.propTypes = {
-  product: React.PropTypes.object.isRequired,
-  cart: React.PropTypes.array.isRequired,
-  addToCart: React.PropTypes.func.isRequired,
-  onCheckout: React.PropTypes.func.isRequired
+  product: React.PropTypes.object.isRequired
 };

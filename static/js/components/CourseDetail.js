@@ -12,52 +12,52 @@ import CardMedia from 'material-ui/lib/card/card-media';
 import CardTitle from 'material-ui/lib/card/card-title';
 
 class CourseDetail extends Component {
-    render() {
-      const { product, error, cart, addToCart, onCheckout } = this.props;
+  render() {
+    const {
+      product,
+      error,
+      cart
+    } = this.props;
 
-      let content;
+    let content;
 
-      if (error !== undefined) {
-        content = <CardText>{error}</CardText>;
-      } else if (product === undefined) {
-        content = <div>
-        </div>;
-      } else {
+    if (error !== undefined) {
+      content = <CardText>{error}</CardText>;
+    } else if (product === undefined) {
+      content = <div>
+      </div>;
+    } else {
 
-        content = <div>
-          <CardTitle
-            title={product.title}
-            subtitle={product.info.author_name}
-            id="course-title"
-          />
-          <CourseImage src={product.info.image_url} />
-          <CardText id="course-description">
-              {product.description}
-          </CardText>
-          <CourseTabs
-            product={product}
-            cart={cart}
-            addToCart={addToCart}
-            onCheckout={onCheckout}
-          />
-        </div>;
-      }
-
-      return <div id="course-body">
-          <Card id="course-content">
-            {content}
-          </Card>
-      </div>
-      ;
+      content = <div>
+        <CardTitle
+          title={product.title}
+          subtitle={product.info.author_name}
+          id="course-title"
+        />
+        <CourseImage src={product.info.image_url}/>
+        <CardText
+          id="course-description"
+          dangerouslySetInnerHTML={{__html: product.description }}
+        />
+        <CourseTabs
+          product={product}
+          cart={cart}
+        />
+      </div>;
     }
+
+    return <div id="course-body">
+      <Card id="course-content">
+        {content}
+      </Card>
+    </div>
+      ;
   }
+}
 
 CourseDetail.propTypes = {
   product: React.PropTypes.object,
-  error: React.PropTypes.string,
-  cart: React.PropTypes.array.isRequired,
-  addToCart: React.PropTypes.func.isRequired,
-  onCheckout: React.PropTypes.func.isRequired
+  error: React.PropTypes.string
 };
 
 export default CourseDetail;
