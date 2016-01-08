@@ -1,7 +1,7 @@
 /* global SETTINGS:false */
 import '../global_init';
 import assert from 'assert';
-import { calculateTotal, getProduct } from './util';
+import { calculateTotal, filterCart, getProduct } from './util';
 import { CART_WITH_ITEM, PRODUCT_RESPONSE } from './../constants';
 
 describe('utility functions', () => {
@@ -13,15 +13,16 @@ describe('utility functions', () => {
     assert.equal(calculateTotal(CART_WITH_ITEM, [PRODUCT_RESPONSE]), 99);
   });
 
-  it('fails to calculate the total if a product is missing from the product list', () => {
+  it('skips items which are missing from the product list when calculating the total', () => {
     const cart = [{
       upc: "some other upc",
       seats: 3
     }];
 
-    assert.throws(() => {
-      calculateTotal(cart, [PRODUCT_RESPONSE]);
-    }, /Missing product/);
+    assert.deepEqual(
+      calculateTotal(cart, [PRODUCT_RESPONSE]),
+      0
+    );
   });
 
   it('looks up a product', () => {
@@ -36,8 +37,21 @@ describe('utility functions', () => {
   });
 
   it('fails to look up a product if it is missing', () => {
-    assert.throws(() => {
-      getProduct("missing", [PRODUCT_RESPONSE]);
-    }, /Missing product/);
+    assert.deepEqual(
+      getProduct("missing", [PRODUCT_RESPONSE]),
+      undefined
+    );
+  });
+
+  it('filters out missing items from a cart', () => {
+    assert.deepEqual(
+      filterCart(CART_WITH_ITEM, [PRODUCT_RESPONSE]),
+      CART_WITH_ITEM
+    );
+    // No products, so all items filtered out
+    assert.deepEqual(
+      filterCart(CART_WITH_ITEM, []),
+      []
+    );
   });
 });
