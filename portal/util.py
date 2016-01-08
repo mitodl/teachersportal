@@ -3,6 +3,7 @@ Helper functions which may be generally useful.
 """
 
 from __future__ import unicode_literals
+import logging
 
 from rest_framework.exceptions import ValidationError
 from oscar.apps.catalogue.models import Product
@@ -12,6 +13,7 @@ from portal.models import Order, OrderLine
 
 MODULE_PRODUCT_TYPE = "Module"
 COURSE_PRODUCT_TYPE = "Course"
+log = logging.getLogger(__name__)
 
 
 def make_upc(product_type, external_pk):
@@ -178,16 +180,21 @@ def is_available_to_buy(product):
 
     if product.structure == Product.PARENT:
         # Product will be available if any children are available
-        return any(
+        has_available_children = any(
             child for child in product.children.all()
             if is_available_to_buy(child)
         )
+        if not has_available_children:
+            log.debug("Product %s doesn't have available children", product)
+        return has_available_children
     elif product.structure == Product.STANDALONE:
+        log.debug("Product %s is standalone.", product)
         return False
     elif product.structure == Product.CHILD:
         stockrecord = product.stockrecords.first()
         if stockrecord is None:
             # No price information, not available to buy
+            log.debug("Module %s doesn't have price information.", product)
             return False
 
         # Get default strategy

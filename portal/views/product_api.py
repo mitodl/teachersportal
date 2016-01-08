@@ -3,6 +3,7 @@ Views for product availability listing.
 """
 from __future__ import unicode_literals
 
+import logging
 import json
 from six.moves.urllib.parse import urlparse, urlunparse  # pylint: disable=import-error
 
@@ -24,6 +25,9 @@ from portal.util import (
     COURSE_PRODUCT_TYPE,
     MODULE_PRODUCT_TYPE,
 )
+
+
+log = logging.getLogger(__name__)
 
 
 def fetch_ccxcon_info(product):
@@ -138,9 +142,11 @@ class ProductDetailView(RetrieveAPIView):
                 upc=product_uuid
             )
         except Product.DoesNotExist:
+            log.debug("Couldn't find a product with uuid %s in the portal", product_uuid)
             raise Http404
 
         if not is_available_to_buy(product):
+            log.debug("Product %s isn't available for sale.", product)
             raise Http404
 
         info = fetch_ccxcon_info(product)
