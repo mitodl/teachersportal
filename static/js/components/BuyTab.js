@@ -38,12 +38,18 @@ class BuyTab extends React.Component {
     let cartContents = <MenuItem>No course chapters selected</MenuItem>;
 
     if (cart.cart.length > 0) {
-      cartContents = cart.cart.map((module, i) =>
-        <MenuItem
-          key={module.upc}>{i}: {getProduct(module.upc, productList).title}:
+      cartContents = cart.cart.map((module, i) => {
+        let cartProduct = getProduct(module.upc, productList);
+        let title = "";
+        if (cartProduct !== undefined) {
+          title = cartProduct.title;
+        }
+
+        return <MenuItem
+          key={module.upc}>{i}: {title}:
           Seats: {module.seats}
-        </MenuItem>
-      );
+        </MenuItem>;
+      });
     }
 
     const maxSeats = 200;

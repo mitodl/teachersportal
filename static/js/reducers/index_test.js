@@ -14,10 +14,13 @@ import {
   updateCartVisibility,
   updateSeatCount,
   updateSelectedChapters,
+  clearInvalidCartItems,
+  receiveProductListSuccess,
   FETCH_FAILURE,
   FETCH_SUCCESS,
 } from '../actions/index_page';
 import * as api from '../util/api';
+import { PRODUCT_RESPONSE, CART_WITH_ITEM } from '../constants';
 import { createDispatchThen } from './util';
 
 import configureStore from '../store/configureStore_test';
@@ -401,6 +404,47 @@ describe('reducers', () => {
           });
 
           done();
+        });
+      });
+    });
+
+    it('clears the items from the cart which are missing', done => {
+      let upc = PRODUCT_RESPONSE.children[0].upc;
+      let courseUpc = PRODUCT_RESPONSE.upc;
+      dispatchThen(updateCartItems([upc], 5, courseUpc), cartState => {
+        let expectedCart = [{
+          upc: upc,
+          seats: 5,
+          courseUpc: courseUpc
+        }];
+        assert.deepEqual(cartState, {
+          cart: expectedCart
+        });
+
+        // update product list
+        dispatchThen(receiveProductListSuccess([PRODUCT_RESPONSE]), () => {
+
+          // don't filter anything since all cart items match some product
+          dispatchThen(clearInvalidCartItems(), cartState => {
+            assert.deepEqual(cartState, {
+              cart: expectedCart,
+              productList: [PRODUCT_RESPONSE]
+            });
+
+            // clear product list
+            dispatchThen(receiveProductListSuccess([]), () => {
+
+              // filter everything since no cart items match any product
+              dispatchThen(clearInvalidCartItems(), cartState => {
+                assert.deepEqual(cartState, {
+                  cart: [],
+                  productList: []
+                });
+
+                done();
+              });
+            });
+          });
         });
       });
     });

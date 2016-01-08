@@ -3,6 +3,7 @@ import CourseDetail from '../components/CourseDetail';
 import {
   fetchProduct,
   fetchProductList,
+  clearInvalidCartItems,
   FETCH_FAILURE,
   FETCH_SUCCESS,
 } from '../actions/index_page';
@@ -31,11 +32,14 @@ class CourseDetailPage extends React.Component {
       // yet, fetch them now. This might execute the fetch action twice if
       // this component is refreshed before action has a chance to dispatch,
       // but that shouldn't cause any problems
+
       if (product.productStatus === undefined) {
         dispatch(fetchProduct("Course_" + uuid));
       }
       if (product.productListStatus === undefined) {
-        dispatch(fetchProductList());
+        dispatch(fetchProductList()).then(() => {
+          return dispatch(clearInvalidCartItems());
+        });
       }
     }
   }

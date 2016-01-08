@@ -16,10 +16,9 @@ export function calculateTotal(cart, products) {
 
   for (let item of cart) {
     let product = productLookup[item.upc];
-    if (product === undefined) {
-      throw "Missing product " + item.upc;
+    if (product !== undefined) {
+      total += item.seats * product.price_without_tax;
     }
-    total += item.seats * product.price_without_tax;
   }
 
   return total;
@@ -27,9 +26,11 @@ export function calculateTotal(cart, products) {
 
 export function getProduct(upc, products) {
   let productLookup = makeProductLookup(products);
-  let product = productLookup[upc];
-  if (product === undefined) {
-    throw "Missing product " + upc;
-  }
-  return product;
+  return productLookup[upc];
+}
+
+export function filterCart(cart, products) {
+  let productLookup = makeProductLookup(products);
+
+  return cart.filter(item => productLookup[item.upc] !== undefined);
 }
