@@ -45,7 +45,7 @@ class BuyTab extends React.Component {
       );
     }
 
-    const maxSeats = 1000;
+    const maxSeats = 200;
 
     // TODO: Move slider to subcomponent, taking size as params.
     return <div className="course-purchase-selector">
@@ -58,7 +58,7 @@ class BuyTab extends React.Component {
             max={maxSeats}
             value={buyTab.seats}
             step={10}
-            style={{ 'margin-bottom': '5px' }}
+            style={{ 'marginBottom': '5px' }}
             onChange={this.onUpdateSeatCount.bind(this)}
           />
           <div className="slider-scale">
