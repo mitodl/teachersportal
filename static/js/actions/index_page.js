@@ -4,6 +4,9 @@ import * as api from '../util/api';
 export const REQUEST_PRODUCT = 'REQUEST_PRODUCT';
 export const RECEIVE_PRODUCT_SUCCESS = 'RECEIVE_PRODUCT_SUCCESS';
 export const RECEIVE_PRODUCT_FAILURE = 'RECEIVE_PRODUCT_FAILURE';
+export const REQUEST_PRODUCT_LIST = 'REQUEST_PRODUCT_LIST';
+export const RECEIVE_PRODUCT_LIST_SUCCESS = 'RECEIVE_PRODUCT_LIST_SUCCESS';
+export const RECEIVE_PRODUCT_LIST_FAILURE = 'RECEIVE_PRODUCT_LIST_FAILURE';
 export const CLEAR_PRODUCT = 'CLEAR_PRODUCT';
 
 export const SHOW_LOGIN = 'SHOW_LOGIN';
@@ -55,6 +58,25 @@ function receiveProductFailure() {
   };
 }
 
+function requestProductList() {
+  return {
+    type: REQUEST_PRODUCT_LIST
+  };
+}
+
+function receiveProductListSuccess(json) {
+  return {
+    type: RECEIVE_PRODUCT_LIST_SUCCESS,
+    productList: json
+  };
+}
+
+function receiveProductListFailure() {
+  return {
+    type: RECEIVE_PRODUCT_LIST_FAILURE
+  };
+}
+
 export function showLogin() {
   return {
     type: SHOW_LOGIN
@@ -88,6 +110,15 @@ export function fetchProduct(upc) {
     return api.getProduct(upc).
       then(json => dispatch(receiveProductSuccess(json))).
       catch(() => dispatch(receiveProductFailure()));
+  };
+}
+
+export function fetchProductList() {
+  return dispatch => {
+    dispatch(requestProductList());
+    return api.getProductList().
+      then(json => dispatch(receiveProductListSuccess(json))).
+      catch(() => dispatch(receiveProductListFailure()));
   };
 }
 

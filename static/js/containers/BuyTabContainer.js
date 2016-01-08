@@ -14,11 +14,12 @@ import { calculateTotal } from '../util/util';
 
 class BuyTabContainer extends React.Component {
   render() {
-    const { product, cart, buyTab } = this.props;
+    const { product, productList, cart, buyTab } = this.props;
 
     return <BuyTab
       selectable={true}
       product={product}
+      productList={productList}
       cart={cart}
       buyTab={buyTab}
 
@@ -45,9 +46,9 @@ class BuyTabContainer extends React.Component {
   }
 
   onCheckout() {
-    const { dispatch, cart, product } = this.props;
+    const { dispatch, cart, productList } = this.props;
 
-    let total = calculateTotal(cart.cart, [product]);
+    let total = calculateTotal(cart.cart, productList);
     if (total === 0) {
       dispatch(checkout(cart.cart, ""));
     } else {
@@ -73,6 +74,7 @@ class BuyTabContainer extends React.Component {
 
 BuyTabContainer.propTypes = {
   product: React.PropTypes.object.isRequired,
+  productList: React.PropTypes.array.isRequired,
   cart: React.PropTypes.object.isRequired,
   buyTab: React.PropTypes.object.isRequired,
   selectable: React.PropTypes.bool.isRequired,

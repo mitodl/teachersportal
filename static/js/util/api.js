@@ -80,6 +80,10 @@ export function getProduct(upc) {
   return fetchJSONWithCSRF(`/api/v1/products/${upc}/`);
 }
 
+export function getProductList() {
+  return fetchJSONWithCSRF('/api/v1/products/');
+}
+
 export function login(username, password) {
   return fetchJSONWithCSRF('/api/v1/login/', {
     method: 'POST',

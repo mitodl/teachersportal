@@ -8,6 +8,7 @@ import jsdom from 'mocha-jsdom';
 import fetchMock from 'fetch-mock/src/server';
 import {
   getProduct,
+  getProductList,
   login,
   logout,
   register,
@@ -204,6 +205,30 @@ describe('common api functions', function() {
       };
     });
     checkout(expected.cart, expected.token).catch(() => {
+      done();
+    });
+  });
+
+  it('gets a list of products', done => {
+    fetchMock.mock('/api/v1/products/', () => {
+      return {
+        status: 200
+      };
+    });
+
+    getProductList().then(() => {
+      done();
+    });
+  });
+
+  it('fails to get a list of products', done => {
+    fetchMock.mock('/api/v1/products/', () => {
+      return {
+        status: 400
+      };
+    });
+
+    getProductList().catch(() => {
       done();
     });
   });

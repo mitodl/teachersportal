@@ -3,6 +3,9 @@ import {
   RECEIVE_PRODUCT_SUCCESS,
   RECEIVE_PRODUCT_FAILURE,
   REQUEST_PRODUCT,
+  RECEIVE_PRODUCT_LIST_SUCCESS,
+  RECEIVE_PRODUCT_LIST_FAILURE,
+  REQUEST_PRODUCT_LIST,
   CLEAR_PRODUCT,
   SHOW_LOGIN,
   HIDE_LOGIN,
@@ -26,25 +29,42 @@ import {
   UPDATE_CART_VISIBILITY,
 } from '../actions/index_page';
 
-export function product(state = {}, action) {
+const INITIAL_PRODUCT_STATE = {
+  productList: []
+};
+export function product(state = INITIAL_PRODUCT_STATE, action) {
   switch (action.type) {
 
   case REQUEST_PRODUCT:
     return Object.assign({}, state, {
-      status: FETCH_PROCESSING
+      productStatus: FETCH_PROCESSING
     });
   case RECEIVE_PRODUCT_SUCCESS:
     return Object.assign({}, state, {
-      status: FETCH_SUCCESS,
+      productStatus: FETCH_SUCCESS,
       product: action.product
     });
   case RECEIVE_PRODUCT_FAILURE:
     return Object.assign({}, state, {
-      status: FETCH_FAILURE
+      productStatus: FETCH_FAILURE
+    });
+
+  case REQUEST_PRODUCT_LIST:
+    return Object.assign({}, state, {
+      productListStatus: FETCH_PROCESSING
+    });
+  case RECEIVE_PRODUCT_LIST_SUCCESS:
+    return Object.assign({}, state, {
+      productListStatus: FETCH_SUCCESS,
+      productList: action.productList
+    });
+  case RECEIVE_PRODUCT_LIST_FAILURE:
+    return Object.assign({}, state, {
+      productListStatus: FETCH_FAILURE
     });
 
   case CLEAR_PRODUCT:
-    return {};
+    return INITIAL_PRODUCT_STATE;
 
   default:
     return state;

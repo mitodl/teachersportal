@@ -14,7 +14,7 @@ injectTapEventPlugin();
 class CourseTabs extends React.Component {
   render() {
 
-    const { product } = this.props;
+    const { product, productList } = this.props;
 
     return <Card id="course-tabs-card">
         <Tabs id="course-tabs">
@@ -31,6 +31,7 @@ class CourseTabs extends React.Component {
                   deselectOnClickaway={true}
                   height={'auto'}
                   product={product}
+                  productList={productList}
                  />
             </Tab>
             <Tab label="Buy" id="buy" className="tab">
@@ -43,6 +44,7 @@ class CourseTabs extends React.Component {
                   deselectOnClickaway={true}
                   height={'auto'}
                   product={product}
+                  productList={productList}
                 />
             </Tab>
         </Tabs>
@@ -53,5 +55,6 @@ class CourseTabs extends React.Component {
 export default CourseTabs;
 
 CourseTabs.propTypes = {
-  product: React.PropTypes.object.isRequired
+  product: React.PropTypes.object.isRequired,
+  productList: React.PropTypes.array.isRequired
 };

@@ -2,6 +2,7 @@ import React from 'react';
 import CourseDetail from '../components/CourseDetail';
 import {
   fetchProduct,
+  fetchProductList,
   FETCH_FAILURE,
   FETCH_SUCCESS,
 } from '../actions/index_page';
@@ -30,8 +31,11 @@ class CourseDetailPage extends React.Component {
       // yet, fetch them now. This might execute the fetch action twice if
       // this component is refreshed before action has a chance to dispatch,
       // but that shouldn't cause any problems
-      if (product.status === undefined) {
+      if (product.productStatus === undefined) {
         dispatch(fetchProduct("Course_" + uuid));
+      }
+      if (product.productListStatus === undefined) {
+        dispatch(fetchProductList());
       }
     }
   }
@@ -44,8 +48,10 @@ class CourseDetailPage extends React.Component {
 
     let error;
 
-    if (product.status === FETCH_FAILURE) {
+    if (product.productStatus === FETCH_FAILURE) {
       error = "An error occurred fetching information about this course.";
+    } else if (product.productListStatus === FETCH_FAILURE) {
+      error = "An error occurred fetching information about other courses.";
     } else if (!authentication.isAuthenticated) {
       error = "Please log in to view the course information.";
     }
@@ -53,6 +59,7 @@ class CourseDetailPage extends React.Component {
     let detail = <CourseDetail
       error={error}
       product={product.product}
+      productList={product.productList}
     />;
 
     return <div>
