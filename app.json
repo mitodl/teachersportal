@@ -67,6 +67,31 @@
             "description": "Base URL for the CCXCon API.",
             "required": true
         },
+	"CCXCON_OAUTH_CLIENT_ID": {
+            "description": "The OAuth client ID issued by the CCXCon instance.",
+            "required": true
+        },
+	"CCXCON_OAUTH_CLIENT_SECRET": {
+            "description": "The OAuth client secret issues by the CCXCon instance.",
+            "required": true
+        },
+	"CCXCON_WEBHOOKS_SECRET": {
+            "description": "The secret used to verify requests made by the CCXCon instance.",
+            "required": true
+        },
+	"STRIPE_PUBLISHABLE_KEY": {
+            "description": "The public key issued by Stripe for its API.",
+            "required": true
+        },
+	"STRIPE_SECRET_KEY": {
+            "description": "The private key issues by Stripe for its API.",
+            "required": true
+        },
+        "PORTAL_OSCAR_VISIBLE": {
+            "description": "Whether or not the /oscar views are available..",
+            "required": false,
+	    "value": "False"
+        },
         "NEW_RELIC_APP_NAME": {
             "description": "Application identifier in New Relic.",
             "default": "Teacher's Portal"
