@@ -104,6 +104,10 @@
             "description": "Application-level SSL redirect setting.",
             "required": false,
             "value": "True"
+        },
+        "STATUS_TOKEN": {
+            "description": "Token to access the status API.",
+            "required": true
         }
     }
 }
