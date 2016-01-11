@@ -24,8 +24,8 @@ web:
   env_file: .env
   ports:
     - "8075:8075"
-  # external_links:
-  #   - "ccxcon_web_1:localhost.daplie.com"
+  external_links:
+    - "ccxcon_web_1:localhost.daplie.com"
   links:
     - db
 watch:
