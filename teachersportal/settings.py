@@ -310,3 +310,5 @@ CCXCON_OAUTH_CLIENT_SECRET = get_var("CCXCON_OAUTH_CLIENT_SECRET", "")
 # Stripe keys
 STRIPE_PUBLISHABLE_KEY = get_var("STRIPE_PUBLISHABLE_KEY", "")
 stripe.api_key = get_var("STRIPE_SECRET_KEY", "")
+
+STATUS_TOKEN = get_var("STATUS_TOKEN", "")
