@@ -16,12 +16,15 @@ class BuyTabContainer extends React.Component {
   render() {
     const { product, productList, cart, buyTab } = this.props;
 
+    let total = this.updateTotal();
+
     return <BuyTab
       selectable={true}
       product={product}
       productList={productList}
       cart={cart}
       buyTab={buyTab}
+      total={total}
 
       updateCartItems={this.onUpdateCartItems.bind(this)}
       updateSelectedChapters={this.onUpdateSelectedChapters.bind(this)}
@@ -33,16 +36,40 @@ class BuyTabContainer extends React.Component {
       />;
   }
 
-  onUpdateCartItems(upcs, seats) {
-    const { dispatch, product } = this.props;
+  updateTotal() {
+    const { buyTab, product, productList } = this.props;
 
-    dispatch(updateCartItems(upcs, seats, product.upc));
+    let cart = buyTab.selectedChapters.map(upc => ({
+      upc: upc,
+      seats: buyTab.seats,
+      courseUpc: product.upc
+    }));
+
+    let total = calculateTotal(cart, productList);
+
+    return total;
   }
 
   onUpdateSeatCount(seats) {
     const { dispatch } = this.props;
 
     dispatch(updateSeatCount(seats));
+  }
+
+  onUpdateSelectedChapters(upcs, allRowsSelected) {
+    const { dispatch } = this.props;
+
+    dispatch(updateSelectedChapters(upcs, allRowsSelected));
+  }
+
+  onUpdateCartItems(upcs, seats) {
+    const { dispatch, product } = this.props;
+    dispatch(updateCartItems(upcs, seats, product.upc));
+  }
+
+  onUpdateCartVisibility(visibility) {
+    const { dispatch } = this.props;
+    dispatch(updateCartVisibility(visibility));
   }
 
   onCheckout() {
@@ -58,17 +85,6 @@ class BuyTabContainer extends React.Component {
         amount: Math.floor(total * 100)
       });
     }
-  }
-
-  onUpdateSelectedChapters(upcs, allRowsSelected) {
-    const { dispatch } = this.props;
-
-    dispatch(updateSelectedChapters(upcs, allRowsSelected));
-  }
-
-  onUpdateCartVisibility(visibility) {
-    const { dispatch } = this.props;
-    dispatch(updateCartVisibility(visibility));
   }
 }
 

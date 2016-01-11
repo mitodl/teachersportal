@@ -9,7 +9,6 @@ import NavigationClose from 'material-ui/lib/svg-icons/navigation/close';
 import ChapterTab from './ChapterTab';
 import StripeButton from './StripeButton';
 import { getProduct } from '../util/util';
-import { calculateTotal } from '../util/util';
 
 class BuyTab extends React.Component {
   componentWillReceiveProps(nextProps) {
@@ -32,10 +31,11 @@ class BuyTab extends React.Component {
       productList,
       cart,
       buyTab,
+      total,
       updateSelectedChapters,
       } = this.props;
 
-    let cartContents = <MenuItem>No course chapters selected</MenuItem>;
+    let cartContents = <MenuItem>No chapters selected</MenuItem>;
 
     if (cart.cart.length > 0) {
       cartContents = cart.cart.map((module, i) => {
@@ -54,7 +54,6 @@ class BuyTab extends React.Component {
 
     const maxSeats = 200;
 
-    // TODO: Move slider to subcomponent, taking size as params.
     return <div className="course-purchase-selector">
       <div className="seat-number-selector">
         <h3 className="slider-label">Seats</h3>
@@ -77,7 +76,7 @@ class BuyTab extends React.Component {
           </div>
         </div>
         <div className="seatCount">{buyTab.seats}<br /><span className="seatCountLabel">Seats</span></div>
-        <div className="selectionTotal">$2,755<br /><span className="selectionTotalLabel">Total</span></div>
+        <div className="selectionTotal">${total}<br /><span className="selectionTotalLabel">Total</span></div>
         <RaisedButton
           label="Update Cart"
           className="add-to-cart"
@@ -102,9 +101,10 @@ class BuyTab extends React.Component {
       <LeftNav
         docked={false}
         openRight={true}
-        onNavClose={this.onCartClose.bind(this)}
+        onRequestChange={this.onCartClose.bind(this)}
         ref="shoppingCart"
         className="shopping-cart"
+        width={400}
       >
         <AppBar
           title="Cart Summary"
@@ -115,8 +115,12 @@ class BuyTab extends React.Component {
           }
         />
         {cartContents}
-        <span className="cart-total">{cart.total}</span>
-        <StripeButton cart={cart} product={product} checkout={this.onCheckout.bind(this)}/>
+        <div className="cart-actions">
+          <StripeButton cart={cart} product={product} checkout={this.onCheckout.bind(this)}/>
+        </div>
+        <div className="cart-status">
+          <span className="cart-total">${total}<br /><span className="cart-total-label">total cost</span></span>
+        </div>
       </LeftNav>
     </div>;
   }

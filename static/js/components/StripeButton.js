@@ -9,10 +9,9 @@ class StripeButton extends React.Component {
 
     return <RaisedButton
       label="Checkout"
-      id="checkout"
+      className="checkout-button"
       onClick={checkout}
       secondary={true}
-      style={{ 'textAlign': 'center', 'display': 'block' }}
     />;
   }
 }

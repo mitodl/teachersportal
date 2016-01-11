@@ -12,7 +12,9 @@ function makeProductLookup(products) {
 }
 
 export function calculateTotal(cart, products) {
-  let total = 0, productLookup = makeProductLookup(products);
+  let total = 0;
+
+  let productLookup = makeProductLookup(products);
 
   for (let item of cart) {
     let product = productLookup[item.upc];

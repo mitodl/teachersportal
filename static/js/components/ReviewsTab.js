@@ -2,7 +2,6 @@ import React from 'react';
 import List from 'material-ui/lib/lists/list';
 import ListDivider from 'material-ui/lib/lists/list-divider';
 import ListItem from 'material-ui/lib/lists/list-item';
-import Colors from 'material-ui/src/styles/colors';
 import Lorem from './Lorem';
 
 class ReviewsTab extends React.Component {
@@ -12,7 +11,7 @@ class ReviewsTab extends React.Component {
         primaryText="Really Superb Material!"
         secondaryText={
           <p>
-            <span style={{color: Colors.darkBlack}}>Amanda Johnson</span><br/>
+            <span>Amanda Johnson</span><br/>
             <Lorem />
           </p>
         }
@@ -22,7 +21,7 @@ class ReviewsTab extends React.Component {
         primaryText="It's a pleasure to teach with this!"
         secondaryText={
           <p>
-            <span style={{color: Colors.darkBlack}}>Dave Reynolds</span><br/>
+            <span>Dave Reynolds</span><br/>
             <Lorem />
           </p>
         }
@@ -32,7 +31,7 @@ class ReviewsTab extends React.Component {
         primaryText="Terrific Stuff!"
         secondaryText={
           <p>
-            <span style={{color: Colors.darkBlack}}>Marlo Thomas</span><br/>
+            <span>Marlo Thomas</span><br/>
             <Lorem />
           </p>
         }
