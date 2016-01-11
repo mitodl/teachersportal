@@ -10,6 +10,7 @@ import CardExpandable from 'material-ui/lib/card/card-expandable';
 import CardHeader from 'material-ui/lib/card/card-header';
 import CardMedia from 'material-ui/lib/card/card-media';
 import CardTitle from 'material-ui/lib/card/card-title';
+import LinearProgress from 'material-ui/lib/linear-progress';
 
 class CourseDetail extends Component {
   render() {
@@ -25,8 +26,7 @@ class CourseDetail extends Component {
     if (error !== undefined) {
       content = <CardText>{error}</CardText>;
     } else if (product === undefined) {
-      content = <div>
-      </div>;
+      content = <LinearProgress mode="indeterminate"/>;
     } else {
 
       content = <div>
