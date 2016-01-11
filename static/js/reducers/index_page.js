@@ -28,6 +28,7 @@ import {
   UPDATE_SELECTED_CHAPTERS,
   UPDATE_SEAT_COUNT,
   UPDATE_CART_VISIBILITY,
+  RESET_BUYTAB,
 } from '../actions/index_page';
 import { filterCart } from '../util/util';
 import { handleActions } from 'redux-actions';
@@ -164,5 +165,6 @@ export const buyTab = handleActions({
   })),
   UPDATE_CART_VISIBILITY: payloadMerge((action) => ({
     cartVisibility: action.payload.visibility
-  }))
+  })),
+  RESET_BUYTAB: () => INITIAL_BUYTAB_STATE
 }, INITIAL_BUYTAB_STATE);
