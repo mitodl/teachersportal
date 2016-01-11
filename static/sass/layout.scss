@@ -88,14 +88,28 @@ body {
 
 
         .shopping-cart {
-          .cart-total {
-            color: 'green';
-            font-size: 2em;
-            text-align: center;
-            .cart-total-label {
-              font-size: 0.5em;
+
+          .cart-actions {
+            @include pad($block-padding);
+            @include span-columns(6);
+            .checkout-button {
+            }
+          }
+
+          .cart-status {
+            @include pad($block-padding);
+            @include span-columns(6);
+            .cart-total {
+              color: green;
+              font-size: 2em;
+              font-weight: 700;
               text-align: center;
-              font-variant: small-caps;
+              .cart-total-label {
+                color: black;
+                font-size: 0.9em;
+                text-align: center;
+                font-variant: small-caps;
+              }
             }
           }
         }
