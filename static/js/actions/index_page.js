@@ -31,6 +31,7 @@ export const CLEAR_CART = 'CLEAR_CART';
 export const CHECKOUT_SUCCESS = 'CHECKOUT_SUCCESS';
 export const CHECKOUT_FAILURE = 'CHECKOUT_FAILURE';
 export const CLEAR_INVALID_CART_ITEMS = 'CLEAR_INVALID_CART_ITEMS';
+export const RESET_BUYTAB = 'RESET_BUYTAB';
 
 export const UPDATE_SELECTED_CHAPTERS = 'UPDATE_SELECTED_CHAPTERS';
 export const UPDATE_SEAT_COUNT = 'UPDATE_SEAT_COUNT';
@@ -43,7 +44,7 @@ export const FETCH_PROCESSING = 'FETCH_PROCESSING';
 
 const requestProduct = createAction(REQUEST_PRODUCT);
 
-const receiveProductSuccess = createAction(
+export const receiveProductSuccess = createAction(
   RECEIVE_PRODUCT_SUCCESS, (product) => {return {product};});
 
 const receiveProductFailure = createAction(RECEIVE_PRODUCT_FAILURE);
@@ -164,6 +165,7 @@ export const updateCartItems = createAction(
 export const clearCart = createAction(CLEAR_CART);
 export const checkoutSuccess = createAction(CHECKOUT_SUCCESS);
 export const checkoutFailure = createAction(CHECKOUT_FAILURE);
+export const resetBuyTab = createAction(RESET_BUYTAB);
 
 export function checkout(cart, token) {
   return dispatch => {
@@ -171,6 +173,7 @@ export function checkout(cart, token) {
       then(() => {
         dispatch(checkoutSuccess());
         dispatch(clearCart());
+        dispatch(resetBuyTab());
       }).
       catch(e => {
         dispatch(checkoutFailure());

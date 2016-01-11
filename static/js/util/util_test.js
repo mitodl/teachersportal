@@ -10,7 +10,11 @@ describe('utility functions', () => {
   });
 
   it('calculates the total of a cart', () => {
-    assert.equal(calculateTotal(CART_WITH_ITEM, [PRODUCT_RESPONSE]), 99);
+    let sum = CART_WITH_ITEM[0].seats * PRODUCT_RESPONSE.children[0].price_without_tax;
+    assert.equal(
+      calculateTotal(CART_WITH_ITEM, [PRODUCT_RESPONSE]),
+      sum
+    );
   });
 
   it('skips items which are missing from the product list when calculating the total', () => {
