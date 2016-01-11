@@ -89,8 +89,6 @@ def module(action, payload):
     Returns:
         HttpResponse
     """
-    category = Category.objects.get(name="Course")
-
     if action == 'update':
         try:
             title = payload['title']
@@ -132,12 +130,6 @@ def module(action, payload):
                     parent=parent,
                     title=title
                 )
-
-            # Link product to category.
-            ProductCategory.objects.get_or_create(
-                category=category,
-                product=product,
-            )
 
     elif action == 'delete':
         try:
