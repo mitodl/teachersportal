@@ -51,6 +51,11 @@ class ActivatePage extends React.Component {
   }
 }
 
+ActivatePage.propTypes = {
+  location: React.PropTypes.object.isRequired,
+  dispatch: React.PropTypes.func.isRequired,
+  activation: React.PropTypes.object.isRequired
+};
 
 const mapStateToProps = (state) => {
   return {

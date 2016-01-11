@@ -19,6 +19,9 @@ import {
   ACTIVATE_SUCCESS,
   ACTIVATE_FAILURE,
   ACTIVATE,
+  CLEAR_CART,
+  ADD_OR_UPDATE_CART_ITEM,
+  REMOVE_CART_ITEM,
 } from '../actions/index_page';
 
 export function product(state = {}, action) {
@@ -132,6 +135,48 @@ export function activation(state = INITIAL_ACTIVATION_STATE, action) {
   case ACTIVATE_FAILURE:
     return Object.assign({}, state, {
       status: FETCH_FAILURE
+    });
+  default:
+    return state;
+  }
+}
+
+const INITIAL_CART_STATE = {
+  cart: []
+};
+export function cart(state = INITIAL_CART_STATE, action) {
+  switch (action.type) {
+  case ADD_OR_UPDATE_CART_ITEM:
+    const newItem = {
+      upc: action.upc,
+      seats: action.seats
+    };
+    let cart = state.cart;
+
+    // Replace old item with new item, or add it to the end if it doesn't already exist
+    let existingItem = cart.find(item => item.upc === newItem.upc);
+    if (existingItem !== undefined) {
+      cart = cart.map(item => {
+        if (item.upc === newItem.upc) {
+          return newItem;
+        } else {
+          return item;
+        }
+      });
+    } else {
+      cart = cart.concat(newItem);
+    }
+    return Object.assign({}, state, {
+      cart: cart
+    });
+  case REMOVE_CART_ITEM:
+    return Object.assign({}, state, {
+      // Remove item with given upc from cart
+      cart: state.cart.filter(item => item.upc !== action.upc)
+    });
+  case CLEAR_CART:
+    return Object.assign({}, state, {
+      cart: []
     });
   default:
     return state;

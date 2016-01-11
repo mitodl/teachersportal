@@ -13,7 +13,7 @@ import CardTitle from 'material-ui/lib/card/card-title';
 
 class CourseDetail extends Component {
     render() {
-      const { product, error } = this.props;
+      const { product, error, cart, addToCart, onCheckout } = this.props;
 
       let content;
 
@@ -34,7 +34,12 @@ class CourseDetail extends Component {
           <CardText id="course-description">
               {product.description}
           </CardText>
-          <CourseTabs product={product} />
+          <CourseTabs
+            product={product}
+            cart={cart}
+            addToCart={addToCart}
+            onCheckout={onCheckout}
+          />
         </div>;
       }
 
@@ -49,7 +54,10 @@ class CourseDetail extends Component {
 
 CourseDetail.propTypes = {
   product: React.PropTypes.object,
-  error: React.PropTypes.string
+  error: React.PropTypes.string,
+  cart: React.PropTypes.array.isRequired,
+  addToCart: React.PropTypes.func.isRequired,
+  onCheckout: React.PropTypes.func.isRequired
 };
 
 export default CourseDetail;

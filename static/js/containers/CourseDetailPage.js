@@ -1,10 +1,14 @@
+/* global StripeHandler:false */
 import React from 'react';
 import CourseDetail from '../components/CourseDetail';
 import {
   fetchProduct,
   FETCH_FAILURE,
   FETCH_SUCCESS,
+  addOrUpdateCartItem,
+  checkout,
 } from '../actions/index_page';
+import { calculateTotal } from '../util/util';
 import { connect } from 'react-redux';
 
 class CourseDetailPage extends React.Component {
@@ -39,6 +43,7 @@ class CourseDetailPage extends React.Component {
   render() {
     const {
       product,
+      cart,
       authentication,
     } = this.props;
 
@@ -50,7 +55,13 @@ class CourseDetailPage extends React.Component {
       error = "Please log in to view the course information.";
     }
 
-    let detail = <CourseDetail error={error} product={product.product} />;
+    let detail = <CourseDetail
+      error={error}
+      cart={cart.cart}
+      addToCart={this.addToCart.bind(this)}
+      product={product.product}
+      onCheckout={this.onCheckout.bind(this)}
+    />;
 
     return <div>
       {detail}
@@ -58,12 +69,41 @@ class CourseDetailPage extends React.Component {
       ;
   }
 
+  addToCart(upc, seats) {
+    const { dispatch } = this.props;
+
+    dispatch(addOrUpdateCartItem(upc, seats));
+  }
+
+  onCheckout() {
+    const { dispatch, cart, product } = this.props;
+
+    let total = calculateTotal(cart.cart, [product.product]);
+    if (total === 0) {
+      dispatch(checkout(cart.cart, ""));
+    } else {
+      StripeHandler.open({
+        name: 'MIT Teacher\'s Portal',
+        description: cart.cart.length + ' item(s)',
+        amount: Math.floor(total * 100)
+      });
+    }
+  }
 }
+
+CourseDetailPage.propTypes = {
+  product: React.PropTypes.object.isRequired,
+  authentication: React.PropTypes.object.isRequired,
+  dispatch: React.PropTypes.func.isRequired,
+  params: React.PropTypes.object.isRequired,
+  cart: React.PropTypes.object.isRequired
+};
 
 const mapStateToProps = (state) => {
   return {
     product: state.product,
     authentication: state.authentication,
+    cart: state.cart
   };
 };
 

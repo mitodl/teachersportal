@@ -74,6 +74,11 @@
         "SECRET_KEY": {
             "description": "Django secret key.",
             "generator": "secret"
+        },
+        "PORTAL_SECURE_SSL_REDIRECT": {
+            "description": "Application-level SSL redirect setting.",
+            "required": false,
+            "value": "True"
         }
     }
 }

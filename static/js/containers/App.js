@@ -65,6 +65,13 @@ class App extends React.Component {
   }
 }
 
+App.propTypes = {
+  dispatch: React.PropTypes.func.isRequired,
+  authentication: React.PropTypes.object.isRequired,
+  registration: React.PropTypes.object.isRequired,
+  loginModal: React.PropTypes.object.isRequired
+};
+
 const mapStateToProps = (state) => {
   return {
     authentication: state.authentication,

@@ -89,7 +89,7 @@ class ProductAPITests(ProductTests):
         StockRecord.objects.all().delete()
 
         resp = self.client.get(reverse("product-list"))
-        assert resp.status_code == 200, resp.content
+        assert resp.status_code == 200, resp.content.decode('utf-8')
         products_from_api = as_json(resp)
 
         self.validate_product_api(products_from_api)
@@ -101,7 +101,7 @@ class ProductAPITests(ProductTests):
         """
         # API only shows products with StockRecords
         resp = self.client.get(reverse("product-list"))
-        assert resp.status_code == 200, resp.content
+        assert resp.status_code == 200, resp.content.decode('utf-8')
         products_from_api = as_json(resp)
 
         self.validate_product_api(products_from_api)
@@ -245,7 +245,7 @@ class ProductAPITests(ProductTests):
         resp = self.client.get(
             reverse("product-detail", kwargs={"uuid": self.child.upc})
         )
-        assert resp.status_code == 404, resp.content
+        assert resp.status_code == 404, resp.content.decode('utf-8')
 
     def test_not_logged_in(self):
         """
@@ -255,10 +255,10 @@ class ProductAPITests(ProductTests):
         resp = self.client.get(
             reverse("product-detail", kwargs={"uuid": self.child.upc})
         )
-        assert resp.status_code == 403, resp.content
+        assert resp.status_code == 403, resp.content.decode('utf-8')
 
         resp = self.client.get(reverse("product-list"))
-        assert resp.status_code == 403, resp.content
+        assert resp.status_code == 403, resp.content.decode('utf-8')
 
     @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
     @requests_mock.mock()

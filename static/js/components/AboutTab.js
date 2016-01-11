@@ -9,3 +9,7 @@ class AboutTab extends React.Component {
 }
 
 export default AboutTab;
+
+AboutTab.propTypes = {
+  content: React.PropTypes.string.isRequired
+};

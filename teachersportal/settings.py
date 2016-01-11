@@ -17,10 +17,11 @@ import platform
 from django.utils.encoding import force_bytes
 import dj_database_url
 import yaml
+import stripe
 
 from oscar import get_core_apps, OSCAR_MAIN_TEMPLATE_DIR
 
-VERSION = "0.0.0"
+VERSION = "0.1.0"
 
 CONFIG_PATHS = [
     os.environ.get('TEACHERSPORTAL_CONFIG', ''),
@@ -70,6 +71,8 @@ SECRET_KEY = get_var(
 DEBUG = get_var('DEBUG', False)
 
 ALLOWED_HOSTS = get_var('ALLOWED_HOSTS', [])
+
+SECURE_SSL_REDIRECT = get_var('PORTAL_SECURE_SSL_REDIRECT', True)
 
 
 # Application definition
@@ -299,3 +302,7 @@ CCXCON_WEBHOOKS_SECRET = force_bytes(get_var('CCXCON_WEBHOOKS_SECRET', ''))
 # Oauth settings for CCXCon
 CCXCON_OAUTH_CLIENT_ID = get_var("CCXCON_OAUTH_CLIENT_ID", "")
 CCXCON_OAUTH_CLIENT_SECRET = get_var("CCXCON_OAUTH_CLIENT_SECRET", "")
+
+# Stripe keys
+STRIPE_PUBLISHABLE_KEY = get_var("STRIPE_PUBLISHABLE_KEY", "")
+stripe.api_key = get_var("STRIPE_SECRET_KEY", "")

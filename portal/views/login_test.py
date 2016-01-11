@@ -32,7 +32,7 @@ class LoginTests(AuthenticationTestCase):
             }),
             content_type="application/json"
         )
-        assert resp.status_code == 200, resp.content
+        assert resp.status_code == 200, resp.content.decode('utf-8')
         assert self.is_authenticated(self.user)
         assert not self.is_authenticated(self.other_user)
 
@@ -48,7 +48,7 @@ class LoginTests(AuthenticationTestCase):
             }),
             content_type="application/json"
         )
-        assert resp.status_code == 403, resp.content
+        assert resp.status_code == 403, resp.content.decode('utf-8')
         assert not self.is_authenticated(self.user)
 
     def test_login_with_bad_username(self):
@@ -63,7 +63,7 @@ class LoginTests(AuthenticationTestCase):
             }),
             content_type="application/json"
         )
-        assert resp.status_code == 403, resp.content
+        assert resp.status_code == 403, resp.content.decode('utf-8')
         assert not self.is_authenticated(self.user)
 
     def test_login_missing_username(self):
@@ -77,7 +77,7 @@ class LoginTests(AuthenticationTestCase):
             }),
             content_type="application/json"
         )
-        assert resp.status_code == 400, resp.content
+        assert resp.status_code == 400, resp.content.decode('utf-8')
         assert not self.is_authenticated(self.user)
 
     def test_login_missing_password(self):
@@ -91,7 +91,7 @@ class LoginTests(AuthenticationTestCase):
             }),
             content_type="application/json"
         )
-        assert resp.status_code == 400, resp.content
+        assert resp.status_code == 400, resp.content.decode('utf-8')
         assert not self.is_authenticated(self.user)
 
     def test_login_not_an_object(self):
@@ -103,7 +103,7 @@ class LoginTests(AuthenticationTestCase):
             "{",
             content_type="application/json"
         )
-        assert resp.status_code == 400, resp.content
+        assert resp.status_code == 400, resp.content.decode('utf-8')
         assert not self.is_authenticated(self.user)
 
     def test_logout(self):
@@ -119,13 +119,13 @@ class LoginTests(AuthenticationTestCase):
             }),
             content_type="application/json"
         )
-        assert resp.status_code == 200, resp.content
+        assert resp.status_code == 200, resp.content.decode('utf-8')
         assert self.is_authenticated(self.user)
         assert not self.is_authenticated(self.other_user)
 
         # Now logout the logged in user.
         resp = self.client.post(reverse('logout'))
-        assert resp.status_code == 200, resp.content
+        assert resp.status_code == 200, resp.content.decode('utf-8')
         assert not self.is_authenticated(self.user)
         assert not self.is_authenticated(self.other_user)
 
@@ -135,6 +135,6 @@ class LoginTests(AuthenticationTestCase):
         and return a 200.
         """
         resp = self.client.post(reverse('logout'))
-        assert resp.status_code == 200, resp.content
+        assert resp.status_code == 200, resp.content.decode('utf-8')
         assert not self.is_authenticated(self.user)
         assert not self.is_authenticated(self.other_user)

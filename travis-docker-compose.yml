@@ -17,6 +17,7 @@ web:
     PORTAL_DB_DISABLE_SSL: 'True'
     CCXCON_API: http://private-anon-388fdf8b0-ccxcon.apiary-mock.com/api/
     PORTAL_OSCAR_VISIBLE: 'True'
+    PORTAL_SECURE_SSL_REDIRECT: 'False'
   ports:
     - "8075:8075"
   links:

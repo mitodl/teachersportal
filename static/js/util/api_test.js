@@ -1,4 +1,4 @@
-/* global SETTINGS */
+/* global SETTINGS:false */
 import '../global_init';
 import assert from 'assert';
 import ReactTestUtils from 'react-addons-test-utils';
@@ -12,42 +12,13 @@ import {
   logout,
   register,
   activate,
+  checkout,
 } from './api';
-
-const PRODUCT_RESPONSE = {
-  "upc": "Course_7560bd21-7b1d-4c2f-8103-acc93b6c40b1",
-  "title": "Course 7560bd21-7b1d-4c2f-8103-acc93b6c40b1",
-  "description": "Course description here",
-  "external_pk": "7560bd21-7b1d-4c2f-8103-acc93b6c40b1",
-  "product_type": "Course",
-  "price_without_tax": null,
-  "parent_upc": null,
-  "info": {
-    "overview": "overview",
-    "image_url": "http://youtube.com/",
-    "description": "description",
-    "author_name": "author",
-    "title": "title"
-  },
-  "children": [
-    {
-      "info": {
-        "subchapters": [],
-        "title": "other course"
-      },
-      "parent_upc": "Course_7560bd21-7b1d-4c2f-8103-acc93b6c40b1",
-      "product_type": "Module",
-      "title": "Module ed99737e-d5bf-4b95-a467-bf4ecf31f7b0",
-      "external_pk": "ed99737e-d5bf-4b95-a467-bf4ecf31f7b0",
-      "children": [],
-      "upc": "Module_ed99737e-d5bf-4b95-a467-bf4ecf31f7b0",
-      "price_without_tax": 33.0
-    }
-  ]
-};
+import { PRODUCT_RESPONSE } from '../constants';
 
 
 describe('common api functions', function() {
+  this.timeout(5000);  // eslint-disable-line no-invalid-this
   jsdom();
 
   it('gets a product', done => {
@@ -193,6 +164,46 @@ describe('common api functions', function() {
       };
     });
     activate(expected.token).catch(() => {
+      done();
+    });
+  });
+
+  it('checks out successfully', done => {
+    let expected = {
+      cart: [{
+        upc: "upc",
+        seats: 5
+      }],
+      token: "token"
+    };
+
+    fetchMock.mock('/api/v1/checkout/', (url, opts) => {
+      assert.deepEqual(JSON.parse(opts.body), expected);
+      return {
+        status: 200
+      };
+    });
+    checkout(expected.cart, expected.token).then(() => {
+      done();
+    });
+  });
+
+  it('fails to checkout', done => {
+    let expected = {
+      cart: [{
+        upc: "upc",
+        seats: 5
+      }],
+      token: "token"
+    };
+
+    fetchMock.mock('/api/v1/checkout/', (url, opts) => {
+      assert.deepEqual(JSON.parse(opts.body), expected);
+      return {
+        status: 400
+      };
+    });
+    checkout(expected.cart, expected.token).catch(() => {
       done();
     });
   });

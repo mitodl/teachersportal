@@ -20,6 +20,7 @@ web:
     PORTAL_OSCAR_VISIBLE: 'True'
     PORTAL_USE_WEBPACK_DEV_SERVER: 'True'
     PORTAL_EMAIL_BACKEND: 'django.core.mail.backends.console.EmailBackend'
+    PORTAL_SECURE_SSL_REDIRECT: 'False'
   env_file: .env
   ports:
     - "8075:8075"

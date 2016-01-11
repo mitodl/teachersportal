@@ -26,7 +26,7 @@ class ActivationTests(AuthenticationTestCase):
             }),
             content_type="application/json"
         )
-        assert resp.status_code == 200, resp.content
+        assert resp.status_code == 200, resp.content.decode('utf-8')
         self.inactive_user.refresh_from_db()
         assert self.inactive_user.is_active
         # User is not logged in automatically just by clicking the link
@@ -45,7 +45,7 @@ class ActivationTests(AuthenticationTestCase):
             }),
             content_type="application/json"
         )
-        assert resp.status_code == 200, resp.content
+        assert resp.status_code == 200, resp.content.decode('utf-8')
         assert self.user.is_active
         assert not self.is_authenticated(self.user)
 
@@ -62,7 +62,7 @@ class ActivationTests(AuthenticationTestCase):
             }),
             content_type="application/json"
         )
-        assert resp.status_code == 403, resp.content
+        assert resp.status_code == 403, resp.content.decode('utf-8')
 
     def test_invalid_json(self):
         """
@@ -73,7 +73,7 @@ class ActivationTests(AuthenticationTestCase):
             "{",
             content_type="application/json"
         )
-        assert resp.status_code == 400, resp.content
+        assert resp.status_code == 400, resp.content.decode('utf-8')
         assert "JSON parse error" in resp.content.decode('utf-8')
 
     def test_missing_token(self):
@@ -86,7 +86,7 @@ class ActivationTests(AuthenticationTestCase):
             }),
             content_type="application/json"
         )
-        assert resp.status_code == 400, resp.content
+        assert resp.status_code == 400, resp.content.decode('utf-8')
         assert "Missing key token" in resp.content.decode('utf-8')
 
     def test_empty_token(self):
@@ -101,5 +101,5 @@ class ActivationTests(AuthenticationTestCase):
             }),
             content_type="application/json"
         )
-        assert resp.status_code == 400, resp.content
+        assert resp.status_code == 400, resp.content.decode('utf-8')
         assert "token is empty" in resp.content.decode('utf-8')

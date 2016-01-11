@@ -15,13 +15,15 @@ class Navigation extends React.Component {
     }
 
     return <div id="navigation">
-        <FlatButton label="Courses" />
-        <FlatButton label="MIT's Pedagogy" />
-        <FlatButton label="Resources and Teaching Guides" />
-        <FlatButton label="About" />
       {loginButton}
       </div>;
   }
 }
+
+Navigation.propTypes = {
+  onShowSignIn: React.PropTypes.func.isRequired,
+  onSignOut: React.PropTypes.func.isRequired,
+  authentication: React.PropTypes.object.isRequired
+};
 
 export default Navigation;
