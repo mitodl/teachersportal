@@ -29,6 +29,7 @@ export const UPDATE_CART_ITEMS = 'UPDATE_CART_ITEMS';
 export const CLEAR_CART = 'CLEAR_CART';
 export const CHECKOUT_SUCCESS = 'CHECKOUT_SUCCESS';
 export const CHECKOUT_FAILURE = 'CHECKOUT_FAILURE';
+export const CLEAR_INVALID_CART_ITEMS = 'CLEAR_INVALID_CART_ITEMS';
 
 export const UPDATE_SELECTED_CHAPTERS = 'UPDATE_SELECTED_CHAPTERS';
 export const UPDATE_SEAT_COUNT = 'UPDATE_SEAT_COUNT';
@@ -64,7 +65,7 @@ function requestProductList() {
   };
 }
 
-function receiveProductListSuccess(json) {
+export function receiveProductListSuccess(json) {
   return {
     type: RECEIVE_PRODUCT_LIST_SUCCESS,
     productList: json
@@ -119,6 +120,12 @@ export function fetchProductList() {
     return api.getProductList().
       then(json => dispatch(receiveProductListSuccess(json))).
       catch(() => dispatch(receiveProductListFailure()));
+  };
+}
+
+export function clearInvalidCartItems() {
+  return {
+    type: CLEAR_INVALID_CART_ITEMS
   };
 }
 

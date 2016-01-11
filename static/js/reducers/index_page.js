@@ -23,11 +23,13 @@ import {
   ACTIVATE_FAILURE,
   ACTIVATE,
   CLEAR_CART,
+  CLEAR_INVALID_CART_ITEMS,
   UPDATE_CART_ITEMS,
   UPDATE_SELECTED_CHAPTERS,
   UPDATE_SEAT_COUNT,
   UPDATE_CART_VISIBILITY,
 } from '../actions/index_page';
+import { filterCart } from '../util/util';
 
 const INITIAL_PRODUCT_STATE = {
   productList: []
@@ -168,6 +170,11 @@ const INITIAL_CART_STATE = {
 };
 export function cart(state = INITIAL_CART_STATE, action) {
   switch (action.type) {
+  case RECEIVE_PRODUCT_LIST_SUCCESS:
+    // we need this to know what products are missing or not
+    return Object.assign({}, state, {
+      productList: action.productList
+    });
   case UPDATE_CART_ITEMS:
     const { upcs, seats, courseUpc } = action;
     // Remove all items for this particular course
@@ -185,6 +192,10 @@ export function cart(state = INITIAL_CART_STATE, action) {
   case CLEAR_CART:
     return Object.assign({}, state, {
       cart: []
+    });
+  case CLEAR_INVALID_CART_ITEMS:
+    return Object.assign({}, state, {
+      cart: filterCart(state.cart, state.productList)
     });
   default:
     return state;
