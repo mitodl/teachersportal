@@ -12,6 +12,7 @@ from rest_framework.exceptions import ValidationError
 
 from portal.models import Order, OrderLine
 from portal.views.base import ProductTests
+from portal.factories import ProductFactory
 from portal.util import (
     calculate_cart_subtotal,
     calculate_cart_item_total,
@@ -610,6 +611,35 @@ class CheckoutValidationTests(ProductTests):
                 {"upc": self.child.upc, "seats": 5}
             ])
         assert ex.exception.detail[0] == "Duplicate item in cart"
+
+    def test_must_have_all_children_in_cart(self):  # pylint: disable=invalid-name
+        """
+        If user tries to buy a subset of a course, raise a validation error.
+
+        Note: It's expected that this will be removed when we support buying
+        modules.
+        """
+        child2 = ProductFactory.create(
+            upc=make_upc(MODULE_PRODUCT_TYPE, 'abcdef2'),
+            parent=self.parent,
+            title='test',
+            product_class=None,
+            structure=Product.CHILD
+        )
+        StockRecord.objects.create(
+            product=child2,
+            partner=Partner.objects.first(),
+            partner_sku=child2.upc,
+            price_currency="$",
+            price_excl_tax=100,
+        )
+
+        with self.assertRaises(ValidationError) as ex:
+            validate_cart([
+                {'upc': self.child.upc, 'seats': 5},
+            ])
+
+        assert ex.exception.detail[0] == 'You must purchase all modules for a course.'
 
 
 class CheckoutOrderTests(ProductTests):
