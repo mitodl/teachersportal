@@ -260,3 +260,24 @@ class CheckoutAPITests(ProductTests):
 
         assert "Example Error" in resp.content.decode('utf-8')
         assert "Another Error" in resp.content.decode('utf-8')
+
+    def test_not_logged_in(self):
+        """
+        Assert that the user must be logged in to checkout.
+        """
+        self.client.logout()
+
+        cart_item = {
+            "upc": self.child.upc,
+            "seats": 5
+        }
+        cart = [cart_item]
+        resp = self.client.post(
+            reverse('checkout'),
+            content_type='application/json',
+            data=json.dumps({
+                "cart": cart,
+                "token": "token"
+            })
+        )
+        assert resp.status_code == 403
