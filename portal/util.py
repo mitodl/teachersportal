@@ -290,6 +290,12 @@ def validate_cart(cart):
 
         items_in_cart.add(item['upc'])
 
+    for item_upc in items_in_cart:
+        item = Product.objects.get(upc=item_upc)
+        children_upcs = Product.objects.filter(parent=item.parent).values_list('upc', flat=True)
+        if not items_in_cart.issuperset(children_upcs):
+            raise ValidationError("You must purchase all modules for a course.")
+
 
 def create_order(cart, user):
     """
