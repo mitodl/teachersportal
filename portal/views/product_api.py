@@ -30,20 +30,17 @@ from portal.util import (
 log = logging.getLogger(__name__)
 
 
-def fetch_ccxcon_info(product):
+def ccxcon_request():
     """
-    Fetch information from CCXCon about a product and its children. Note that
-    this list is not filtered by availability to buy, that will be done in view.
-    Args:
-        product (Product): The product to get course or module information for.
+    Returns an object to make requests to CCXcon
+
     Returns:
-        OrderedDict: Information from CCXCon, for either a module or course.
+        conn_info (requests_oauthlib.OAuth2Session): You can use this to make
+            authenticated requests to the backing instance.
     """
     ccxcon_api = settings.CCXCON_API
     client_id = settings.CCXCON_OAUTH_CLIENT_ID
     client_secret = settings.CCXCON_OAUTH_CLIENT_SECRET
-    allowed_module_keys = ('title', 'subchapters')
-    allowed_course_keys = ('title', 'description', 'overview', 'image_url', 'author_name')
 
     # Get an oauth token. At some point in the future we may want to cache
     # this if it doesn't already so we don't make an unnecessary request here.
@@ -55,6 +52,23 @@ def fetch_ccxcon_info(product):
         client_id=client_id,
         client_secret=client_secret,
     )
+
+    return oauth_ccxcon
+
+
+def fetch_ccxcon_info(product):
+    """
+    Fetch information from CCXCon about a product and its children. Note that
+    this list is not filtered by availability to buy, that will be done in view.
+    Args:
+        product (Product): The product to get course or module information for.
+    Returns:
+        dict: Information from CCXCon, for either a module or course.
+    """
+    allowed_module_keys = ('title', 'subchapters')
+    allowed_course_keys = ('title', 'description', 'overview', 'image_url', 'author_name')
+    oauth_ccxcon = ccxcon_request()
+    ccxcon_api = settings.CCXCON_API
 
     product_type = get_product_type(product)
     if product_type == COURSE_PRODUCT_TYPE:
