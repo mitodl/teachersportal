@@ -272,6 +272,7 @@ def validate_cart(cart):
             product = Product.objects.get(upc=item['upc'])
             seats = int(item['seats'])
         except Product.DoesNotExist:
+            log.debug('Could not find product with upc %s', item['upc'])
             raise ValidationError("One or more products are unavailable")
         except KeyError as ex:
             raise ValidationError("Missing key {}".format(ex.args[0]))
