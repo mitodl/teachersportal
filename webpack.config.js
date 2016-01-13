@@ -39,5 +39,13 @@ module.exports = {
   resolve: {
     modulesDirectories: ['node_modules'],
     extensions: ['', '.js', '.jsx']
-  }
+  },
+  plugins: [
+    new webpack.optimize.UglifyJsPlugin({
+      compress: {
+        warnings: false
+      }
+    })
+  ],
+  devtool: 'source-map'
 };
