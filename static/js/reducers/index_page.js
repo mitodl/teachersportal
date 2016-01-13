@@ -44,7 +44,7 @@ export function product(state = INITIAL_PRODUCT_STATE, action) {
   case RECEIVE_PRODUCT_SUCCESS:
     return Object.assign({}, state, {
       productStatus: FETCH_SUCCESS,
-      product: action.product
+      product: action.payload.product
     });
   case RECEIVE_PRODUCT_FAILURE:
     return Object.assign({}, state, {
@@ -58,7 +58,7 @@ export function product(state = INITIAL_PRODUCT_STATE, action) {
   case RECEIVE_PRODUCT_LIST_SUCCESS:
     return Object.assign({}, state, {
       productListStatus: FETCH_SUCCESS,
-      productList: action.productList
+      productList: action.payload.productList
     });
   case RECEIVE_PRODUCT_LIST_FAILURE:
     return Object.assign({}, state, {
@@ -102,7 +102,7 @@ export function authentication(state = INITIAL_AUTHENTICATION_STATE, action) {
   case LOGIN_FAILURE:
     return Object.assign({}, state, {
       isAuthenticated: false,
-      error: action.error
+      error: action.payload.error
     });
   case LOGIN_SUCCESS:
     return Object.assign({}, state, {
@@ -136,7 +136,7 @@ export function registration(state = INITIAL_REGISTRATION_STATE, action) {
     });
   case REGISTER_FAILURE:
     return Object.assign({}, state, {
-      error: action.error,
+      error: action.payload.error,
       status: FETCH_FAILURE
     });
   case CLEAR_REGISTRATION_ERROR:
@@ -173,10 +173,10 @@ export function cart(state = INITIAL_CART_STATE, action) {
   case RECEIVE_PRODUCT_LIST_SUCCESS:
     // we need this to know what products are missing or not
     return Object.assign({}, state, {
-      productList: action.productList
+      productList: action.payload.productList
     });
   case UPDATE_CART_ITEMS:
-    const { upcs, seats, courseUpc } = action;
+    const { upcs, seats, courseUpc } = action.payload;
     // Remove all items for this particular course
     let newCart = state.cart.filter(item => item.courseUpc !== courseUpc);
     let newItems = upcs.map(upc => ({
@@ -213,16 +213,16 @@ export function buyTab(state = INITIAL_BUYTAB_STATE, action) {
   switch (action.type) {
   case UPDATE_SELECTED_CHAPTERS:
     return Object.assign({}, state, {
-      selectedChapters: action.upcs,
-      allRowsSelected: action.allRowsSelected
+      selectedChapters: action.payload.upcs,
+      allRowsSelected: action.payload.allRowsSelected
     });
   case UPDATE_SEAT_COUNT:
     return Object.assign({}, state, {
-      seats: action.seats
+      seats: action.payload.seats
     });
   case UPDATE_CART_VISIBILITY:
     return Object.assign({}, state, {
-      cartVisibility: action.visibility
+      cartVisibility: action.payload.visibility
     });
   default:
     return state;

@@ -1,4 +1,5 @@
 import * as api from '../util/api';
+import { createAction } from 'redux-actions';
 
 // action type constants
 export const REQUEST_PRODUCT = 'REQUEST_PRODUCT';
@@ -40,49 +41,20 @@ export const FETCH_FAILURE = 'FETCH_FAILURE';
 export const FETCH_SUCCESS = 'FETCH_SUCCESS';
 export const FETCH_PROCESSING = 'FETCH_PROCESSING';
 
-function requestProduct() {
-  return {
-    type: REQUEST_PRODUCT
-  };
-}
+const requestProduct = createAction(REQUEST_PRODUCT);
 
-function receiveProductSuccess(json) {
-  return {
-    type: RECEIVE_PRODUCT_SUCCESS,
-    product: json
-  };
-}
+const receiveProductSuccess = createAction(
+  RECEIVE_PRODUCT_SUCCESS, (product) => {return {product};});
 
-function receiveProductFailure() {
-  return {
-    type: RECEIVE_PRODUCT_FAILURE
-  };
-}
+const receiveProductFailure = createAction(RECEIVE_PRODUCT_FAILURE);
+const requestProductList = createAction(REQUEST_PRODUCT_LIST);
 
-function requestProductList() {
-  return {
-    type: REQUEST_PRODUCT_LIST
-  };
-}
+export const receiveProductListSuccess = createAction(
+  RECEIVE_PRODUCT_LIST_SUCCESS, (productList) => {return {productList};});
 
-export function receiveProductListSuccess(json) {
-  return {
-    type: RECEIVE_PRODUCT_LIST_SUCCESS,
-    productList: json
-  };
-}
+const receiveProductListFailure = createAction(RECEIVE_PRODUCT_LIST_FAILURE);
 
-function receiveProductListFailure() {
-  return {
-    type: RECEIVE_PRODUCT_LIST_FAILURE
-  };
-}
-
-export function showLogin() {
-  return {
-    type: SHOW_LOGIN
-  };
-}
+export const showLogin = createAction(SHOW_LOGIN);
 
 export function hideLogin() {
   return dispatch => {
@@ -98,12 +70,8 @@ export function hideLogin() {
   };
 }
 
-export function updateCartVisibility(visibility) {
-  return {
-    type: UPDATE_CART_VISIBILITY,
-    visibility
-  };
-}
+export const updateCartVisibility = createAction(
+  UPDATE_CART_VISIBILITY, (visibility) => { return {visibility}; });
 
 export function fetchProduct(upc) {
   return dispatch => {
@@ -123,24 +91,9 @@ export function fetchProductList() {
   };
 }
 
-export function clearInvalidCartItems() {
-  return {
-    type: CLEAR_INVALID_CART_ITEMS
-  };
-}
-
-export function loginFailure(error) {
-  return {
-    type: LOGIN_FAILURE,
-    error: error
-  };
-}
-
-export function loginSuccess() {
-  return {
-    type: LOGIN_SUCCESS
-  };
-}
+export const clearInvalidCartItems = createAction(CLEAR_INVALID_CART_ITEMS);
+export const loginFailure = createAction(LOGIN_FAILURE, (error) => {return {error}; });
+export const loginSuccess = createAction(LOGIN_SUCCESS);
 
 export function logout() {
   return dispatch => {
@@ -170,18 +123,9 @@ export function login(username, password) {
   };
 }
 
-export function registerSuccess() {
-  return {
-    type: REGISTER_SUCCESS
-  };
-}
-
-export function registerFailure(error) {
-  return {
-    type: REGISTER_FAILURE,
-    error: error
-  };
-}
+export const registerSuccess = createAction(REGISTER_SUCCESS);
+export const registerFailure = createAction(
+  REGISTER_FAILURE, (error) => { return {error}; });
 
 export function register(fullName, email, organization, password, redirect) {
   return dispatch => {
@@ -198,17 +142,8 @@ export function register(fullName, email, organization, password, redirect) {
   };
 }
 
-export function activateSuccess() {
-  return {
-    type: ACTIVATE_SUCCESS
-  };
-}
-
-export function activateFailure() {
-  return {
-    type: ACTIVATE_FAILURE
-  };
-}
+export const activateSuccess = createAction(ACTIVATE_SUCCESS);
+export const activateFailure = createAction(ACTIVATE_FAILURE);
 
 export function activate(token) {
   return dispatch => {
@@ -223,32 +158,12 @@ export function activate(token) {
   };
 }
 
-export function updateCartItems(upcs, seats, courseUpc) {
-  return {
-    type: UPDATE_CART_ITEMS,
-    upcs,
-    seats,
-    courseUpc
-  };
-}
+export const updateCartItems = createAction(
+  UPDATE_CART_ITEMS, (upcs, seats, courseUpc) => { return {upcs, seats, courseUpc}; });
 
-export function clearCart() {
-  return {
-    type: CLEAR_CART
-  };
-}
-
-export function checkoutSuccess() {
-  return {
-    type: CHECKOUT_SUCCESS
-  };
-}
-
-export function checkoutFailure() {
-  return {
-    type: CHECKOUT_FAILURE
-  };
-}
+export const clearCart = createAction(CLEAR_CART);
+export const checkoutSuccess = createAction(CHECKOUT_SUCCESS);
+export const checkoutFailure = createAction(CHECKOUT_FAILURE);
 
 export function checkout(cart, token) {
   return dispatch => {
@@ -264,17 +179,8 @@ export function checkout(cart, token) {
   };
 }
 
-export function updateSelectedChapters(upcs, allRowsSelected) {
-  return {
-    type: UPDATE_SELECTED_CHAPTERS,
-    upcs,
-    allRowsSelected
-  };
-}
+export const updateSelectedChapters = createAction(
+  UPDATE_SELECTED_CHAPTERS, (upcs, allRowsSelected)  => { return {upcs, allRowsSelected}; });
 
-export function updateSeatCount(seats) {
-  return {
-    type: UPDATE_SEAT_COUNT,
-    seats
-  };
-}
+export const updateSeatCount = createAction(
+  UPDATE_SEAT_COUNT, (seats) => { return { seats }; });
