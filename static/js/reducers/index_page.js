@@ -30,152 +30,97 @@ import {
   UPDATE_CART_VISIBILITY,
 } from '../actions/index_page';
 import { filterCart } from '../util/util';
+import { handleActions } from 'redux-actions';
+
+
+// Helper function to avoid a commonly repeated pattern where we merge
+// state with something computed soley from the actions. Accepts a
+// function that will get the action, and should return the value to
+// be merged with the existing state.
+function payloadMerge(fn) {
+  return (state, action) => {
+    return Object.assign({}, state, fn(action));
+  };
+}
 
 const INITIAL_PRODUCT_STATE = {
   productList: []
 };
-export function product(state = INITIAL_PRODUCT_STATE, action) {
-  switch (action.type) {
 
-  case REQUEST_PRODUCT:
-    return Object.assign({}, state, {
-      productStatus: FETCH_PROCESSING
-    });
-  case RECEIVE_PRODUCT_SUCCESS:
-    return Object.assign({}, state, {
-      productStatus: FETCH_SUCCESS,
-      product: action.payload.product
-    });
-  case RECEIVE_PRODUCT_FAILURE:
-    return Object.assign({}, state, {
-      productStatus: FETCH_FAILURE
-    });
+export const product = handleActions({
+  REQUEST_PRODUCT: payloadMerge((action) => ({productStatus: FETCH_PROCESSING})),
+  RECEIVE_PRODUCT_SUCCESS: payloadMerge((action) => ({
+    productStatus: FETCH_SUCCESS,
+    product: action.payload.product
+  })),
 
-  case REQUEST_PRODUCT_LIST:
-    return Object.assign({}, state, {
-      productListStatus: FETCH_PROCESSING
-    });
-  case RECEIVE_PRODUCT_LIST_SUCCESS:
-    return Object.assign({}, state, {
-      productListStatus: FETCH_SUCCESS,
-      productList: action.payload.productList
-    });
-  case RECEIVE_PRODUCT_LIST_FAILURE:
-    return Object.assign({}, state, {
-      productListStatus: FETCH_FAILURE
-    });
+  RECEIVE_PRODUCT_FAILURE: payloadMerge((action) => ({
+    productStatus: FETCH_FAILURE
+  })),
 
-  case CLEAR_PRODUCT:
-    return INITIAL_PRODUCT_STATE;
+  REQUEST_PRODUCT_LIST: payloadMerge((action) => ({
+    productListStatus: FETCH_PROCESSING
+  })),
 
-  default:
-    return state;
-  }
-}
+  RECEIVE_PRODUCT_LIST_SUCCESS: payloadMerge((action) => ({
+    productListStatus: FETCH_SUCCESS,
+    productList: action.payload.productList
+  })),
 
-const INITIAL_LOGIN_MODAL_STATE = {
-  visible: false
-};
+  RECEIVE_PRODUCT_LIST_FAILURE: payloadMerge((action) => ({
+    productListStatus: FETCH_FAILURE
+  })),
 
-export function loginModal(state = INITIAL_LOGIN_MODAL_STATE, action) {
-  switch (action.type) {
-  case SHOW_LOGIN:
-    return Object.assign({}, state, {
-      visible: true
-    });
-  case HIDE_LOGIN:
-    return Object.assign({}, state, {
-      visible: false
-    });
-  default:
-    return state;
-  }
-}
+  CLEAR_PRODUCT: (state, action) => INITIAL_PRODUCT_STATE
+}, INITIAL_PRODUCT_STATE);
 
-const INITIAL_AUTHENTICATION_STATE = {
+export const loginModal = handleActions({
+  SHOW_LOGIN: () => ({ visible: true }),
+  HIDE_LOGIN: () => ({ visible: false })
+}, {visible: false});
+
+export const authentication = handleActions({
+  LOGIN_FAILURE: (state, action) => ({
+    error: action.payload.error,
+    isAuthenticated: false
+  }),
+  LOGIN_SUCCESS: (state, action) => ({
+    error: "",
+    isAuthenticated: true
+  }),
+  LOGOUT: (state, action) => ({
+    error: "",
+    isAuthenticated: false
+  }),
+  CLEAR_AUTHENTICATION_ERROR: payloadMerge((action) => ({error: ""}))
+}, {
   isAuthenticated: SETTINGS.isAuthenticated,
   error: ""
-};
+});
 
-export function authentication(state = INITIAL_AUTHENTICATION_STATE, action) {
-  switch (action.type) {
-  case LOGIN_FAILURE:
-    return Object.assign({}, state, {
-      isAuthenticated: false,
-      error: action.payload.error
-    });
-  case LOGIN_SUCCESS:
-    return Object.assign({}, state, {
-      error: "",
-      isAuthenticated: true
-    });
-  case LOGOUT:
-    return Object.assign({}, state, {
-      error: "",
-      isAuthenticated: false
-    });
-  case CLEAR_AUTHENTICATION_ERROR:
-    return Object.assign({}, state, {
-      error: ""
-    });
-  default:
-    return state;
-  }
-}
+export const registration = handleActions({
+  REGISTER_SUCCESS: (state, action) => ({
+    error: "",
+    status: FETCH_SUCCESS
+  }),
+  REGISTER_FAILURE: (state, action) => ({
+    error: action.payload.error,
+    status: FETCH_FAILURE
+  }),
+  CLEAR_REGISTRATION_ERROR: payloadMerge((action) => ({error: ""}))
+}, { error: "", status: null });
 
-const INITIAL_REGISTRATION_STATE = {
-  error: ""
-};
+export const activation = handleActions({
+  ACTIVATE_SUCCESS: () => ({ status: FETCH_SUCCESS }),
+  ACTIVATE_FAILURE: () => ({ status: FETCH_FAILURE })
+}, { status: null });
 
-export function registration(state = INITIAL_REGISTRATION_STATE, action) {
-  switch (action.type) {
-  case REGISTER_SUCCESS:
-    return Object.assign({}, state, {
-      error: "",
-      status: FETCH_SUCCESS
-    });
-  case REGISTER_FAILURE:
-    return Object.assign({}, state, {
-      error: action.payload.error,
-      status: FETCH_FAILURE
-    });
-  case CLEAR_REGISTRATION_ERROR:
-    return Object.assign({}, state, {
-      error: ""
-    });
-  default:
-    return state;
-  }
-}
+export const cart = handleActions({
+  RECEIVE_PRODUCT_LIST_SUCCESS: payloadMerge((action) => ({
+    productList: action.payload.productList
+  })),
 
-const INITIAL_ACTIVATION_STATE = {};
-
-export function activation(state = INITIAL_ACTIVATION_STATE, action) {
-  switch (action.type) {
-  case ACTIVATE_SUCCESS:
-    return Object.assign({}, state, {
-      status: FETCH_SUCCESS
-    });
-  case ACTIVATE_FAILURE:
-    return Object.assign({}, state, {
-      status: FETCH_FAILURE
-    });
-  default:
-    return state;
-  }
-}
-
-const INITIAL_CART_STATE = {
-  cart: []
-};
-export function cart(state = INITIAL_CART_STATE, action) {
-  switch (action.type) {
-  case RECEIVE_PRODUCT_LIST_SUCCESS:
-    // we need this to know what products are missing or not
-    return Object.assign({}, state, {
-      productList: action.payload.productList
-    });
-  case UPDATE_CART_ITEMS:
+  UPDATE_CART_ITEMS: (state, action) => {
     const { upcs, seats, courseUpc } = action.payload;
     // Remove all items for this particular course
     let newCart = state.cart.filter(item => item.courseUpc !== courseUpc);
@@ -189,18 +134,18 @@ export function cart(state = INITIAL_CART_STATE, action) {
     return Object.assign({}, state, {
       cart: newCart
     });
-  case CLEAR_CART:
-    return Object.assign({}, state, {
-      cart: []
-    });
-  case CLEAR_INVALID_CART_ITEMS:
-    return Object.assign({}, state, {
+  },
+
+  CLEAR_CART: payloadMerge((action) => ({cart: []})),
+
+  CLEAR_INVALID_CART_ITEMS: (state, action) =>
+    Object.assign({}, state, {
       cart: filterCart(state.cart, state.productList)
-    });
-  default:
-    return state;
-  }
-}
+    })
+}, {
+  productList: [],
+  cart: []
+});
 
 const INITIAL_BUYTAB_STATE = {
   seats: 20,
@@ -209,22 +154,15 @@ const INITIAL_BUYTAB_STATE = {
   cartVisibility: false
 };
 
-export function buyTab(state = INITIAL_BUYTAB_STATE, action) {
-  switch (action.type) {
-  case UPDATE_SELECTED_CHAPTERS:
-    return Object.assign({}, state, {
-      selectedChapters: action.payload.upcs,
-      allRowsSelected: action.payload.allRowsSelected
-    });
-  case UPDATE_SEAT_COUNT:
-    return Object.assign({}, state, {
-      seats: action.payload.seats
-    });
-  case UPDATE_CART_VISIBILITY:
-    return Object.assign({}, state, {
-      cartVisibility: action.payload.visibility
-    });
-  default:
-    return state;
-  }
-}
+export const buyTab = handleActions({
+  UPDATE_SELECTED_CHAPTERS: payloadMerge((action) => ({
+    selectedChapters: action.payload.upcs,
+    allRowsSelected: action.payload.allRowsSelected
+  })),
+  UPDATE_SEAT_COUNT: payloadMerge((action) => ({
+    seats: action.payload.seats
+  })),
+  UPDATE_CART_VISIBILITY: payloadMerge((action) => ({
+    cartVisibility: action.payload.visibility
+  }))
+}, INITIAL_BUYTAB_STATE);

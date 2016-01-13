@@ -330,7 +330,8 @@ describe('reducers', () => {
             upc: 'upc',
             seats: 3,
             courseUpc: 'courseUpc'
-          }]
+          }],
+          productList: []
         });
 
         // Update cart with item in it, which removes the other items in cart
@@ -340,7 +341,8 @@ describe('reducers', () => {
               upc: 'newUpc',
               seats: 5,
               courseUpc: 'courseUpc'
-            }]
+            }],
+            productList: []
           });
 
           // Update cart with a different courseUpc, ignoring existing items with a different courseUpc
@@ -354,7 +356,8 @@ describe('reducers', () => {
                 upc: 'upc',
                 seats: 4,
                 courseUpc: 'othercourseUpc'
-              }]
+              }],
+              productList: []
             });
             done();
           });
@@ -372,12 +375,14 @@ describe('reducers', () => {
           courseUpc: 'courseUpc'
         }];
         assert.deepEqual(cartState, {
-          cart: expectedCart
+          cart: expectedCart,
+          productList: []
         });
 
         dispatchThen(checkout(expectedCart, "token"), 2, cartState => {
           assert.deepEqual(cartState, {
-            cart: []
+            cart: [],
+            productList: []
           });
 
           done();
@@ -395,12 +400,14 @@ describe('reducers', () => {
           courseUpc: 'courseUpc'
         }];
         assert.deepEqual(cartState, {
-          cart: expectedCart
+          cart: expectedCart,
+          productList: []
         });
 
         dispatchThen(checkout(expectedCart, "token"), cartState => {
           assert.deepEqual(cartState, {
-            cart: expectedCart
+            cart: expectedCart,
+            productList: []
           });
 
           done();
@@ -418,7 +425,8 @@ describe('reducers', () => {
           courseUpc: courseUpc
         }];
         assert.deepEqual(cartState, {
-          cart: expectedCart
+          cart: expectedCart,
+          productList: []
         });
 
         // update product list
