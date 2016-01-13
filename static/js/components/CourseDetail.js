@@ -38,7 +38,7 @@ class CourseDetail extends Component {
         <CourseImage src={product.info.image_url}/>
         <CardText
           id="course-description"
-          dangerouslySetInnerHTML={{__html: product.description }}
+          dangerouslySetInnerHTML={{__html: product.description || product.info.description }}
         />
         <CourseTabs
           product={product}

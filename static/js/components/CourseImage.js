@@ -5,10 +5,7 @@ import CardMedia from 'material-ui/lib/card/card-media';
 class CourseImage extends Component {
   render() {
     const { src } = this.props;
-    let loremImage = "http://lorempixel.com/g/350/250/abstract";
-
-    // TODO: When we're pointing at real images, use those.
-    let image = loremImage;
+    let image = src;
 
     return <Card id="course-image">
       <CardMedia>
