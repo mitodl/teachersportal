@@ -13,6 +13,7 @@ import { devTools, persistState } from 'redux-devtools';
 import { DevTools, DebugPanel, LogMonitor } from 'redux-devtools/lib/react';
 import { checkout } from './actions/index_page';
 import ga from 'react-ga';
+import { calculateTotal } from './util/util';
 
 const store = configureStore();
 
@@ -27,7 +28,11 @@ StripeHandler = StripeCheckout.configure({
   email: SETTINGS.email,
   token: token => {
     // User has confirmed the intent to pay, now process the transaction
-    store.dispatch(checkout(store.getState().cart.cart, token.id));
+    let total = calculateTotal(
+      store.getState().cart.cart,
+      store.getState().product.productList
+    );
+    store.dispatch(checkout(store.getState().cart.cart, token.id, total));
   }
 });
 

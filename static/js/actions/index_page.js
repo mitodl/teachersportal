@@ -167,9 +167,9 @@ export const checkoutSuccess = createAction(CHECKOUT_SUCCESS);
 export const checkoutFailure = createAction(CHECKOUT_FAILURE);
 export const resetBuyTab = createAction(RESET_BUYTAB);
 
-export function checkout(cart, token) {
+export function checkout(cart, token, total) {
   return dispatch => {
-    return api.checkout(cart, token).
+    return api.checkout(cart, token, total).
       then(() => {
         dispatch(checkoutSuccess());
         dispatch(clearCart());

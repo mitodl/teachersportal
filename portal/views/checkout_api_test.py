@@ -53,7 +53,8 @@ class CheckoutAPITests(ProductTests):
             content_type='application/json',
             data=json.dumps({
                 "cart": [],
-                "token": "token"
+                "token": "token",
+                "total": 0
             })
         )
         assert resp.status_code == 400, resp.content.decode('utf-8')
@@ -63,10 +64,11 @@ class CheckoutAPITests(ProductTests):
         """
         Assert that missing keys cause a 400.
         """
-        for key in ('cart', 'token'):
+        for key in ('cart', 'token', 'total'):
             payload = {
                 "cart": [],
-                "token": ""
+                "token": "",
+                "total": 0
             }
             del payload[key]
             resp = self.client.post(
@@ -95,7 +97,8 @@ class CheckoutAPITests(ProductTests):
                     "upc": self.child.upc,
                     "seats": 5
                 }],
-                "token": ""
+                "token": "",
+                "total": 0
             })
         )
         assert resp.status_code == 200, resp.content.decode('utf-8')
@@ -129,7 +132,8 @@ class CheckoutAPITests(ProductTests):
                 content_type='application/json',
                 data=json.dumps({
                     "cart": cart,
-                    "token": "token"
+                    "token": "token",
+                    "total": float(total)
                 })
             )
             assert resp.status_code == 200, resp.content.decode('utf-8')
@@ -144,6 +148,29 @@ class CheckoutAPITests(ProductTests):
             assert order.orderline_set.count() == 1
             order_line = order.orderline_set.first()
             assert calculate_cart_item_total(cart_item) == order_line.line_total
+
+    def test_cart_with_price_not_matching_total(self):
+        """
+        Assert that if the total of a cart doesn't match the calculated price,
+        we raise a ValidationError.
+        """
+        cart_item = {
+            "upc": self.child.upc,
+            "seats": 5
+        }
+        cart = [cart_item]
+
+        resp = self.client.post(
+            reverse('checkout'),
+            content_type='application/json',
+            data=json.dumps({
+                "cart": cart,
+                "token": "token",
+                "total": 0
+            })
+        )
+        assert resp.status_code == 400, resp.content.decode('utf-8')
+        assert "Cart total doesn't match expected value" in resp.content.decode('utf-8')
 
     @patch('portal.views.checkout_api.ccxcon_request')
     def test_cart_fails_to_checkout(self, ccxcon_request):
@@ -168,7 +195,8 @@ class CheckoutAPITests(ProductTests):
                     content_type='application/json',
                     data=json.dumps({
                         "cart": cart,
-                        "token": "token"
+                        "token": "token",
+                        "total": float(calculate_cart_subtotal(cart))
                     })
                 )
             assert ex.exception.args[0] == 'test exception'
@@ -210,7 +238,8 @@ class CheckoutAPITests(ProductTests):
                 content_type='application/json',
                 data=json.dumps({
                     "cart": cart,
-                    "token": "token"
+                    "token": "token",
+                    "total": float(calculate_cart_subtotal(cart))
                 })
             )
 
@@ -254,7 +283,8 @@ class CheckoutAPITests(ProductTests):
                 content_type='application/json',
                 data=json.dumps({
                     "cart": cart,
-                    "token": "token"
+                    "token": "token",
+                    "total": float(calculate_cart_subtotal(cart))
                 })
             )
 
