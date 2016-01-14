@@ -312,3 +312,6 @@ STRIPE_PUBLISHABLE_KEY = get_var("STRIPE_PUBLISHABLE_KEY", "")
 stripe.api_key = get_var("STRIPE_SECRET_KEY", "")
 
 STATUS_TOKEN = get_var("STATUS_TOKEN", "")
+
+GA_TRACKING_ID = get_var("GA_TRACKING_ID", "")
+REACT_GA_DEBUG = get_var("REACT_GA_DEBUG", False)

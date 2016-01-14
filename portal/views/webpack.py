@@ -29,7 +29,9 @@ def index_view(request):
         "host": host,
         "email": email,
         "isAuthenticated": request.user.is_authenticated(),
-        "stripePublishableKey": settings.STRIPE_PUBLISHABLE_KEY
+        "stripePublishableKey": settings.STRIPE_PUBLISHABLE_KEY,
+        "gaTrackingID": settings.GA_TRACKING_ID,
+        "reactGaDebug": settings.REACT_GA_DEBUG
     }
 
     return render(
