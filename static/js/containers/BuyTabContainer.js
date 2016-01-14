@@ -77,7 +77,7 @@ class BuyTabContainer extends React.Component {
 
     let total = calculateTotal(cart.cart, productList);
     if (total === 0) {
-      dispatch(checkout(cart.cart, ""));
+      dispatch(checkout(cart.cart, "", total));
     } else {
       StripeHandler.open({
         name: 'MIT Teacher\'s Portal',

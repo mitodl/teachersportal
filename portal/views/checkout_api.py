@@ -13,7 +13,13 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from stripe import Charge
 
-from portal.util import create_order, get_external_pk, get_product_type, COURSE_PRODUCT_TYPE
+from portal.util import (
+    calculate_cart_subtotal,
+    create_order,
+    get_external_pk,
+    get_product_type,
+    COURSE_PRODUCT_TYPE,
+)
 from ..models import OrderLine
 from .product_api import ccxcon_request
 
@@ -83,6 +89,7 @@ class CheckoutView(APIView):
         try:
             token = str(data['token'])
             cart = data['cart']
+            estimated_total = float(data['total'])
         except KeyError as ex:
             raise ValidationError("Missing key {}".format(ex.args[0]))
         except TypeError:
@@ -92,6 +99,16 @@ class CheckoutView(APIView):
             raise ValidationError("Cart must be a list of items")
         if len(cart) == 0:
             raise ValidationError("Cannot checkout an empty cart")
+
+        total = calculate_cart_subtotal(cart)
+        if int(total * 100) != int(estimated_total * 100):
+            log.error(
+                "Cart total doesn't match expected value. "
+                "Total from client: %f but actual total is: %f",
+                estimated_total,
+                total
+            )
+            raise ValidationError("Cart total doesn't match expected value")
 
         return token, cart
 
