@@ -133,18 +133,6 @@ report. To run them all inside the Docker image, run ``docker-compose
 run web tox``, or if you are running locally, after installing the
 requirements file, just run ``tox``.
 
-Continuous Testing
-~~~~~~~~~~~~~~~~~~
-
-If you want to run tests when files change, the ``test_requirements.txt``
-adds pytest-watcher, which can be started with ``ptw``. This
-unfortunately will not work well in the Docker container because the
-file events it uses are fired on the host OS, and not the Docker OS. I
-have corrected it upstream with
-`issue <https://github.com/joeyespo/pytest-watch/issues/9>`_ to the
-`pytest-watch repo <https://github.com/joeyespo/pytest-watch>`_, but it
-has not been released to pypi as of this writing.
-
 How it works
 ============
 
