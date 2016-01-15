@@ -270,12 +270,16 @@ def validate_cart(cart):
     for item in cart:
         try:
             product = Product.objects.get(upc=item['upc'])
-            seats = int(item['seats'])
+            seats = item['seats']
         except Product.DoesNotExist:
             log.debug('Could not find product with upc %s', item['upc'])
             raise ValidationError("One or more products are unavailable")
         except KeyError as ex:
             raise ValidationError("Missing key {}".format(ex.args[0]))
+
+        if not isinstance(seats, int):
+            # Hopefully we're never entering long territory here
+            raise ValidationError("Seats must be an integer")
 
         if get_product_type(product) == COURSE_PRODUCT_TYPE:
             raise ValidationError("Cannot purchase a Course")

@@ -601,6 +601,16 @@ class CheckoutValidationTests(ProductTests):
                 validate_cart([item_copy])
             assert ex.exception.detail[0] == "Missing key {}".format(key)
 
+    def test_int_seats(self):
+        """
+        Assert that non-int keys for number of seats are rejected.
+        """
+        for seats in ('6.5', 6.5, None, [], {}):
+            item = {"upc": self.child.upc, "seats": seats}
+            with self.assertRaises(ValidationError) as ex:
+                validate_cart([item])
+            assert ex.exception.detail[0] == "Seats must be an integer"
+
     def test_duplicate_order(self):
         """
         Assert that we don't allow duplicate items in cart
