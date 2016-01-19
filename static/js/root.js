@@ -41,6 +41,13 @@ window.onpopstate = () => {
   StripeHandler.close();
 };
 
+let debugTools;
+if (process.env.NODE_ENV !== 'production') {
+  debugTools = <DebugPanel top right bottom>
+    <DevTools store={store} monitor={LogMonitor} visibleOnLoad={false}/>
+  </DebugPanel>;
+}
+
 ReactDOM.render(
   <div>
     <Provider store={store}>
@@ -51,9 +58,7 @@ ReactDOM.render(
         </Route>
       </Router>
     </Provider>
-    <DebugPanel top right bottom>
-      <DevTools store={store} monitor={LogMonitor} visibleOnLoad={false}/>
-    </DebugPanel>
+    {debugTools}
   </div>,
   document.getElementById("container")
 );

@@ -6,15 +6,25 @@ import rootReducer from '../reducers';
 import { persistState as devToolsPersistState, devTools } from 'redux-devtools';
 import localStoragePersistState from 'redux-localstorage';
 
-const createStoreWithMiddleware = compose(
-  applyMiddleware(
-    thunkMiddleware,
-    createLogger()
-  ),
-  localStoragePersistState("cart"),
-  devTools(),
-  devToolsPersistState(window.location.href.match(/[?&]debug_session=([^&]+)\b/))
-)(createStore);
+let createStoreWithMiddleware;
+if (process.env.NODE_ENV !== "production") {
+  createStoreWithMiddleware = compose(
+    applyMiddleware(
+      thunkMiddleware,
+      createLogger()
+    ),
+    localStoragePersistState("cart"),
+    devTools(),
+    devToolsPersistState(window.location.href.match(/[?&]debug_session=([^&]+)\b/))
+  )(createStore);
+} else {
+  createStoreWithMiddleware = compose(
+    applyMiddleware(
+      thunkMiddleware
+    ),
+    localStoragePersistState("cart")
+  )(createStore);
+}
 
 export default function configureStore(initialState) {
   const store = createStoreWithMiddleware(rootReducer, initialState);
