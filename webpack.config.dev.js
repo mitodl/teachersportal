@@ -1,13 +1,11 @@
-var Promise = require('es6-promise').Promise;
 var path = require("path");
 var webpack = require('webpack');
-var BundleTracker = require('webpack-bundle-tracker');
 var NodeNeat = require("node-neat");
 
 module.exports = {
   context: __dirname,
   entry: {
-    'index_page': './static/js/index_page'
+    'index_page': './static/js/root'
   },
   output: {
     path: path.resolve('./static/bundles/'),
@@ -41,9 +39,9 @@ module.exports = {
     extensions: ['', '.js', '.jsx']
   },
   plugins: [
-    new webpack.optimize.UglifyJsPlugin({
-      compress: {
-        warnings: false
+    new webpack.DefinePlugin({
+      'process.env': {
+        'NODE_ENV': '"development"'
       }
     })
   ],
