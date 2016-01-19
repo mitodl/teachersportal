@@ -10,6 +10,7 @@ from oscar.apps.catalogue.models import Category, Product, ProductCategory
 from oscar.apps.partner.models import Partner, StockRecord
 from rest_framework.exceptions import ValidationError
 
+from portal.exceptions import ProductException
 from portal.models import Order, OrderLine
 from portal.views.base import ProductTests
 from portal.factories import ProductFactory
@@ -99,7 +100,7 @@ class ProductUtilTests(ProductTests):
         """Assert make_external_pk behavior"""
         assert make_external_pk("type", "type_upc") == "upc"
 
-        with self.assertRaises(Exception) as ex:
+        with self.assertRaises(ProductException) as ex:
             make_external_pk("type", "other_prefix_upc")
         assert ex.exception.args[0] == "Unexpected prefix found"
 
@@ -159,7 +160,7 @@ class ProductValidationTests(ProductTests):
             price_excl_tax=123,
         )
 
-        with self.assertRaises(Exception) as ex:
+        with self.assertRaises(ProductException) as ex:
             self.validate_products()
         assert ex.exception.args[0] == "Only CHILD products can have StockRecords"
 
@@ -177,7 +178,7 @@ class ProductValidationTests(ProductTests):
             price_excl_tax=price,
         )
 
-        with self.assertRaises(Exception) as ex:
+        with self.assertRaises(ProductException) as ex:
             self.validate_products()
         assert ex.exception.args[0] == "StockRecord SKU does not match Product UPC"
 
@@ -195,7 +196,7 @@ class ProductValidationTests(ProductTests):
             price_excl_tax=price,
         )
 
-        with self.assertRaises(Exception) as ex:
+        with self.assertRaises(ProductException) as ex:
             self.validate_products()
         assert ex.exception.args[0] == "StockRecord price_currency must be $"
 
@@ -222,7 +223,7 @@ class ProductValidationTests(ProductTests):
             price_excl_tax=price2,
         )
 
-        with self.assertRaises(Exception) as ex:
+        with self.assertRaises(ProductException) as ex:
             self.validate_products()
         assert ex.exception.args[0] == "More than one StockRecords for a Product"
 
@@ -258,7 +259,7 @@ class ProductValidationTests(ProductTests):
             parent=child,
             title="child of child"
         )
-        with self.assertRaises(Exception) as ex:
+        with self.assertRaises(ProductException) as ex:
             self.validate_products()
         assert ex.exception.args[0] == "Children cannot have product_class set"
 
@@ -273,7 +274,7 @@ class ProductValidationTests(ProductTests):
             parent=None,
             title=self.parent.title
         )
-        with self.assertRaises(Exception) as ex:
+        with self.assertRaises(ProductException) as ex:
             self.validate_products()
         assert ex.exception.args[0] == "PARENT products must have children"
 
@@ -295,7 +296,7 @@ class ProductValidationTests(ProductTests):
             parent=parent,
             title="child"
         )
-        with self.assertRaises(Exception) as ex:
+        with self.assertRaises(ProductException) as ex:
             self.validate_products()
         assert ex.exception.args[0] == "STANDALONE products must not have children"
 
@@ -310,7 +311,7 @@ class ProductValidationTests(ProductTests):
             parent=self.parent,
             title=self.parent.title
         )
-        with self.assertRaises(Exception) as ex:
+        with self.assertRaises(ProductException) as ex:
             self.validate_products()
         assert ex.exception.args[0] == "PARENT products must not have a parent"
 
@@ -325,7 +326,7 @@ class ProductValidationTests(ProductTests):
             parent=self.parent,
             title=self.child.title
         )
-        with self.assertRaises(Exception) as ex:
+        with self.assertRaises(ProductException) as ex:
             self.validate_products()
         assert ex.exception.args[0] == "Modules may only be CHILD Products"
 
@@ -340,7 +341,7 @@ class ProductValidationTests(ProductTests):
             parent=None,
             title=self.parent.title
         )
-        with self.assertRaises(Exception) as ex:
+        with self.assertRaises(ProductException) as ex:
             self.validate_products()
         assert ex.exception.args[0] == "Courses may only be PARENT Products"
 
@@ -355,7 +356,7 @@ class ProductValidationTests(ProductTests):
             parent=None,
             title=self.parent.title
         )
-        with self.assertRaises(Exception) as ex:
+        with self.assertRaises(ProductException) as ex:
             self.validate_products()
         assert ex.exception.args[0] == "Courses may only be PARENT Products"
 
@@ -370,7 +371,7 @@ class ProductValidationTests(ProductTests):
             parent=self.parent,
             title=self.child.title
         )
-        with self.assertRaises(Exception) as ex:
+        with self.assertRaises(ProductException) as ex:
             self.validate_products()
         assert ex.exception.args[0] == "Invalid product type"
 
@@ -385,7 +386,7 @@ class ProductValidationTests(ProductTests):
             parent=self.parent,
             title=self.child.title
         )
-        with self.assertRaises(Exception) as ex:
+        with self.assertRaises(ProductException) as ex:
             self.validate_products()
         assert ex.exception.args[0] == "Children cannot have product_class set"
 
@@ -406,7 +407,7 @@ class ProductValidationTests(ProductTests):
             parent=parent,
             title="child"
         )
-        with self.assertRaises(Exception) as ex:
+        with self.assertRaises(ProductException) as ex:
             self.validate_products()
         assert ex.exception.args[0] == "STANDALONE and PARENT products must have a category"
 
@@ -421,7 +422,7 @@ class ProductValidationTests(ProductTests):
             parent=None,
             title="standalone"
         )
-        with self.assertRaises(Exception) as ex:
+        with self.assertRaises(ProductException) as ex:
             self.validate_products()
         assert ex.exception.args[0] == "STANDALONE and PARENT products must have a category"
 
@@ -440,7 +441,7 @@ class ProductValidationTests(ProductTests):
             category=Category.objects.get(name="Course")
         )
 
-        with self.assertRaises(Exception) as ex:
+        with self.assertRaises(ProductException) as ex:
             self.validate_products()
         assert ex.exception.args[0] == "CHILD products can't have categories"
 

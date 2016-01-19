@@ -9,6 +9,7 @@ from rest_framework.exceptions import ValidationError
 from oscar.apps.catalogue.models import Product
 from oscar.apps.partner.strategy import Selector
 
+from portal.exceptions import ProductException
 from portal.models import Order, OrderLine
 
 MODULE_PRODUCT_TYPE = "Module"
@@ -51,7 +52,7 @@ def make_external_pk(product_type, upc):
         return upc[len(prefix):]
 
     # Should never happen since only the webhooks should update this listing
-    raise Exception("Unexpected prefix found")
+    raise ProductException("Unexpected prefix found")
 
 
 def get_external_pk(product):
@@ -72,7 +73,7 @@ def get_external_pk(product):
     elif product.structure == Product.CHILD:
         product_type = MODULE_PRODUCT_TYPE
     else:
-        raise Exception("Unexpected structure")
+        raise ProductException("Unexpected structure")
     return make_external_pk(product_type, product.upc)
 
 
@@ -90,7 +91,7 @@ def get_product_type(product):
     for product_type in (COURSE_PRODUCT_TYPE, MODULE_PRODUCT_TYPE):
         if upc.startswith("{product_type}_".format(product_type=product_type)):
             return product_type
-    raise Exception("Invalid product type")
+    raise ProductException("Invalid product type")
 
 
 # pylint: disable=too-many-branches
@@ -103,42 +104,42 @@ def validate_product(product):
     # This is not the same as the product type which is part of the UPC.
     if product.structure == Product.CHILD:
         if product.product_class is not None:
-            raise Exception("Children cannot have product_class set")
+            raise ProductException("Children cannot have product_class set")
         if product.parent is None:
-            raise Exception("CHILD products must have a parent")
+            raise ProductException("CHILD products must have a parent")
         if product.children.count() != 0:
-            raise Exception("CHILD products must not have children")
+            raise ProductException("CHILD products must not have children")
         if get_product_type(product) != MODULE_PRODUCT_TYPE:
-            raise Exception("Modules may only be CHILD Products")
+            raise ProductException("Modules may only be CHILD Products")
         if product.categories.count() != 0:
-            raise Exception("CHILD products can't have categories")
+            raise ProductException("CHILD products can't have categories")
     elif product.structure == Product.PARENT or product.structure == Product.STANDALONE:
         if product.product_class.name != "Course":
-            raise Exception("Only Course ProductClass may be set")
+            raise ProductException("Only Course ProductClass may be set")
         if product.parent is not None:
-            raise Exception("PARENT products must not have a parent")
+            raise ProductException("PARENT products must not have a parent")
         if get_product_type(product) != COURSE_PRODUCT_TYPE:
-            raise Exception("Courses may only be PARENT Products")
+            raise ProductException("Courses may only be PARENT Products")
         if product.structure == Product.PARENT and product.children.count() == 0:
-            raise Exception("PARENT products must have children")
+            raise ProductException("PARENT products must have children")
         if product.structure == Product.STANDALONE and product.children.count() > 0:
-            raise Exception("STANDALONE products must not have children")
+            raise ProductException("STANDALONE products must not have children")
         if product.categories.count() == 0:
-            raise Exception("STANDALONE and PARENT products must have a category")
+            raise ProductException("STANDALONE and PARENT products must have a category")
 
     stockrecords = product.stockrecords.all()
     if stockrecords.count() > 0:
         if product.structure != Product.CHILD:
-            raise Exception("Only CHILD products can have StockRecords")
+            raise ProductException("Only CHILD products can have StockRecords")
         if stockrecords.count() > 1:
-            raise Exception("More than one StockRecords for a Product")
+            raise ProductException("More than one StockRecords for a Product")
 
         stockrecord = stockrecords.first()
         if stockrecord.partner_sku != product.upc:
-            raise Exception("StockRecord SKU does not match Product UPC")
+            raise ProductException("StockRecord SKU does not match Product UPC")
 
         if stockrecord.price_currency != "$":
-            raise Exception("StockRecord price_currency must be $")
+            raise ProductException("StockRecord price_currency must be $")
 
 
 def get_price_without_tax(product):
@@ -202,7 +203,7 @@ def is_available_to_buy(product):
         info = strategy.fetch_for_product(product, stockrecord)
         return info.availability.is_available_to_buy
     else:
-        raise Exception("Unexpected structure")
+        raise ProductException("Unexpected structure")
 
 
 def product_as_json(product, ccxcon_info):
