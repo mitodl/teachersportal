@@ -8,7 +8,6 @@ web:
     /bin/bash -c '
     sleep 3 &&
     python manage.py migrate &&
-    python manage.py oscar_populate_countries >& /dev/null || true &&
     ./with_host.sh python manage.py runserver 0.0.0.0:8075'
   volumes:
     - .:/src
@@ -17,7 +16,6 @@ web:
     PORT: 8075
     DATABASE_URL: postgres://postgres@db:5432/postgres
     PORTAL_DB_DISABLE_SSL: 'True'
-    PORTAL_OSCAR_VISIBLE: 'True'
     PORTAL_USE_WEBPACK_DEV_SERVER: 'True'
     PORTAL_EMAIL_BACKEND: 'django.core.mail.backends.console.EmailBackend'
     PORTAL_SECURE_SSL_REDIRECT: 'False'

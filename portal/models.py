@@ -1,17 +1,79 @@
 """
 Models classes needed for portal
 """
+from __future__ import unicode_literals
+
 from django.db import models
 
 from django.contrib.auth.models import User
 from django.db.models.fields.related import ForeignKey, OneToOneField
 from django.db.models.fields import (
+    BooleanField,
     DecimalField,
     IntegerField,
     TextField,
     DateTimeField,
 )
-from oscar.apps.catalogue.models import Product
+
+
+class Course(models.Model):
+    """
+    A CCX course
+    """
+    uuid = TextField()
+    title = TextField()
+    description = TextField(blank=True, null=True)
+    live = BooleanField()
+    created_at = DateTimeField(auto_now_add=True, blank=True)
+    modified_at = DateTimeField(auto_now=True, blank=True)
+
+    @property
+    def qualified_id(self):
+        """Concatenate product type with uuid to make a unique id"""
+        # Try to avoid circular dependencies
+        from portal.util import COURSE_PRODUCT_TYPE, make_qualified_id
+        return make_qualified_id(COURSE_PRODUCT_TYPE, self.uuid)  # pylint: disable=no-member
+
+    @property
+    def is_available_for_purchase(self):
+        """
+        Does the course have any modules available for purchase?
+        """
+        if self.module_set.count() == 0:
+            return False
+        return all(module.is_available_for_purchase for module in self.module_set.all())
+
+    class Meta:  # pylint: disable=missing-docstring, no-init, old-style-class, too-few-public-methods
+        ordering = ('created_at', )
+
+
+class Module(models.Model):
+    """
+    A chapter in a CCX course
+    """
+    uuid = TextField()
+    course = ForeignKey(Course)
+    title = TextField()
+    price_without_tax = DecimalField(decimal_places=2, max_digits=20, blank=True, null=True)
+    created_at = DateTimeField(auto_now_add=True, blank=True)
+    modified_at = DateTimeField(auto_now=True, blank=True)
+
+    @property
+    def qualified_id(self):
+        """Concatenate product type with uuid to make a unique id"""
+        # Try to avoid circular dependencies
+        from portal.util import MODULE_PRODUCT_TYPE, make_qualified_id
+        return make_qualified_id(MODULE_PRODUCT_TYPE, self.uuid)  # pylint: disable=no-member
+
+    @property
+    def is_available_for_purchase(self):
+        """
+        Is the module available for purchase?
+        """
+        return self.course.live and self.price_without_tax is not None  # pylint: disable=no-member
+
+    class Meta:  # pylint: disable=missing-docstring, no-init, old-style-class, too-few-public-methods
+        ordering = ('created_at', )
 
 
 class UserInfo(models.Model):
@@ -41,7 +103,7 @@ class OrderLine(models.Model):
     """
     order = ForeignKey(Order)
     seats = IntegerField()
-    product = ForeignKey(Product)
+    module = ForeignKey(Module)
     price_without_tax = DecimalField(decimal_places=2, max_digits=20)
     line_total = DecimalField(decimal_places=2, max_digits=20)
     created_at = DateTimeField(auto_now_add=True, blank=True)

@@ -8,15 +8,19 @@ import json
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from mock import patch
-from oscar.apps.catalogue.models import Product
-from oscar.apps.partner.models import Partner, StockRecord
 from stripe import Charge
 
-from portal.factories import OrderFactory, OrderLineFactory, ProductFactory
+from portal.factories import (
+    ModuleFactory,
+    OrderFactory,
+    OrderLineFactory,
+)
 from portal.models import Order, OrderLine, UserInfo
 from portal.views.base import ProductTests
 from portal.util import (
-    calculate_cart_subtotal, calculate_cart_item_total, make_upc, MODULE_PRODUCT_TYPE
+    calculate_cart_subtotal,
+    calculate_cart_item_total,
+    get_cents,
 )
 
 from .checkout_api import CheckoutView
@@ -28,15 +32,8 @@ class CheckoutAPITests(ProductTests):
     """
     def setUp(self):
         super(CheckoutAPITests, self).setUp()
-        partner = Partner.objects.first()
-        self.price = 123
-        StockRecord.objects.create(
-            product=self.child,
-            partner=partner,
-            partner_sku=self.child.upc,
-            price_currency="$",
-            price_excl_tax=self.price,
-        )
+        self.course.live = True
+        self.course.save()
 
         credentials = {"username": "auser", "password": "apass"}
         UserInfo.objects.create(
@@ -85,16 +82,16 @@ class CheckoutAPITests(ProductTests):
         Assert that if the total of a cart is zero, checkout still works.
         """
         mock_ccxcon.return_value.post.return_value.status_code = 200
-        stockrecord = StockRecord.objects.first()
-        stockrecord.price_excl_tax = 0
-        stockrecord.save()
+
+        self.module.price_without_tax = 0
+        self.module.save()
 
         resp = self.client.post(
             reverse('checkout'),
             content_type='application/json',
             data=json.dumps({
                 "cart": [{
-                    "upc": self.child.upc,
+                    "upc": self.module.qualified_id,
                     "seats": 5
                 }],
                 "token": "",
@@ -111,7 +108,7 @@ class CheckoutAPITests(ProductTests):
         """
         mock_ccxcon.return_value.post.return_value.status_code = 200
         cart_item = {
-            "upc": self.child.upc,
+            "upc": self.module.qualified_id,
             "seats": 5
         }
         cart = [cart_item]
@@ -139,7 +136,7 @@ class CheckoutAPITests(ProductTests):
             assert resp.status_code == 200, resp.content.decode('utf-8')
 
             assert mocked_kwargs['source'] == 'token'
-            assert mocked_kwargs['amount'] == int(total * 100)
+            assert mocked_kwargs['amount'] == get_cents(total)
             assert mocked_kwargs['currency'] == 'usd'
             assert 'order_id' in mocked_kwargs['metadata']
             assert mock_ccxcon.return_value.post.called
@@ -155,7 +152,7 @@ class CheckoutAPITests(ProductTests):
         we raise a ValidationError.
         """
         cart_item = {
-            "upc": self.child.upc,
+            "upc": self.module.qualified_id,
             "seats": 5
         }
         cart = [cart_item]
@@ -178,7 +175,7 @@ class CheckoutAPITests(ProductTests):
         Assert that we clean up everything if checkout failed.
         """
         cart_item = {
-            "upc": self.child.upc,
+            "upc": self.module.qualified_id,
             "seats": 5
         }
         cart = [cart_item]
@@ -227,13 +224,13 @@ class CheckoutAPITests(ProductTests):
         start_ol = OrderLine.objects.count()
         requester.return_value.post.side_effect = AttributeError()
         cart_item = {
-            "upc": self.child.upc,
+            "upc": self.module.qualified_id,
             "seats": 5
         }
         cart = [cart_item]
 
         with patch.object(Charge, 'create'):
-            self.client.post(
+            resp = self.client.post(
                 reverse('checkout'),
                 content_type='application/json',
                 data=json.dumps({
@@ -243,6 +240,7 @@ class CheckoutAPITests(ProductTests):
                 })
             )
 
+        assert resp.status_code == 400, resp.content.decode('utf-8')
         assert Order.objects.count() - start == 1
         assert OrderLine.objects.count() - start_ol == 1
 
@@ -251,29 +249,18 @@ class CheckoutAPITests(ProductTests):
         """
         If there are errors on checkout, they make it to the response.
         """
-        child2 = ProductFactory.create(
-            upc=make_upc(MODULE_PRODUCT_TYPE, 'abcdef2'),
-            parent=self.parent,
-            title='test',
-            product_class=None,
-            structure=Product.CHILD
-        )
-        StockRecord.objects.create(
-            product=child2,
-            partner=Partner.objects.first(),
-            partner_sku=child2.upc,
-            price_currency="$",
-            price_excl_tax=100,
+        module2 = ModuleFactory.create(
+            course=self.course,
         )
         requester.return_value.post.side_effect = [
             AttributeError("Example Error"),
             AttributeError("Another Error"),
         ]
         cart = [{
-            "upc": self.child.upc,
+            "upc": self.module.qualified_id,
             "seats": 5
         }, {
-            "upc": child2.upc,
+            "upc": module2.qualified_id,
             "seats": 4
         }]
 
@@ -288,6 +275,7 @@ class CheckoutAPITests(ProductTests):
                 })
             )
 
+        assert resp.status_code == 400, resp.content.decode('utf-8')
         assert "Example Error" in resp.content.decode('utf-8')
         assert "Another Error" in resp.content.decode('utf-8')
 
@@ -298,7 +286,7 @@ class CheckoutAPITests(ProductTests):
         self.client.logout()
 
         cart_item = {
-            "upc": self.child.upc,
+            "upc": self.module.qualified_id,
             "seats": 5
         }
         cart = [cart_item]

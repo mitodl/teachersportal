@@ -4,6 +4,7 @@ API for checkout
 
 from __future__ import unicode_literals
 import logging
+from decimal import Decimal
 
 from django.conf import settings
 from django.db import transaction
@@ -16,9 +17,7 @@ from stripe import Charge
 from portal.util import (
     calculate_cart_subtotal,
     create_order,
-    get_external_pk,
-    get_product_type,
-    COURSE_PRODUCT_TYPE,
+    get_cents,
 )
 from ..models import OrderLine
 from .product_api import ccxcon_request
@@ -46,19 +45,15 @@ class CheckoutView(APIView):
         """
         errors = set()
         for line in OrderLine.objects.filter(order=order):
-            if get_product_type(line.product) == COURSE_PRODUCT_TYPE:
-                title = line.product.title
-                course_id = get_external_pk(line.product)
-            else:
-                title = line.product.parent.title
-                course_id = get_external_pk(line.product.parent)
+            title = line.module.course.title
+            course_uuid = line.module.course.uuid
             ccxcon = ccxcon_request()
             api_base = settings.CCXCON_API
             try:
                 result = ccxcon.post(
                     '{api_base}v1/ccx/'.format(api_base=api_base),
                     data={
-                        'master_course_id': course_id,
+                        'master_course_id': course_uuid,
                         'user_email': user.email,
                         'total_seats': line.seats,
                         'display_name': '{} for {}'.format(title, user.userinfo.full_name),
@@ -89,7 +84,7 @@ class CheckoutView(APIView):
         try:
             token = str(data['token'])
             cart = data['cart']
-            estimated_total = float(data['total'])
+            estimated_total = Decimal(float(data['total']))
         except KeyError as ex:
             raise ValidationError("Missing key {}".format(ex.args[0]))
         except TypeError:
@@ -101,7 +96,7 @@ class CheckoutView(APIView):
             raise ValidationError("Cannot checkout an empty cart")
 
         total = calculate_cart_subtotal(cart)
-        if int(total * 100) != int(estimated_total * 100):
+        if get_cents(total) != get_cents(estimated_total):
             log.error(
                 "Cart total doesn't match expected value. "
                 "Total from client: %f but actual total is: %f",
@@ -125,7 +120,7 @@ class CheckoutView(APIView):
         with transaction.atomic():
             order = create_order(cart, request.user)
 
-            amount_in_cents = int(order.total_paid * 100)
+            amount_in_cents = get_cents(order.total_paid)
             if amount_in_cents != 0:
                 Charge.create(
                     amount=amount_in_cents,

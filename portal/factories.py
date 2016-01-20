@@ -1,12 +1,19 @@
 """Factories for testing"""
+from __future__ import unicode_literals
+
 from django.contrib.auth.models import User
 import factory
 from factory import fuzzy
 from factory.django import DjangoModelFactory
 import faker
-from oscar.apps.catalogue.models import Product, ProductClass
 
-from .models import Order, OrderLine, UserInfo
+from portal.models import (
+    Course,
+    Module,
+    Order,
+    OrderLine,
+    UserInfo,
+)
 
 
 FAKE = faker.Factory.create()
@@ -30,25 +37,26 @@ class UserFactory(DjangoModelFactory):
         model = User
 
 
-class ProductClassFactory(DjangoModelFactory):
-    """Factory for Oscar ProductClass"""
-    name = "Course"
+class CourseFactory(DjangoModelFactory):
+    """Factory for Courses"""
+    uuid = fuzzy.FuzzyText()
+    title = fuzzy.FuzzyText(prefix="Course ")
+    description = factory.LazyAttribute(lambda x: FAKE.text())
+    live = False
 
     class Meta:  # pylint: disable=missing-docstring,no-init,too-few-public-methods,old-style-class
-        model = ProductClass
+        model = Course
 
 
-class ProductFactory(DjangoModelFactory):
-    """Factory for Oscar Products"""
-    upc = fuzzy.FuzzyText(prefix="Course_")
-    description = fuzzy.FuzzyText()
-    product_class = factory.SubFactory(ProductClassFactory)
-    structure = Product.PARENT
-    parent = None
-    title = fuzzy.FuzzyText()
+class ModuleFactory(DjangoModelFactory):
+    """Factory for Modules"""
+    uuid = fuzzy.FuzzyText()
+    course = factory.SubFactory(CourseFactory)
+    title = fuzzy.FuzzyText(prefix="Module ")
+    price_without_tax = fuzzy.FuzzyDecimal(0, 1234.5)
 
     class Meta:  # pylint: disable=missing-docstring,no-init,too-few-public-methods,old-style-class
-        model = Product
+        model = Module
 
 
 class OrderFactory(DjangoModelFactory):
@@ -67,7 +75,7 @@ class OrderLineFactory(DjangoModelFactory):
     price_without_tax = fuzzy.FuzzyDecimal(0, 1000.00)
     line_total = fuzzy.FuzzyDecimal(0, 1000.00)
     seats = fuzzy.FuzzyInteger(2, 60)
-    product = factory.SubFactory(ProductFactory)
+    module = factory.SubFactory(ModuleFactory)
 
     class Meta:  # pylint: disable=missing-docstring,no-init,too-few-public-methods,old-style-class
         model = OrderLine

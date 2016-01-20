@@ -95,11 +95,6 @@
             "description": "The private key issues by Stripe for its API.",
             "required": true
         },
-        "PORTAL_OSCAR_VISIBLE": {
-            "description": "Whether or not the /oscar views are available..",
-            "required": false,
-            "value": "False"
-        },
         "NEW_RELIC_APP_NAME": {
             "description": "Application identifier in New Relic.",
             "default": "Teacher's Portal"
