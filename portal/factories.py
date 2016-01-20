@@ -8,6 +8,7 @@ from factory.django import DjangoModelFactory
 import faker
 
 from portal.models import (
+    BackingInstance,
     Course,
     Module,
     Order,
@@ -37,12 +38,21 @@ class UserFactory(DjangoModelFactory):
         model = User
 
 
+class BackingInstanceFactory(DjangoModelFactory):
+    """Factory for BackingInstance"""
+    instance_url = fuzzy.FuzzyText(prefix="http://")
+
+    class Meta:  # pylint: disable=missing-docstring,no-init,too-few-public-methods,old-style-class
+        model = BackingInstance
+
+
 class CourseFactory(DjangoModelFactory):
     """Factory for Courses"""
     uuid = fuzzy.FuzzyText()
     title = fuzzy.FuzzyText(prefix="Course ")
     description = factory.LazyAttribute(lambda x: FAKE.text())
     live = False
+    instance = factory.SubFactory(BackingInstanceFactory)
 
     class Meta:  # pylint: disable=missing-docstring,no-init,too-few-public-methods,old-style-class
         model = Course

@@ -16,6 +16,13 @@ from django.db.models.fields import (
 )
 
 
+class BackingInstance(models.Model):
+    """
+    The instance of edX where the course lives.
+    """
+    instance_url = TextField(unique=True)
+
+
 class Course(models.Model):
     """
     A CCX course
@@ -26,6 +33,7 @@ class Course(models.Model):
     live = BooleanField()
     created_at = DateTimeField(auto_now_add=True, blank=True)
     modified_at = DateTimeField(auto_now=True, blank=True)
+    instance = ForeignKey(BackingInstance)
 
     @property
     def is_available_for_purchase(self):
