@@ -122,12 +122,13 @@ export function activate(token) {
   });
 }
 
-export function checkout(cart, token) {
+export function checkout(cart, token, total) {
   return fetchJSONWithCSRF('/api/v1/checkout/', {
     method: 'POST',
     body: JSON.stringify({
       cart: cart,
-      token: token
+      token: token,
+      total: total
     })
   });
 }

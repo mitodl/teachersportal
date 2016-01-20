@@ -360,7 +360,7 @@ describe('reducers', () => {
           productList: []
         });
 
-        dispatchThen(checkout(expectedCart, "token"), 2).then(cartState => {
+        dispatchThen(checkout(expectedCart, "token", 500), 2).then(cartState => {
           assert.deepEqual(cartState, {
             cart: [],
             productList: []
@@ -385,7 +385,7 @@ describe('reducers', () => {
           productList: []
         });
 
-        dispatchThen(checkout(expectedCart, "token")).then(cartState => {
+        dispatchThen(checkout(expectedCart, "token", 500)).then(cartState => {
           assert.deepEqual(cartState, {
             cart: expectedCart,
             productList: []

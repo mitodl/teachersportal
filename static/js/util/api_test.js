@@ -173,7 +173,8 @@ describe('common api functions', function() {
         upc: "upc",
         seats: 5
       }],
-      token: "token"
+      token: "token",
+      total: 500
     };
 
     fetchMock.mock('/api/v1/checkout/', (url, opts) => {
@@ -182,7 +183,7 @@ describe('common api functions', function() {
         status: 200
       };
     });
-    checkout(expected.cart, expected.token).then(() => {
+    checkout(expected.cart, expected.token, expected.total).then(() => {
       done();
     });
   });
@@ -191,7 +192,8 @@ describe('common api functions', function() {
     let expected = {
       cart: [{
         upc: "upc",
-        seats: 5
+        seats: 5,
+        total: 500
       }],
       token: "token"
     };
@@ -202,7 +204,7 @@ describe('common api functions', function() {
         status: 400
       };
     });
-    checkout(expected.cart, expected.token).catch(() => {
+    checkout(expected.cart, expected.token, expected.total).catch(() => {
       done();
     });
   });
