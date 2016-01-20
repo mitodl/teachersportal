@@ -38,6 +38,8 @@ class WebhookTests(TestCase):
     MODULE_TITLE1 = "Module's title 1\u203d"
     MODULE_TITLE2 = "Module's title 2"
 
+    INSTANCE = "http://example.com/1/"
+
     def setUp(self):
         """
         Create a user to use with these tests
@@ -52,7 +54,8 @@ class WebhookTests(TestCase):
             'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': self.COURSE_TITLE1,
-                'external_pk': self.COURSE_UUID1
+                'external_pk': self.COURSE_UUID1,
+                'instance': self.INSTANCE
             }
         })
         self.post_webhook({
@@ -132,7 +135,8 @@ class WebhookTests(TestCase):
             'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': self.COURSE_TITLE2,
-                'external_pk': self.COURSE_UUID2
+                'external_pk': self.COURSE_UUID2,
+                'instance': self.INSTANCE
             }
         }
         resp = self.client.post(
@@ -153,7 +157,8 @@ class WebhookTests(TestCase):
             'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': self.COURSE_TITLE2,
-                'external_pk': self.COURSE_UUID2
+                'external_pk': self.COURSE_UUID2,
+                'instance': self.INSTANCE
             }
         }
         # Signature is now for a different set of data and therefore invalid
@@ -179,7 +184,8 @@ class WebhookTests(TestCase):
             'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': self.COURSE_TITLE2,
-                'external_pk': self.COURSE_UUID2
+                'external_pk': self.COURSE_UUID2,
+                'instance': self.INSTANCE
             }
         })
 
@@ -187,6 +193,7 @@ class WebhookTests(TestCase):
         assert len(courses) == course_count + 1
         assert courses[-1].title == self.COURSE_TITLE2
         assert courses[-1].uuid == self.COURSE_UUID2
+        assert courses[-1].instance.instance_url == self.INSTANCE
 
     def test_update_course(self):
         """
@@ -200,7 +207,8 @@ class WebhookTests(TestCase):
             'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': new_title,
-                'external_pk': self.COURSE_UUID1
+                'external_pk': self.COURSE_UUID1,
+                'instance': self.INSTANCE
             }
         })
 
@@ -208,6 +216,7 @@ class WebhookTests(TestCase):
         assert len(courses) == course_count
         assert courses[0].title == new_title
         assert courses[0].uuid == self.COURSE_UUID1
+        assert courses[0].instance.instance_url == self.INSTANCE
 
     def test_add_course_with_same_title(self):
         """Test adding a course with duplicate titles"""
@@ -218,7 +227,8 @@ class WebhookTests(TestCase):
             'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': self.COURSE_TITLE1,
-                'external_pk': self.COURSE_UUID2
+                'external_pk': self.COURSE_UUID2,
+                'instance': self.INSTANCE
             }
         })
 
@@ -252,6 +262,7 @@ class WebhookTests(TestCase):
             'payload': {
                 'title': self.COURSE_TITLE1,
                 'external_pk': '',
+                'instance': self.INSTANCE
             }
         }, expected_status=400, expected_errors=['Invalid external_pk'])
 
@@ -284,7 +295,8 @@ class WebhookTests(TestCase):
             'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': self.MODULE_TITLE1,
-                'external_pk': self.MODULE_UUID1
+                'external_pk': self.MODULE_UUID1,
+                'instance': self.INSTANCE
             }
         })
 
@@ -304,7 +316,8 @@ class WebhookTests(TestCase):
             'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': '',
-                'external_pk': self.COURSE_UUID1
+                'external_pk': self.COURSE_UUID1,
+                'instance': self.INSTANCE
             }
         })
 
@@ -343,7 +356,7 @@ class WebhookTests(TestCase):
             'action': 'delete',
             'type': MODULE_PRODUCT_TYPE,
             'payload': {
-                'external_pk': self.COURSE_UUID1
+                'external_pk': self.COURSE_UUID1,
             }
         })
         # Unchanged
@@ -505,7 +518,8 @@ class WebhookTests(TestCase):
             'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': self.COURSE_TITLE2,
-                'external_pk': self.COURSE_UUID2
+                'external_pk': self.COURSE_UUID2,
+                'instance': self.INSTANCE
             }
         })
         courses = self.get_courses()
@@ -543,7 +557,8 @@ class WebhookTests(TestCase):
             'type': COURSE_PRODUCT_TYPE,
             'payload': {
                 'title': self.COURSE_TITLE2,
-                'external_pk': self.COURSE_UUID2
+                'external_pk': self.COURSE_UUID2,
+                'instance': self.INSTANCE
             }
         })
         # Update module1 to point to course2
@@ -624,7 +639,8 @@ class WebhookTests(TestCase):
             'action': 'update',
             'payload': {
                 'title': "title",
-                'external_pk': "uuid"
+                'external_pk': "uuid",
+                'instance': self.INSTANCE
             }
         }, expected_status=400, expected_errors=['Missing key type'])
 
@@ -636,7 +652,8 @@ class WebhookTests(TestCase):
                 'type': hook_type,
                 'payload': {
                     'title': "title",
-                    'external_pk': "uuid"
+                    'external_pk': "uuid",
+                    'instance': self.INSTANCE
                 }
             }, expected_status=400, expected_errors=['Unknown action missing'])
 
@@ -647,20 +664,10 @@ class WebhookTests(TestCase):
                 'type': hook_type,
                 'payload': {
                     'title': "title",
-                    'external_pk': "uuid"
+                    'external_pk': "uuid",
+                    'instance': self.INSTANCE
                 }
             }, expected_status=400, expected_errors=['Missing key action'])
-
-    def test_payload_missing_title(self):
-        """Payload missing title"""
-        for hook_type in (COURSE_PRODUCT_TYPE, MODULE_PRODUCT_TYPE):
-            self.post_webhook({
-                'action': 'update',
-                'type': hook_type,
-                'payload': {
-                    'external_pk': "uuid"
-                }
-            }, expected_status=400, expected_errors=['Missing key title'])
 
     def test_missing_payload(self):
         """Missing payload"""
@@ -692,7 +699,8 @@ class WebhookTests(TestCase):
         """Missing fields for course update"""
         payload = {
             'title': self.COURSE_TITLE1,
-            'external_pk': self.COURSE_UUID1
+            'external_pk': self.COURSE_UUID1,
+            'instance': self.INSTANCE
         }
         for key in payload.keys():
             payload_copy = dict(payload)
@@ -718,3 +726,32 @@ class WebhookTests(TestCase):
                 'type': MODULE_PRODUCT_TYPE,
                 'payload': payload_copy
             }, expected_errors=["Missing key {key}".format(key=key)], expected_status=400)
+
+    def test_course_instance_cant_change(self):
+        """Assert that instance can't change"""
+        self.post_webhook({
+            'action': 'update',
+            'type': COURSE_PRODUCT_TYPE,
+            'payload': {
+                'title': self.COURSE_TITLE1,
+                'external_pk': self.COURSE_UUID1,
+                'instance': '{}/update'.format(self.INSTANCE)
+            }
+        }, expected_status=400, expected_errors=['Instance cannot be changed'])
+
+    def test_invalid_instance_type(self):
+        """Assert that instance must be a non-empty string"""
+        for instance in ('', None, 3, [], {}):
+            self.post_webhook(
+                {
+                    'action': 'update',
+                    'type': COURSE_PRODUCT_TYPE,
+                    'payload': {
+                        'title': self.COURSE_TITLE1,
+                        'external_pk': self.COURSE_UUID1,
+                        'instance': instance
+                    }
+                },
+                expected_status=400,
+                expected_errors=['Instance must be a non-empty string']
+            )
