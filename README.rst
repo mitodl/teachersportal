@@ -187,8 +187,7 @@ Course Listings
 ---------------
 
 When doing a public course listing, the javascript front-end queries TP
-for available courses (as determined by the django-oscar ``Product``
-model). This returns ids to look up. From here, the javascript
+for available courses. This returns ids to look up. From here, the javascript
 dispatches an additional API call to CCXCon to get detail on those
 specific course ids for populating the UI.
 

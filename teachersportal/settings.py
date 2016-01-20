@@ -19,8 +19,6 @@ import dj_database_url
 import yaml
 import stripe
 
-from oscar import get_core_apps, OSCAR_MAIN_TEMPLATE_DIR
-
 VERSION = "0.0.0"
 
 CONFIG_PATHS = [
@@ -77,7 +75,7 @@ SECURE_SSL_REDIRECT = get_var('PORTAL_SECURE_SSL_REDIRECT', True)
 
 # Application definition
 
-INSTALLED_APPS = [
+INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -86,18 +84,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.flatpages',
-    'compressor',
-    'widget_tweaks',
     'rest_framework',
     # Our INSTALLED_APPS
     'portal',
-] + get_core_apps()
+)
 
-# Oscar site id
 SITE_ID = 1
 
 AUTHENTICATION_BACKENDS = (
-    'oscar.apps.customer.auth_backends.EmailBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -110,7 +104,6 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'oscar.apps.basket.middleware.BasketMiddleware',
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
 )
 
@@ -121,7 +114,6 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             BASE_DIR + '/templates/',
-            OSCAR_MAIN_TEMPLATE_DIR
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -174,13 +166,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-# Haystack is required for Oscar
-HAYSTACK_CONNECTIONS = {
-    'default': {
-        'ENGINE': 'haystack.backends.simple_backend.SimpleEngine',
-    },
-}
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
@@ -195,8 +180,6 @@ STATICFILES_FINDERS = (
     # defaults
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    # Necessary for oscar which uses compressor
-    'compressor.finders.CompressorFinder',
 )
 
 INTERNAL_IPS = (get_var('HOST_IP', '127.0.0.1'), )
@@ -204,13 +187,6 @@ INTERNAL_IPS = (get_var('HOST_IP', '127.0.0.1'), )
 # Request files from the webpack dev server
 USE_WEBPACK_DEV_SERVER = get_var('PORTAL_USE_WEBPACK_DEV_SERVER', False)
 WEBPACK_SERVER_URL = get_var('PORTAL_WEBPACK_SERVER_URL', 'http://{host}:8076')
-
-# Import oscar default settings
-# pylint: disable=wrong-import-position,unused-wildcard-import,wildcard-import
-from oscar.defaults import *  # noqa
-
-# Is oscar visible at /oscar/?
-PORTAL_OSCAR_VISIBLE = get_var('PORTAL_OSCAR_VISIBLE', False)
 
 # Configure e-mail settings
 EMAIL_BACKEND = get_var('PORTAL_EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
