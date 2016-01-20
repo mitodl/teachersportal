@@ -54,6 +54,6 @@
     "webpack-stats-plugin": "^0.1.1"
   },
   "scripts": {
-    "postinstall": "node node_modules/webpack/bin/webpack.js"
+    "postinstall": "node node_modules/webpack/bin/webpack.js --config webpack.config.prod.js"
   }
 }
