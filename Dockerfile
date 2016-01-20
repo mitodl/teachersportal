@@ -9,8 +9,12 @@ COPY apt.txt /tmp/apt.txt
 RUN apt-get install curl -y &&\
     curl --silent --location https://deb.nodesource.com/setup_4.x | bash - &&\
     apt-get update &&\
-    apt-get install -y $(grep -vE "^\s*#" apt.txt  | tr "\n" " ") &&\
-    pip install pip --upgrade
+    apt-get install -y $(grep -vE "^\s*#" apt.txt  | tr "\n" " ")
+
+# Install pip for Python 2 (Python 3.4 already has it)
+RUN curl --silent --location https://bootstrap.pypa.io/get-pip.py > get-pip.py &&\
+    python3 get-pip.py &&\
+    python get-pip.py
 
 # Add non-root user.
 RUN adduser --disabled-password --gecos "" mitodl
