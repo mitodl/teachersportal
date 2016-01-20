@@ -4,7 +4,6 @@ import assert from 'assert';
 import ReactTestUtils from 'react-addons-test-utils';
 import ReactDOM from 'react-dom';
 import React from 'react';
-import jsdom from 'mocha-jsdom';
 import fetchMock from 'fetch-mock/src/server';
 import {
   getProduct,
@@ -20,7 +19,6 @@ import { PRODUCT_RESPONSE } from '../constants';
 
 describe('common api functions', function() {
   this.timeout(5000);  // eslint-disable-line no-invalid-this
-  jsdom();
 
   it('gets a product', done => {
     const upc = PRODUCT_RESPONSE.upc;

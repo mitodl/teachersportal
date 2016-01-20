@@ -21,56 +21,42 @@ import {
 } from '../actions/index_page';
 import * as api from '../util/api';
 import { PRODUCT_RESPONSE, CART_WITH_ITEM } from '../constants';
-import { createDispatchThen } from './util';
 
-import configureStore from '../store/configureStore_test';
+import configureTestStore from '../store/configureStore_test';
 import assert from 'assert';
 import sinon from 'sinon';
-import jsdom from 'mocha-jsdom';
-
-let productStub;
-let productListStub;
-let loginStub;
-let logoutStub;
-let registerStub;
-let activateStub;
-let checkoutStub;
-let store;
-
 
 describe('reducers', () => {
-  beforeEach(() => {
-    productStub = sinon.stub(api, 'getProduct');
-    productListStub = sinon.stub(api, 'getProductList');
-    logoutStub = sinon.stub(api, 'logout');
-    loginStub = sinon.stub(api, 'login');
-    registerStub = sinon.stub(api, 'register');
-    activateStub = sinon.stub(api, 'activate');
-    checkoutStub = sinon.stub(api, 'checkout');
 
-    store = configureStore();
+  let sandbox, store, productStub, productListStub, loginStub, logoutStub,
+    registerStub, activateStub, checkoutStub, dispatchThen;
+  beforeEach(() => {
+    sandbox = sinon.sandbox.create();
+    productStub = sandbox.stub(api, 'getProduct');
+    productListStub = sandbox.stub(api, 'getProductList');
+    logoutStub = sandbox.stub(api, 'logout');
+    loginStub = sandbox.stub(api, 'login');
+    registerStub = sandbox.stub(api, 'register');
+    activateStub = sandbox.stub(api, 'activate');
+    checkoutStub = sandbox.stub(api, 'checkout');
+
+    store = configureTestStore();
   });
 
   afterEach(() => {
-    productStub.restore();
-    productListStub.restore();
-    logoutStub.restore();
-    loginStub.restore();
-    registerStub.restore();
-    activateStub.restore();
-    checkoutStub.restore();
+    sandbox.restore();
 
     store = null;
+    dispatchThen = null;
   });
 
   describe('product reducers', () => {
-    /**
-     * Helper function for dispatch and assert pattern
-     */
-    let dispatchThen = createDispatchThen(() => store, state => state.product);
+    beforeEach(() => {
+      dispatchThen = store.createDispatchThen(state => state.product);
+    });
 
     it('should have an empty default state', done => {
-      dispatchThen({type: 'unknown'}, state => {
+      dispatchThen({type: 'unknown'}).then(state => {
         assert.deepEqual(state, {
           productList: []
         });
@@ -81,7 +67,7 @@ describe('reducers', () => {
     it('should fetch a product successfully', done => {
       productStub.returns(Promise.resolve("data"));
 
-      dispatchThen(fetchProduct("upc"), 2, productState => {
+      dispatchThen(fetchProduct("upc"), 2).then(productState => {
         assert.equal(productState.product, "data");
         assert.equal(productState.productStatus, FETCH_SUCCESS);
 
@@ -92,7 +78,7 @@ describe('reducers', () => {
     it('should fail to fetch a product', done => {
       productStub.returns(Promise.reject());
 
-      dispatchThen(fetchProduct("upc"), 2, productState => {
+      dispatchThen(fetchProduct("upc"), 2).then(productState => {
         assert.equal(productState.productStatus, FETCH_FAILURE);
 
         done();
@@ -102,7 +88,7 @@ describe('reducers', () => {
     it('should fetch a list of products successfully', done => {
       productListStub.returns(Promise.resolve(["data"]));
 
-      dispatchThen(fetchProductList(), 2, productState => {
+      dispatchThen(fetchProductList(), 2).then(productState => {
         assert.deepEqual(productState.productList, ["data"]);
         assert.equal(productState.productListStatus, FETCH_SUCCESS);
 
@@ -113,7 +99,7 @@ describe('reducers', () => {
     it('should fail to fetch a list of products', done => {
       productListStub.returns(Promise.reject());
 
-      dispatchThen(fetchProductList(), 2, productState => {
+      dispatchThen(fetchProductList(), 2).then(productState => {
         assert.equal(productState.productListStatus, FETCH_FAILURE);
 
         done();
@@ -122,14 +108,13 @@ describe('reducers', () => {
   });
 
   describe('loginModal reducers', () => {
-    /**
-     * Helper function for dispatch and assert pattern
-     */
-    let dispatchThen = createDispatchThen(() => store, state => state.loginModal);
+    beforeEach(() => {
+      dispatchThen = store.createDispatchThen(state => state.loginModal);
+    });
 
     it('should have visible = false as a default state', done => {
       // dispatch empty action to look at default state
-      dispatchThen({type: "unknown"}, state => {
+      dispatchThen({type: "unknown"}).then(state => {
         assert.deepEqual(state, {
           visible: false
         });
@@ -138,7 +123,7 @@ describe('reducers', () => {
     });
 
     it('should set login state to show when triggered', done => {
-      dispatchThen(showLogin(), state => {
+      dispatchThen(showLogin()).then(state => {
         assert.deepEqual(state, {
           visible: true
         });
@@ -147,7 +132,7 @@ describe('reducers', () => {
     });
 
     it('should set login state to hide when triggered', done => {
-      dispatchThen(hideLogin(), 3, state => {
+      dispatchThen(hideLogin(), 3).then(state => {
         assert.deepEqual(state, {
           visible: false
         });
@@ -157,14 +142,13 @@ describe('reducers', () => {
   });
 
   describe('authentication reducers', () => {
-    /**
-     * Helper function for dispatch and assert pattern
-     */
-    let dispatchThen = createDispatchThen(() => store, state => state.authentication);
+    beforeEach(() => {
+      dispatchThen = store.createDispatchThen(state => state.authentication);
+    });
 
     it('should have an empty error message and unauthenticated as a default state', done => {
       // dispatch empty action to look at default state
-      dispatchThen({type: "unknown"}, state => {
+      dispatchThen({type: "unknown"}).then(state => {
         assert.deepEqual(state, {
           error: "",
           isAuthenticated: false,
@@ -174,7 +158,7 @@ describe('reducers', () => {
     });
 
     it('should clear authentication and show an error message if failed to log in', done => {
-      dispatchThen(loginFailure("Error logging in inside test"), state => {
+      dispatchThen(loginFailure("Error logging in inside test")).then(state => {
         assert.deepEqual(state, {
           isAuthenticated: false,
           error: "Error logging in inside test"
@@ -184,7 +168,7 @@ describe('reducers', () => {
     });
 
     it('should set isAuthenticated to true if logged in successfully', done => {
-      dispatchThen(loginSuccess(), state => {
+      dispatchThen(loginSuccess()).then(state => {
         assert.deepEqual(state, {
           isAuthenticated: true,
           error: ""
@@ -197,13 +181,13 @@ describe('reducers', () => {
       logoutStub.returns(Promise.resolve());
       loginStub.returns(Promise.resolve());
 
-      dispatchThen(login("user", "pass"), 4, loginState => {
+      dispatchThen(login("user", "pass"), 4).then(loginState => {
         assert.deepEqual(loginState, {
           isAuthenticated: true,
           error: ""
         });
 
-        dispatchThen(logout(), 2, logoutState => {
+        dispatchThen(logout(), 2).then(logoutState => {
           assert.deepEqual(logoutState, {
             isAuthenticated: false,
             error: ""
@@ -218,7 +202,7 @@ describe('reducers', () => {
       logoutStub.returns(Promise.resolve());
       loginStub.returns(Promise.reject());
 
-      dispatchThen(login("user", "pass"), loginState => {
+      dispatchThen(login("user", "pass")).then(loginState => {
         assert.deepEqual(loginState, {
           isAuthenticated: false,
           error: "Unable to log in"
@@ -233,13 +217,13 @@ describe('reducers', () => {
       logoutStub.returns(Promise.reject());
       loginStub.returns(Promise.resolve());
 
-      dispatchThen(login("user", "pass"), 4, loginState => {
+      dispatchThen(login("user", "pass"), 4).then(loginState => {
         assert.deepEqual(loginState, {
           isAuthenticated: true,
           error: ""
         });
 
-        dispatchThen(logout(), 0, logoutState => {
+        dispatchThen(logout(), 0).then(logoutState => {
           // On logout error no state should change
           assert.deepEqual(logoutState, {
             isAuthenticated: true,
@@ -253,15 +237,14 @@ describe('reducers', () => {
   });
 
   describe('registration reducers', () => {
-    /**
-     * Helper function for dispatch and assert pattern
-     */
-    let dispatchThen = createDispatchThen(() => store, state => state.registration);
+    beforeEach(() => {
+      dispatchThen = store.createDispatchThen(state => state.registration);
+    });
 
     it('successfully registers', done => {
       registerStub.returns(Promise.resolve());
 
-      dispatchThen(register("name", "email", "org", "pass", "redirect"), 4, registrationState => {
+      dispatchThen(register("name", "email", "org", "pass", "redirect"), 4).then(registrationState => {
         assert.deepEqual(registrationState, {
           error: "",
           status: FETCH_SUCCESS
@@ -274,7 +257,7 @@ describe('reducers', () => {
     it('fails to register', done => {
       registerStub.returns(Promise.reject());
 
-      dispatchThen(register("name", "email", "org", "pass", "redirect"), registrationState => {
+      dispatchThen(register("name", "email", "org", "pass", "redirect")).then(registrationState => {
         assert.deepEqual(registrationState, {
           error: "Unable to register",
           status: FETCH_FAILURE
@@ -286,15 +269,14 @@ describe('reducers', () => {
   });
 
   describe('activation reducers', () => {
-    /**
-     * Helper function for dispatch and assert pattern
-     */
-    let dispatchThen = createDispatchThen(() => store, state => state.activation);
+    beforeEach(() => {
+      dispatchThen = store.createDispatchThen(state => state.activation);
+    });
 
     it('successfully activates', done => {
       activateStub.returns(Promise.resolve());
 
-      dispatchThen(activate("token"), activationState => {
+      dispatchThen(activate("token")).then(activationState => {
         assert.deepEqual(activationState, {
           status: FETCH_SUCCESS
         });
@@ -306,7 +288,7 @@ describe('reducers', () => {
     it('fails to activate', done => {
       activateStub.returns(Promise.reject());
 
-      dispatchThen(activate("token"), activationState => {
+      dispatchThen(activate("token")).then(activationState => {
         assert.deepEqual(activationState, {
           status: FETCH_FAILURE
         });
@@ -317,14 +299,13 @@ describe('reducers', () => {
   });
 
   describe('cart reducers', () => {
-    /**
-     * Helper function for dispatch and assert pattern
-     */
-    let dispatchThen = createDispatchThen(() => store, state => state.cart);
+    beforeEach(() => {
+      dispatchThen = store.createDispatchThen(state => state.cart);
+    });
 
     it('updates the cart', done => {
       // Add item to empty cart
-      dispatchThen(updateCartItems(['upc'], 3, 'courseUpc'), cartState => {
+      dispatchThen(updateCartItems(['upc'], 3, 'courseUpc')).then(cartState => {
         assert.deepEqual(cartState, {
           cart: [{
             upc: 'upc',
@@ -335,7 +316,7 @@ describe('reducers', () => {
         });
 
         // Update cart with item in it, which removes the other items in cart
-        dispatchThen(updateCartItems(['newUpc'], 5, 'courseUpc'), cartState => {
+        dispatchThen(updateCartItems(['newUpc'], 5, 'courseUpc')).then(cartState => {
           assert.deepEqual(cartState, {
             cart: [{
               upc: 'newUpc',
@@ -346,7 +327,7 @@ describe('reducers', () => {
           });
 
           // Update cart with a different courseUpc, ignoring existing items with a different courseUpc
-          dispatchThen(updateCartItems(['upc'], 4, 'othercourseUpc'), cartState => {
+          dispatchThen(updateCartItems(['upc'], 4, 'othercourseUpc')).then(cartState => {
             assert.deepEqual(cartState, {
               cart: [{
                 upc: 'newUpc',
@@ -368,7 +349,7 @@ describe('reducers', () => {
     it('checks out the cart', done => {
       checkoutStub.returns(Promise.resolve());
 
-      dispatchThen(updateCartItems(['upc'], 5, 'courseUpc'), cartState => {
+      dispatchThen(updateCartItems(['upc'], 5, 'courseUpc')).then(cartState => {
         let expectedCart = [{
           upc: 'upc',
           seats: 5,
@@ -379,7 +360,7 @@ describe('reducers', () => {
           productList: []
         });
 
-        dispatchThen(checkout(expectedCart, "token"), 2, cartState => {
+        dispatchThen(checkout(expectedCart, "token"), 2).then(cartState => {
           assert.deepEqual(cartState, {
             cart: [],
             productList: []
@@ -393,7 +374,7 @@ describe('reducers', () => {
     it('fails to checkout the cart', done => {
       checkoutStub.returns(Promise.reject());
 
-      dispatchThen(updateCartItems(['upc'], 5, 'courseUpc'), cartState => {
+      dispatchThen(updateCartItems(['upc'], 5, 'courseUpc')).then(cartState => {
         let expectedCart = [{
           upc: 'upc',
           seats: 5,
@@ -404,7 +385,7 @@ describe('reducers', () => {
           productList: []
         });
 
-        dispatchThen(checkout(expectedCart, "token"), cartState => {
+        dispatchThen(checkout(expectedCart, "token")).then(cartState => {
           assert.deepEqual(cartState, {
             cart: expectedCart,
             productList: []
@@ -418,7 +399,7 @@ describe('reducers', () => {
     it('clears the items from the cart which are missing', done => {
       let upc = PRODUCT_RESPONSE.children[0].upc;
       let courseUpc = PRODUCT_RESPONSE.upc;
-      dispatchThen(updateCartItems([upc], 5, courseUpc), cartState => {
+      dispatchThen(updateCartItems([upc], 5, courseUpc)).then(cartState => {
         let expectedCart = [{
           upc: upc,
           seats: 5,
@@ -430,20 +411,20 @@ describe('reducers', () => {
         });
 
         // update product list
-        dispatchThen(receiveProductListSuccess([PRODUCT_RESPONSE]), () => {
+        dispatchThen(receiveProductListSuccess([PRODUCT_RESPONSE])).then(() => {
 
           // don't filter anything since all cart items match some product
-          dispatchThen(clearInvalidCartItems(), cartState => {
+          dispatchThen(clearInvalidCartItems()).then(cartState => {
             assert.deepEqual(cartState, {
               cart: expectedCart,
               productList: [PRODUCT_RESPONSE]
             });
 
             // clear product list
-            dispatchThen(receiveProductListSuccess([]), () => {
+            dispatchThen(receiveProductListSuccess([])).then(() => {
 
               // filter everything since no cart items match any product
-              dispatchThen(clearInvalidCartItems(), cartState => {
+              dispatchThen(clearInvalidCartItems()).then(cartState => {
                 assert.deepEqual(cartState, {
                   cart: [],
                   productList: []
@@ -459,11 +440,13 @@ describe('reducers', () => {
   });
 
   describe('buyTab reducers', () => {
-    let dispatchThen = createDispatchThen(() => store, state => state.buyTab);
+    beforeEach(() => {
+      dispatchThen = store.createDispatchThen(state => state.buyTab);
+    });
 
     it('sets cart visibility', done => {
       assert.equal(store.getState().buyTab.cartVisibility, false);
-      dispatchThen(updateCartVisibility(true), cartState => {
+      dispatchThen(updateCartVisibility(true)).then(cartState => {
         assert.equal(cartState.cartVisibility, true);
         done();
       });
@@ -473,7 +456,7 @@ describe('reducers', () => {
       assert.deepEqual(store.getState().buyTab.selectedChapters, []);
       assert.equal(store.getState().buyTab.allRowsSelected, false);
 
-      dispatchThen(updateSelectedChapters(['a', 'b', 'c'], true), cartState => {
+      dispatchThen(updateSelectedChapters(['a', 'b', 'c'], true)).then(cartState => {
         assert.deepEqual(cartState.selectedChapters, ['a', 'b', 'c']);
         assert.equal(cartState.allRowsSelected, true);
 
@@ -484,7 +467,7 @@ describe('reducers', () => {
     it('updates seat count', done => {
       assert.equal(store.getState().buyTab.seats, 20);
 
-      dispatchThen(updateSeatCount(200), cartState => {
+      dispatchThen(updateSeatCount(200)).then(cartState => {
         assert.equal(cartState.seats, 200);
         done();
       });
