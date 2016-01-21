@@ -5,10 +5,13 @@ Base classes for test cases
 from __future__ import unicode_literals
 
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from portal.factories import CourseFactory, ModuleFactory
 from portal.models import UserInfo
+
+
+FAKE_CCXCON_API = 'https://fakehost/api/'
 
 
 class AuthenticationTestCase(TestCase):
@@ -71,6 +74,7 @@ class AuthenticationTestCase(TestCase):
         )
 
 
+@override_settings(CCXCON_API=FAKE_CCXCON_API)
 class ProductTests(TestCase):
     """
     Base class for tests dealing with products
