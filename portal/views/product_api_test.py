@@ -8,11 +8,10 @@ import json
 from mock import patch
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
-from django.test.utils import override_settings
 import requests_mock
 
 from portal.models import Course, Module
-from portal.views.base import ProductTests
+from portal.views.base import ProductTests, FAKE_CCXCON_API
 from portal.views.util import as_json
 from portal.util import (
     course_as_product_json,
@@ -24,10 +23,6 @@ from portal.util import (
 )
 
 
-FAKE_CCXCON_API = 'https://fakehost/api/'
-
-
-@override_settings(CCXCON_API=FAKE_CCXCON_API)
 class ProductAPITests(ProductTests):
     """
     Tests for product API
@@ -110,15 +105,13 @@ class ProductAPITests(ProductTests):
             base=FAKE_CCXCON_API,
             course_uuid=self.module.course.uuid,
             module_uuid=module_uuid,
-        ), text=json.dumps(
-            {
-                "uuid": module_uuid,
-                "title": ccxcon_title,
-                "subchapters": subchapters,
-                "course": "https://example.com/",
-                "url": "https://example.com/"
-            }
-        ))
+        ), json={
+            "uuid": module_uuid,
+            "title": ccxcon_title,
+            "subchapters": subchapters,
+            "course": "https://example.com/",
+            "url": "https://example.com/"
+        })
         resp = self.client.get(
             reverse("product-detail", kwargs={"qualified_id": self.module.qualified_id})
         )
@@ -137,6 +130,7 @@ class ProductAPITests(ProductTests):
             "upc": self.module.qualified_id,
             "price_without_tax": float(self.module.price_without_tax)
         }
+        assert fetch_mock.called
 
     @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
     @requests_mock.mock()
@@ -157,25 +151,23 @@ class ProductAPITests(ProductTests):
         fetch_mock.get("{base}v1/coursexs/{course_uuid}/".format(
             base=FAKE_CCXCON_API,
             course_uuid=course_uuid,
-        ), text=json.dumps(
-            {
-                "uuid": course_uuid,
-                "title": ccxcon_course_title,
-                "author_name": author,
-                "overview": overview,
-                "description": ccxcon_description,
-                "image_url": image_url,
-                "edx_instance": "http://mitx.edx.org",
-                "url": "https://example.com",
-                "modules": "https://example.com",
-                "instructors": [],
-                "course_id": "course_id"
-            }
-        ))
+        ), json={
+            "uuid": course_uuid,
+            "title": ccxcon_course_title,
+            "author_name": author,
+            "overview": overview,
+            "description": ccxcon_description,
+            "image_url": image_url,
+            "edx_instance": "http://mitx.edx.org",
+            "url": "https://example.com",
+            "modules": "https://example.com",
+            "instructors": [],
+            "course_id": "course_id"
+        })
         fetch_mock.get("{base}v1/coursexs/{course_uuid}/modules/".format(
             base=FAKE_CCXCON_API,
             course_uuid=course_uuid
-        ), text=json.dumps([
+        ), json=[
             {
                 "uuid": module_uuid,
                 "title": ccxcon_module_title,
@@ -183,7 +175,7 @@ class ProductAPITests(ProductTests):
                 "course": "https://example.com/",
                 "url": "https://example.com/"
             }
-        ]))
+        ])
 
         resp = self.client.get(
             reverse("product-detail", kwargs={"qualified_id": self.course.qualified_id})
@@ -221,6 +213,7 @@ class ProductAPITests(ProductTests):
             "upc": self.course.qualified_id,
             "price_without_tax": None
         }
+        assert fetch_mock.called
 
     def test_product_not_available(self):
         """
@@ -264,13 +257,14 @@ class ProductAPITests(ProductTests):
             base=FAKE_CCXCON_API,
             course_uuid=self.course.uuid,
             module_uuid=module_uuid,
-        ), status_code=500, text="{}")
+        ), status_code=500, json={})
 
         with self.assertRaises(Exception) as ex:
             self.client.get(
                 reverse("product-detail", kwargs={"qualified_id": self.module.qualified_id})
             )
         assert "CCXCon returned a non 200 status code 500" in ex.exception.args[0]
+        assert fetch_mock.called
 
         # Product list API does not read from CCXCon so it should be unaffected
         resp = self.client.get(reverse('product-list'))
