@@ -141,6 +141,6 @@ class CheckoutView(APIView):
             return Response({
                 'error': "Unable to post to CCXCon",
                 'error_list': errors,
-            }, status=400)
+            }, status=500)
 
         return Response(status=200)
