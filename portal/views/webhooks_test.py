@@ -12,14 +12,12 @@ from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 
 from portal.models import Course, Module
-from portal.util import (
-    COURSE_PRODUCT_TYPE,
-    MODULE_PRODUCT_TYPE,
-)
 from portal.views.util import as_json
 
 
 FAKE_SECRET = b'secret'
+MODULE_PRODUCT_TYPE = "Module"
+COURSE_PRODUCT_TYPE = "Course"
 
 
 # pylint: disable=invalid-name, too-many-public-methods
@@ -75,10 +73,10 @@ class WebhookTests(TestCase):
         data_bytes = json.dumps(data)
         signature = hmac.new(FAKE_SECRET, data_bytes.encode('utf-8'), hashlib.sha1).hexdigest()
 
-        # Only products marked is_available should show up in this list
-        resp = self.client.get(reverse("product-list"))
+        # Only courses marked as available should show up in this list
+        resp = self.client.get(reverse("course-list"))
         assert resp.status_code == 200, resp.content.decode('utf-8')
-        old_available = [product['external_pk'] for product in as_json(resp)]
+        old_available = [course['external_pk'] for course in as_json(resp)]
 
         old_courses = self.get_courses()
         old_modules = self.get_modules()
@@ -90,9 +88,9 @@ class WebhookTests(TestCase):
         )
         assert resp.status_code == expected_status, resp.content.decode('utf-8')
 
-        product_api_resp = self.client.get(reverse("product-list"))
-        assert product_api_resp.status_code == 200, product_api_resp.content
-        available = [product['external_pk'] for product in as_json(product_api_resp)]
+        course_api_resp = self.client.get(reverse("course-list"))
+        assert course_api_resp.status_code == 200, course_api_resp.content
+        available = [course['external_pk'] for course in as_json(course_api_resp)]
         # Make sure we didn't mark anything new as being live
         assert available == old_available
 
@@ -111,7 +109,7 @@ class WebhookTests(TestCase):
         Returns list of courses in order of creation date.
 
         Returns:
-            list: List of products from database
+            list: List of courses from database
         """
         return list(Course.objects.all())
 
@@ -120,7 +118,7 @@ class WebhookTests(TestCase):
         Returns list of modules in order of creation date.
 
         Returns:
-            list: List of products from database
+            list: List of courses from database
         """
         return list(Module.objects.all())
 
@@ -214,7 +212,7 @@ class WebhookTests(TestCase):
     def test_add_course_with_same_title(self):
         """Test adding a course with duplicate titles"""
         course_count = len(self.get_courses())
-        # When we change the external_pk it should create a new product.
+        # When we change the external_pk it should create a new course.
         self.post_webhook({
             'action': 'update',
             'type': COURSE_PRODUCT_TYPE,

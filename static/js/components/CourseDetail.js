@@ -15,32 +15,30 @@ import LinearProgress from 'material-ui/lib/linear-progress';
 class CourseDetail extends Component {
   render() {
     const {
-      product,
-      productList,
-      cart
+      course,
+      courseList
     } = this.props;
 
     let content;
 
-    if (product === undefined) {
+    if (course === undefined) {
       content = <LinearProgress mode="indeterminate"/>;
     } else {
 
       content = <div>
         <CardTitle
-          title={product.title}
-          subtitle={product.info.author_name}
+          title={course.title}
+          subtitle={course.info.author_name}
           id="course-title"
         />
-        <CourseImage src={product.info.image_url}/>
+        <CourseImage src={course.info.image_url}/>
         <CardText
           id="course-description"
-          dangerouslySetInnerHTML={{__html: product.description || product.info.description }}
+          dangerouslySetInnerHTML={{__html: course.description || course.info.description }}
         />
         <CourseTabs
-          product={product}
-          productList={productList}
-          cart={cart}
+          course={course}
+          courseList={courseList}
         />
       </div>;
     }
@@ -55,8 +53,8 @@ class CourseDetail extends Component {
 }
 
 CourseDetail.propTypes = {
-  product: React.PropTypes.object,
-  productList: React.PropTypes.array.isRequired,
+  course: React.PropTypes.object,
+  courseList: React.PropTypes.array.isRequired
 };
 
 export default CourseDetail;

@@ -6,39 +6,39 @@ import ReactDOM from 'react-dom';
 import React from 'react';
 import fetchMock from 'fetch-mock/src/server';
 import {
-  getProduct,
-  getProductList,
+  getCourse,
+  getCourseList,
   login,
   logout,
   register,
   activate,
   checkout,
 } from './api';
-import { PRODUCT_RESPONSE } from '../constants';
+import { COURSE_RESPONSE } from '../constants';
 
 
 describe('common api functions', function() {
   this.timeout(5000);  // eslint-disable-line no-invalid-this
 
-  it('gets a product', done => {
-    const upc = PRODUCT_RESPONSE.upc;
+  it('gets a course', done => {
+    const uuid = COURSE_RESPONSE.uuid;
 
-    fetchMock.mock(`/api/v1/products/${upc}/`, PRODUCT_RESPONSE);
-    getProduct(upc).then(receivedCourse => {
-      assert.deepEqual(receivedCourse, PRODUCT_RESPONSE);
+    fetchMock.mock(`/api/v1/courses/${uuid}/`, COURSE_RESPONSE);
+    getCourse(uuid).then(receivedCourse => {
+      assert.deepEqual(receivedCourse, COURSE_RESPONSE);
 
       done();
     });
   });
 
-  it('fails to get a product', done => {
-    const upc = PRODUCT_RESPONSE.upc;
+  it('fails to get a course', done => {
+    const uuid = COURSE_RESPONSE.uuid;
 
-    fetchMock.mock(`/api/v1/products/${upc}/`, {
-      body: PRODUCT_RESPONSE,
+    fetchMock.mock(`/api/v1/courses/${uuid}/`, {
+      body: COURSE_RESPONSE,
       status: 400
     });
-    getProduct(upc).catch(() => {
+    getCourse(uuid).catch(() => {
       done();
     });
   });
@@ -170,7 +170,7 @@ describe('common api functions', function() {
   it('checks out successfully', done => {
     let expected = {
       cart: [{
-        upc: "upc",
+        uuid: "uuid",
         seats: 5
       }],
       token: "token",
@@ -191,7 +191,7 @@ describe('common api functions', function() {
   it('fails to checkout', done => {
     let expected = {
       cart: [{
-        upc: "upc",
+        uuid: "uuid",
         seats: 5,
         total: 500
       }],
@@ -209,26 +209,26 @@ describe('common api functions', function() {
     });
   });
 
-  it('gets a list of products', done => {
-    fetchMock.mock('/api/v1/products/', () => {
+  it('gets a list of courses', done => {
+    fetchMock.mock('/api/v1/courses/', () => {
       return {
         status: 200
       };
     });
 
-    getProductList().then(() => {
+    getCourseList().then(() => {
       done();
     });
   });
 
-  it('fails to get a list of products', done => {
-    fetchMock.mock('/api/v1/products/', () => {
+  it('fails to get a list of courses', done => {
+    fetchMock.mock('/api/v1/courses/', () => {
       return {
         status: 400
       };
     });
 
-    getProductList().catch(() => {
+    getCourseList().catch(() => {
       done();
     });
   });

@@ -30,7 +30,7 @@ StripeHandler = StripeCheckout.configure({
     // User has confirmed the intent to pay, now process the transaction
     let total = calculateTotal(
       store.getState().cart.cart,
-      store.getState().product.productList
+      store.getState().course.courseList
     );
     store.dispatch(checkout(store.getState().cart.cart, token.id, total));
   }

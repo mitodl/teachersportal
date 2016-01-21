@@ -1,12 +1,12 @@
 /* global SETTINGS:false */
 import {
-  RECEIVE_PRODUCT_SUCCESS,
-  RECEIVE_PRODUCT_FAILURE,
-  REQUEST_PRODUCT,
-  RECEIVE_PRODUCT_LIST_SUCCESS,
-  RECEIVE_PRODUCT_LIST_FAILURE,
-  REQUEST_PRODUCT_LIST,
-  CLEAR_PRODUCT,
+  RECEIVE_COURSE_SUCCESS,
+  RECEIVE_COURSE_FAILURE,
+  REQUEST_COURSE,
+  RECEIVE_COURSE_LIST_SUCCESS,
+  RECEIVE_COURSE_LIST_FAILURE,
+  REQUEST_COURSE_LIST,
+  CLEAR_COURSE,
   SHOW_LOGIN,
   HIDE_LOGIN,
   SHOW_SNACKBAR,
@@ -60,36 +60,36 @@ export const snackBar = handleActions({
   })),
 }, INITIAL_SNACKBAR_STATE);
 
-const INITIAL_PRODUCT_STATE = {
-  productList: []
+const INITIAL_COURSE_STATE = {
+  courseList: []
 };
 
-export const product = handleActions({
-  REQUEST_PRODUCT: payloadMerge((action) => ({productStatus: FETCH_PROCESSING})),
-  RECEIVE_PRODUCT_SUCCESS: payloadMerge((action) => ({
-    productStatus: FETCH_SUCCESS,
-    product: action.payload.product
+export const course = handleActions({
+  REQUEST_COURSE: payloadMerge((action) => ({courseStatus: FETCH_PROCESSING})),
+  RECEIVE_COURSE_SUCCESS: payloadMerge((action) => ({
+    courseStatus: FETCH_SUCCESS,
+    course: action.payload.course
   })),
 
-  RECEIVE_PRODUCT_FAILURE: payloadMerge((action) => ({
-    productStatus: FETCH_FAILURE
+  RECEIVE_COURSE_FAILURE: payloadMerge((action) => ({
+    courseStatus: FETCH_FAILURE
   })),
 
-  REQUEST_PRODUCT_LIST: payloadMerge((action) => ({
-    productListStatus: FETCH_PROCESSING
+  REQUEST_COURSE_LIST: payloadMerge((action) => ({
+    courseListStatus: FETCH_PROCESSING
   })),
 
-  RECEIVE_PRODUCT_LIST_SUCCESS: payloadMerge((action) => ({
-    productListStatus: FETCH_SUCCESS,
-    productList: action.payload.productList
+  RECEIVE_COURSE_LIST_SUCCESS: payloadMerge((action) => ({
+    courseListStatus: FETCH_SUCCESS,
+    courseList: action.payload.courseList
   })),
 
-  RECEIVE_PRODUCT_LIST_FAILURE: payloadMerge((action) => ({
-    productListStatus: FETCH_FAILURE
+  RECEIVE_COURSE_LIST_FAILURE: payloadMerge((action) => ({
+    courseListStatus: FETCH_FAILURE
   })),
 
-  CLEAR_PRODUCT: (state, action) => INITIAL_PRODUCT_STATE
-}, INITIAL_PRODUCT_STATE);
+  CLEAR_COURSE: (state, action) => INITIAL_COURSE_STATE
+}, INITIAL_COURSE_STATE);
 
 export const loginModal = handleActions({
   SHOW_LOGIN: () => ({ visible: true }),
@@ -133,18 +133,18 @@ export const activation = handleActions({
 }, { status: null });
 
 export const cart = handleActions({
-  RECEIVE_PRODUCT_LIST_SUCCESS: payloadMerge((action) => ({
-    productList: action.payload.productList
+  RECEIVE_COURSE_LIST_SUCCESS: payloadMerge((action) => ({
+    courseList: action.payload.courseList
   })),
 
   UPDATE_CART_ITEMS: (state, action) => {
-    const { upcs, seats, courseUpc } = action.payload;
+    const { uuids, seats, courseUuid } = action.payload;
     // Remove all items for this particular course
-    let newCart = state.cart.filter(item => item.courseUpc !== courseUpc);
-    let newItems = upcs.map(upc => ({
-      upc: upc,
+    let newCart = state.cart.filter(item => item.courseUuid !== courseUuid);
+    let newItems = uuids.map(uuid => ({
+      uuid: uuid,
       seats: seats,
-      courseUpc: courseUpc
+      courseUuid: courseUuid
     }));
     newCart = newCart.concat(newItems);
 
@@ -157,10 +157,10 @@ export const cart = handleActions({
 
   CLEAR_INVALID_CART_ITEMS: (state, action) =>
     Object.assign({}, state, {
-      cart: filterCart(state.cart, state.productList)
+      cart: filterCart(state.cart, state.courseList)
     })
 }, {
-  productList: [],
+  courseList: [],
   cart: []
 });
 
@@ -173,7 +173,7 @@ const INITIAL_BUYTAB_STATE = {
 
 export const buyTab = handleActions({
   UPDATE_SELECTED_CHAPTERS: payloadMerge((action) => ({
-    selectedChapters: action.payload.upcs,
+    selectedChapters: action.payload.uuids,
     allRowsSelected: action.payload.allRowsSelected
   })),
   UPDATE_SEAT_COUNT: payloadMerge((action) => ({

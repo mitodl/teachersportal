@@ -17,7 +17,7 @@ from portal.factories import (
     OrderLineFactory,
 )
 from portal.models import Order, OrderLine, UserInfo
-from portal.views.base import ProductTests, FAKE_CCXCON_API
+from portal.views.base import CourseTests, FAKE_CCXCON_API
 from portal.util import (
     calculate_cart_subtotal,
     calculate_cart_item_total,
@@ -27,7 +27,7 @@ from portal.util import (
 from .checkout_api import CheckoutView
 
 
-class CheckoutAPITests(ProductTests):
+class CheckoutAPITests(CourseTests):
     """
     Tests for checkout
     """
@@ -98,7 +98,7 @@ class CheckoutAPITests(ProductTests):
             content_type='application/json',
             data=json.dumps({
                 "cart": [{
-                    "upc": self.module.qualified_id,
+                    "uuid": self.module.uuid,
                     "seats": 5
                 }],
                 "token": "",
@@ -132,7 +132,7 @@ class CheckoutAPITests(ProductTests):
         ), text=_mocked_request_callback)
 
         cart_item = {
-            "upc": self.module.qualified_id,
+            "uuid": self.module.uuid,
             "seats": total_seats
         }
         cart = [cart_item]
@@ -161,7 +161,7 @@ class CheckoutAPITests(ProductTests):
         """
         mock_ccxcon.return_value.post.return_value.status_code = 200
         cart_item = {
-            "upc": self.module.qualified_id,
+            "uuid": self.module.uuid,
             "seats": 5
         }
         cart = [cart_item]
@@ -205,7 +205,7 @@ class CheckoutAPITests(ProductTests):
         we raise a ValidationError.
         """
         cart_item = {
-            "upc": self.module.qualified_id,
+            "uuid": self.module.uuid,
             "seats": 5
         }
         cart = [cart_item]
@@ -228,7 +228,7 @@ class CheckoutAPITests(ProductTests):
         Assert that we clean up everything if checkout failed.
         """
         cart_item = {
-            "upc": self.module.qualified_id,
+            "uuid": self.module.uuid,
             "seats": 5
         }
         cart = [cart_item]
@@ -277,7 +277,7 @@ class CheckoutAPITests(ProductTests):
         start_ol = OrderLine.objects.count()
         requester.return_value.post.side_effect = AttributeError()
         cart_item = {
-            "upc": self.module.qualified_id,
+            "uuid": self.module.uuid,
             "seats": 5
         }
         cart = [cart_item]
@@ -310,10 +310,10 @@ class CheckoutAPITests(ProductTests):
             AttributeError("Another Error"),
         ]
         cart = [{
-            "upc": self.module.qualified_id,
+            "uuid": self.module.uuid,
             "seats": 5
         }, {
-            "upc": module2.qualified_id,
+            "uuid": module2.uuid,
             "seats": 4
         }]
 
@@ -339,7 +339,7 @@ class CheckoutAPITests(ProductTests):
         self.client.logout()
 
         cart_item = {
-            "upc": self.module.qualified_id,
+            "uuid": self.module.uuid,
             "seats": 5
         }
         cart = [cart_item]

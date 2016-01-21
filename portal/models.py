@@ -28,13 +28,6 @@ class Course(models.Model):
     modified_at = DateTimeField(auto_now=True, blank=True)
 
     @property
-    def qualified_id(self):
-        """Concatenate product type with uuid to make a unique id"""
-        # Try to avoid circular dependencies
-        from portal.util import COURSE_PRODUCT_TYPE, make_qualified_id
-        return make_qualified_id(COURSE_PRODUCT_TYPE, self.uuid)  # pylint: disable=no-member
-
-    @property
     def is_available_for_purchase(self):
         """
         Does the course have any modules available for purchase?
@@ -57,13 +50,6 @@ class Module(models.Model):
     price_without_tax = DecimalField(decimal_places=2, max_digits=20, blank=True, null=True)
     created_at = DateTimeField(auto_now_add=True, blank=True)
     modified_at = DateTimeField(auto_now=True, blank=True)
-
-    @property
-    def qualified_id(self):
-        """Concatenate product type with uuid to make a unique id"""
-        # Try to avoid circular dependencies
-        from portal.util import MODULE_PRODUCT_TYPE, make_qualified_id
-        return make_qualified_id(MODULE_PRODUCT_TYPE, self.uuid)  # pylint: disable=no-member
 
     @property
     def is_available_for_purchase(self):

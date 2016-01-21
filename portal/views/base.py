@@ -75,9 +75,9 @@ class AuthenticationTestCase(TestCase):
 
 
 @override_settings(CCXCON_API=FAKE_CCXCON_API)
-class ProductTests(TestCase):
+class CourseTests(TestCase):
     """
-    Base class for tests dealing with products
+    Base class for tests dealing with courses and modules
     """
     def setUp(self):
         """
