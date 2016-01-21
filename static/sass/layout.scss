@@ -41,6 +41,37 @@ body {
       background-color: $lightgrey;
       border: 1px solid #ddd;
 
+      h2.course-listing-header {
+        padding: 0 40px;
+        font-weight: 700;
+        font-size: 1.5em;
+        color: #B30000;
+      }
+
+      ul.course-listing {
+        @include outer-container;
+        li.course-card-item {
+          @include span-columns(3);
+          @include omega(4n);
+          margin-bottom: 20px;
+          .course-card-body {
+            .course-card-content {
+              .course-card {
+                a {
+                  text-decoration: none;
+                  .course-card-title {
+                    font-size: 18px;
+                    line-height: 30px;
+                    font-weight: 700;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+
       #course-content {
         @include pad($page-padding);
         #course-title {

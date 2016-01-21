@@ -3,11 +3,12 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import '../sass/layout.scss';
 import App from './containers/App';
+import CourseListing from './containers/CourseListing';
 import CourseDetailPage from './containers/CourseDetailPage';
 import ActivatePage from './containers/ActivatePage';
 import { Provider } from 'react-redux';
 import configureStore from './store/configureStore';
-import { Router, Route } from 'react-router';
+import { Router, Route, IndexRoute } from 'react-router';
 import createBrowserHistory from 'history/lib/createBrowserHistory';
 import { devTools, persistState } from 'redux-devtools';
 import { DevTools, DebugPanel, LogMonitor } from 'redux-devtools/lib/react';
@@ -53,6 +54,7 @@ ReactDOM.render(
     <Provider store={store}>
       <Router history={createBrowserHistory()}>
         <Route path="/" component={App} onUpdate={ga.pageview(window.location.pathname)}>
+          <IndexRoute component={CourseListing} />
           <Route path="courses/:uuid" component={CourseDetailPage} />
           <Route path="activate" component={ActivatePage} />
         </Route>
