@@ -240,7 +240,7 @@ class CheckoutAPITests(ProductTests):
                 })
             )
 
-        assert resp.status_code == 400, resp.content.decode('utf-8')
+        assert resp.status_code == 500, resp.content.decode('utf-8')
         assert Order.objects.count() - start == 1
         assert OrderLine.objects.count() - start_ol == 1
 
@@ -275,7 +275,7 @@ class CheckoutAPITests(ProductTests):
                 })
             )
 
-        assert resp.status_code == 400, resp.content.decode('utf-8')
+        assert resp.status_code == 500, resp.content.decode('utf-8')
         assert "Example Error" in resp.content.decode('utf-8')
         assert "Another Error" in resp.content.decode('utf-8')
 
