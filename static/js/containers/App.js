@@ -2,10 +2,14 @@ import React from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { connect } from 'react-redux';
+import Snackbar from 'material-ui/lib/snackbar';
+import RaisedButton from 'material-ui/lib/raised-button';
 
 import {
   showLogin,
   hideLogin,
+  showSnackBar,
+  hideSnackBar,
   logout,
   login,
   loginFailure,
@@ -16,20 +20,25 @@ import {
 } from '../actions/index_page';
 
 class App extends React.Component {
+
   render() {
     const {
       authentication,
       registration,
       loginModal,
-      dispatch
+      snackBar,
+      dispatch,
     } = this.props;
 
     let content;
+    let sbMessage;
 
     if (registration.status === FETCH_FAILURE) {
-      content = "An error occurred registering the user.";
+      sbMessage = "An error occurred registering the user.";
+      dispatch(showSnackBar({ message: sbMessage }));
     } else if (registration.status === FETCH_SUCCESS) {
-      content = "User registered successfully! Check your email for an activation link.";
+      sbMessage = "User registered successfully! Check your email for an activation link.";
+      dispatch(showSnackBar({ message: sbMessage }));
     } else {
       content = this.props.children;
     }
@@ -48,6 +57,14 @@ class App extends React.Component {
         loginModal={loginModal}
       />
         {content}
+      <Snackbar
+        open={snackBar.open}
+        message={snackBar.message}
+        action="OK"
+        autoHideDuration={3000}
+        onActionTouchTap={() => dispatch(hideSnackBar())}
+        onRequestClose={() => dispatch(hideSnackBar())}
+      />
       <Footer/>
     </div>;
   }
@@ -69,7 +86,8 @@ App.propTypes = {
   dispatch: React.PropTypes.func.isRequired,
   authentication: React.PropTypes.object.isRequired,
   registration: React.PropTypes.object.isRequired,
-  loginModal: React.PropTypes.object.isRequired
+  loginModal: React.PropTypes.object.isRequired,
+  snackBar: React.PropTypes.object.isRequired,
 };
 
 const mapStateToProps = (state) => {
@@ -77,6 +95,7 @@ const mapStateToProps = (state) => {
     authentication: state.authentication,
     registration: state.registration,
     loginModal: state.loginModal,
+    snackBar: state.snackBar,
   };
 };
 

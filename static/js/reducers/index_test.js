@@ -1,6 +1,8 @@
 import {
   showLogin,
   hideLogin,
+  showSnackBar,
+  hideSnackBar,
   logout,
   loginFailure,
   loginSuccess,
@@ -39,7 +41,6 @@ describe('reducers', () => {
     registerStub = sandbox.stub(api, 'register');
     activateStub = sandbox.stub(api, 'activate');
     checkoutStub = sandbox.stub(api, 'checkout');
-
     store = configureTestStore();
   });
 
@@ -137,6 +138,50 @@ describe('reducers', () => {
           visible: false
         });
         done();
+      });
+    });
+  });
+
+  describe('snackBar reducers', () => {
+    beforeEach(() => {
+      dispatchThen = store.createDispatchThen(state => state.snackBar);
+    });
+
+    it('should have open: false as a default state', done => {
+      // dispatch empty action to look at default state
+      dispatchThen({type: "unknown"}).then(state => {
+        assert.deepEqual(state, {
+          message: "",
+          open: false
+        });
+        done();
+      });
+    });
+
+    it('should set snackBar to open when triggered', done => {
+      dispatchThen(showSnackBar({ message: "Snackbar is open for business!" })).then(state => {
+        assert.deepEqual(state, {
+          message: "Snackbar is open for business!",
+          open: true
+        });
+        done();
+      });
+    });
+
+    it('should set snackbar open to false when triggered', done => {
+      dispatchThen(showSnackBar({ message: "Snackbar is open for business!" })).then(state => {
+        assert.deepEqual(state, {
+          message: "Snackbar is open for business!",
+          open: true
+        });
+
+        dispatchThen(hideSnackBar()).then(state => {
+          assert.deepEqual(state, {
+            message: "",
+            open: false
+          });
+          done();
+        });
       });
     });
   });

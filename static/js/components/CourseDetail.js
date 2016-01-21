@@ -17,15 +17,12 @@ class CourseDetail extends Component {
     const {
       product,
       productList,
-      error,
       cart
     } = this.props;
 
     let content;
 
-    if (error !== undefined) {
-      content = <CardText>{error}</CardText>;
-    } else if (product === undefined) {
+    if (product === undefined) {
       content = <LinearProgress mode="indeterminate"/>;
     } else {
 
@@ -60,7 +57,6 @@ class CourseDetail extends Component {
 CourseDetail.propTypes = {
   product: React.PropTypes.object,
   productList: React.PropTypes.array.isRequired,
-  error: React.PropTypes.string
 };
 
 export default CourseDetail;

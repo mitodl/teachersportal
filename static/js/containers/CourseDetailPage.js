@@ -4,6 +4,7 @@ import {
   fetchProduct,
   fetchProductList,
   clearInvalidCartItems,
+  showSnackBar,
   FETCH_FAILURE,
   FETCH_SUCCESS,
 } from '../actions/index_page';
@@ -13,10 +14,12 @@ class CourseDetailPage extends React.Component {
 
   componentDidMount() {
     this.fetchProduct.call(this);
+    this.handleError.call(this);
   }
 
   componentDidUpdate() {
     this.fetchProduct.call(this);
+    this.handleError.call(this);
   }
 
   fetchProduct() {
@@ -48,17 +51,10 @@ class CourseDetailPage extends React.Component {
     const {
       product,
       authentication,
+      dispatch
     } = this.props;
 
     let error;
-
-    if (product.productStatus === FETCH_FAILURE) {
-      error = "An error occurred fetching information about this course.";
-    } else if (product.productListStatus === FETCH_FAILURE) {
-      error = "An error occurred fetching information about other courses.";
-    } else if (!authentication.isAuthenticated) {
-      error = "Please log in to view the course information.";
-    }
 
     let detail = <CourseDetail
       error={error}
@@ -70,6 +66,24 @@ class CourseDetailPage extends React.Component {
       {detail}
       </div>
       ;
+  }
+
+
+  handleError() {
+    const { product, dispatch, authentication } = this.props;
+
+    let error;
+
+    if (product.productStatus === FETCH_FAILURE) {
+      error = "An error occurred fetching information about this course.";
+    } else if (product.productListStatus === FETCH_FAILURE) {
+      error = "An error occurred fetching information about other courses.";
+    } else if (!authentication.isAuthenticated) {
+      error = "Please log in to view the course information.";
+    }
+    if (error) {
+      dispatch(showSnackBar({ message: error, open: true }));
+    }
   }
 }
 

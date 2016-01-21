@@ -1,11 +1,12 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Card, CardText } from 'material-ui/lib/card';
+import MessagePage from '../components/MessagePage';
 import {
   FETCH_SUCCESS,
   FETCH_PROCESSING,
   FETCH_FAILURE,
   activate,
+  showSnackBar
 } from '../actions/index_page';
 
 class ActivatePage extends React.Component {
@@ -29,7 +30,7 @@ class ActivatePage extends React.Component {
   }
 
   render() {
-    const { activation, location: { query } } = this.props;
+    const { activation, location: { query }, dispatch } = this.props;
     let message;
 
     if (activation.status === FETCH_SUCCESS) {
@@ -42,12 +43,15 @@ class ActivatePage extends React.Component {
     } else if (activation.status === FETCH_FAILURE) {
       message = "Activation failed.";
     }
+    if (message) {
+      dispatch(showSnackBar({ message: message, open: true }));
+    }
 
-    return <Card>
-        <CardText>
-          {message}
-        </CardText>
-      </Card>;
+    return <MessagePage
+      message={message}
+      error=""
+      explanation=""
+    />;
   }
 }
 
