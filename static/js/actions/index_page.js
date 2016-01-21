@@ -2,13 +2,13 @@ import * as api from '../util/api';
 import { createAction } from 'redux-actions';
 
 // action type constants
-export const REQUEST_PRODUCT = 'REQUEST_PRODUCT';
-export const RECEIVE_PRODUCT_SUCCESS = 'RECEIVE_PRODUCT_SUCCESS';
-export const RECEIVE_PRODUCT_FAILURE = 'RECEIVE_PRODUCT_FAILURE';
-export const REQUEST_PRODUCT_LIST = 'REQUEST_PRODUCT_LIST';
-export const RECEIVE_PRODUCT_LIST_SUCCESS = 'RECEIVE_PRODUCT_LIST_SUCCESS';
-export const RECEIVE_PRODUCT_LIST_FAILURE = 'RECEIVE_PRODUCT_LIST_FAILURE';
-export const CLEAR_PRODUCT = 'CLEAR_PRODUCT';
+export const REQUEST_COURSE = 'REQUEST_COURSE';
+export const RECEIVE_COURSE_SUCCESS = 'RECEIVE_COURSE_SUCCESS';
+export const RECEIVE_COURSE_FAILURE = 'RECEIVE_COURSE_FAILURE';
+export const REQUEST_COURSE_LIST = 'REQUEST_COURSE_LIST';
+export const RECEIVE_COURSE_LIST_SUCCESS = 'RECEIVE_COURSE_LIST_SUCCESS';
+export const RECEIVE_COURSE_LIST_FAILURE = 'RECEIVE_COURSE_LIST_FAILURE';
+export const CLEAR_COURSE = 'CLEAR_COURSE';
 
 export const SHOW_LOGIN = 'SHOW_LOGIN';
 export const HIDE_LOGIN = 'HIDE_LOGIN';
@@ -45,18 +45,18 @@ export const FETCH_FAILURE = 'FETCH_FAILURE';
 export const FETCH_SUCCESS = 'FETCH_SUCCESS';
 export const FETCH_PROCESSING = 'FETCH_PROCESSING';
 
-const requestProduct = createAction(REQUEST_PRODUCT);
+const requestCourse = createAction(REQUEST_COURSE);
 
-export const receiveProductSuccess = createAction(
-  RECEIVE_PRODUCT_SUCCESS, (product) => {return {product};});
+export const receiveCourseSuccess = createAction(
+  RECEIVE_COURSE_SUCCESS, (course) => {return {course};});
 
-const receiveProductFailure = createAction(RECEIVE_PRODUCT_FAILURE);
-const requestProductList = createAction(REQUEST_PRODUCT_LIST);
+const receiveCourseFailure = createAction(RECEIVE_COURSE_FAILURE);
+const requestCourseList = createAction(REQUEST_COURSE_LIST);
 
-export const receiveProductListSuccess = createAction(
-  RECEIVE_PRODUCT_LIST_SUCCESS, (productList) => {return {productList};});
+export const receiveCourseListSuccess = createAction(
+  RECEIVE_COURSE_LIST_SUCCESS, (courseList) => {return {courseList};});
 
-const receiveProductListFailure = createAction(RECEIVE_PRODUCT_LIST_FAILURE);
+const receiveCourseListFailure = createAction(RECEIVE_COURSE_LIST_FAILURE);
 
 export const showLogin = createAction(SHOW_LOGIN);
 
@@ -80,21 +80,21 @@ export function hideLogin() {
 export const updateCartVisibility = createAction(
   UPDATE_CART_VISIBILITY, (visibility) => { return {visibility}; });
 
-export function fetchProduct(upc) {
+export function fetchCourse(uuid) {
   return dispatch => {
-    dispatch(requestProduct());
-    return api.getProduct(upc).
-      then(json => dispatch(receiveProductSuccess(json))).
-      catch(() => dispatch(receiveProductFailure()));
+    dispatch(requestCourse());
+    return api.getCourse(uuid).
+      then(json => dispatch(receiveCourseSuccess(json))).
+      catch(() => dispatch(receiveCourseFailure()));
   };
 }
 
-export function fetchProductList() {
+export function fetchCourseList() {
   return dispatch => {
-    dispatch(requestProductList());
-    return api.getProductList().
-      then(json => dispatch(receiveProductListSuccess(json))).
-      catch(() => dispatch(receiveProductListFailure()));
+    dispatch(requestCourseList());
+    return api.getCourseList().
+      then(json => dispatch(receiveCourseListSuccess(json))).
+      catch(() => dispatch(receiveCourseListFailure()));
   };
 }
 
@@ -109,7 +109,7 @@ export function logout() {
         type: LOGOUT
       });
       dispatch({
-        type: CLEAR_PRODUCT
+        type: CLEAR_COURSE
       });
     });
   };
@@ -166,7 +166,7 @@ export function activate(token) {
 }
 
 export const updateCartItems = createAction(
-  UPDATE_CART_ITEMS, (upcs, seats, courseUpc) => { return {upcs, seats, courseUpc}; });
+  UPDATE_CART_ITEMS, (uuids, seats, courseUuid) => { return {uuids, seats, courseUuid}; });
 
 export const clearCart = createAction(CLEAR_CART);
 export const checkoutSuccess = createAction(CHECKOUT_SUCCESS);
@@ -189,7 +189,7 @@ export function checkout(cart, token, total) {
 }
 
 export const updateSelectedChapters = createAction(
-  UPDATE_SELECTED_CHAPTERS, (upcs, allRowsSelected)  => { return {upcs, allRowsSelected}; });
+  UPDATE_SELECTED_CHAPTERS, (uuids, allRowsSelected)  => { return {uuids, allRowsSelected}; });
 
 export const updateSeatCount = createAction(
   UPDATE_SEAT_COUNT, (seats) => { return { seats }; });

@@ -76,12 +76,12 @@ function fetchJSONWithCSRF(input, init) {
   });
 }
 
-export function getProduct(upc) {
-  return fetchJSONWithCSRF(`/api/v1/products/${upc}/`);
+export function getCourse(uuid) {
+  return fetchJSONWithCSRF(`/api/v1/courses/${uuid}/`);
 }
 
-export function getProductList() {
-  return fetchJSONWithCSRF('/api/v1/products/');
+export function getCourseList() {
+  return fetchJSONWithCSRF('/api/v1/courses/');
 }
 
 export function login(username, password) {

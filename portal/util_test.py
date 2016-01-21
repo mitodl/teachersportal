@@ -8,85 +8,54 @@ from decimal import Decimal
 from django.contrib.auth.models import User
 from rest_framework.exceptions import ValidationError
 
-from portal.exceptions import ProductException
 from portal.models import Order, OrderLine
-from portal.views.base import ProductTests
+from portal.views.base import CourseTests
 from portal.factories import ModuleFactory
 from portal.util import (
     calculate_cart_subtotal,
     calculate_cart_item_total,
     create_order,
     get_cents,
-    make_qualified_id,
-    make_external_pk,
-    get_product_type,
-    course_as_product_json,
-    module_as_product_json,
+    course_as_json,
+    module_as_json,
     validate_cart,
-    COURSE_PRODUCT_TYPE,
-    MODULE_PRODUCT_TYPE,
 )
 
 
-class ProductUtilTests(ProductTests):
+class ProductUtilTests(CourseTests):
     """
     Test for Product utility functions.
     """
 
-    def test_product_json(self):
+    def test_course_module_json(self):
         """
-        Test functionality of course_as_product_json and module_as_product_json
+        Test functionality of course_as_json and module_as_json
         """
 
         expected_module = {
-            "upc": self.module.qualified_id,
             "title": self.module.title,
-            "description": "",
-            "external_pk": self.module.uuid,
-            "product_type": MODULE_PRODUCT_TYPE,
+            "uuid": self.module.uuid,
             "price_without_tax": float(self.module.price_without_tax),
-            "parent_upc": self.course.qualified_id,
-            "info": None,
-            "children": []
-        }
-        assert module_as_product_json(self.module, {}) == expected_module
-
-        ccxcon_title = "a title"
-        assert course_as_product_json(self.course, {
-            self.course.qualified_id: {
-                "title": ccxcon_title
+            "info": {
+                "type": "module"
             }
-        }) == {
-            "upc": self.course.qualified_id,
+        }
+        course_info = {"type": "course"}
+        modules_info = {
+            self.module.uuid: {
+                "type": "module"
+            }
+        }
+        assert module_as_json(self.module, modules_info[self.module.uuid]) == expected_module
+        assert course_as_json(self.course, course_info, modules_info) == {
             "title": self.course.title,
             "description": self.course.description,
-            "external_pk": self.course.uuid,
-            "product_type": COURSE_PRODUCT_TYPE,
-            "price_without_tax": None,
-            "parent_upc": None,
+            "uuid": self.course.uuid,
             "info": {
-                "title": ccxcon_title
+                "type": "course"
             },
-            "children": [expected_module]
+            "modules": [expected_module]
         }
-
-    def test_make_qualified_id(self):  # pylint: disable=no-self-use
-        """Assert make_qualified_id behavior"""
-        assert make_qualified_id("product_type", "external_pk") == "product_type_external_pk"
-
-    def test_make_external_pk(self):
-        """Assert make_external_pk behavior"""
-        assert make_external_pk("type", "type_upc") == "upc"
-
-        with self.assertRaises(ProductException) as ex:
-            make_external_pk("type", "other_prefix_upc")
-        assert ex.exception.args[0] == "Unexpected prefix found"
-
-    def test_get_product_type(self):
-        """Assert get_product_type behavior"""
-        assert get_product_type(self.module.qualified_id) == MODULE_PRODUCT_TYPE
-        assert get_product_type(self.course.qualified_id) == COURSE_PRODUCT_TYPE
-        assert get_product_type("invalid") is None
 
     def test_live_availability(self):
         """Assert that live boolean affects availability for purchase"""
@@ -98,7 +67,7 @@ class ProductUtilTests(ProductTests):
         assert self.module.is_available_for_purchase
 
     def test_missing_price(self):
-        """Assert that a missing price means product is unavailable for purchase"""
+        """Assert that a missing price means module is unavailable for purchase"""
         self.course.live = True
         self.course.save()
         self.module.price_without_tax = None
@@ -108,7 +77,7 @@ class ProductUtilTests(ProductTests):
         assert not self.module.is_available_for_purchase
 
     def test_zero_price(self):
-        """Assert that a $0 price means product is available for purchase"""
+        """Assert that a module is available for purchase even with a $0 price"""
         self.course.live = True
         self.course.save()
         self.module.price_without_tax = 0
@@ -136,7 +105,7 @@ class ProductUtilTests(ProductTests):
         assert get_cents(dec) == 511415
 
 
-class CheckoutValidationTests(ProductTests):
+class CheckoutValidationTests(CourseTests):
     """
     Tests for checkout validation
     """
@@ -148,13 +117,13 @@ class CheckoutValidationTests(ProductTests):
 
     def test_cart_with_zero_price(self):
         """
-        Assert that we support carts with zero priced products
+        Assert that we support carts with zero priced modules
         """
         self.module.price_without_tax = 0
         self.module.save()
 
         assert calculate_cart_subtotal([
-            {"upc": self.module.qualified_id, "seats": 10}
+            {"uuid": self.module.uuid, "seats": 10}
         ]) == 0
 
     def test_empty_cart_total(self):  # pylint: disable=no-self-use
@@ -168,7 +137,7 @@ class CheckoutValidationTests(ProductTests):
         Assert that the cart total is calculated correctly (seats * price)
         """
         assert calculate_cart_subtotal([
-            {"upc": self.module.qualified_id, "seats": 10}
+            {"uuid": self.module.uuid, "seats": 10}
         ]) == self.module.price_without_tax * 10
 
     def test_empty_line_total(self):
@@ -179,7 +148,7 @@ class CheckoutValidationTests(ProductTests):
         self.module.save()
 
         assert calculate_cart_item_total({
-            "upc": self.module.qualified_id,
+            "uuid": self.module.uuid,
             "seats": 10
         }) == 0
 
@@ -188,7 +157,7 @@ class CheckoutValidationTests(ProductTests):
         Assert that a line total is the price times quantity.
         """
         assert calculate_cart_item_total({
-            "upc": self.module.qualified_id,
+            "uuid": self.module.uuid,
             "seats": 10
         }) == self.module.price_without_tax * 10
 
@@ -197,7 +166,7 @@ class CheckoutValidationTests(ProductTests):
         Assert that a valid cart will pass validation.
         """
         validate_cart([
-            {"upc": self.module.qualified_id, "seats": 10}
+            {"uuid": self.module.uuid, "seats": 10}
         ])
 
     def test_no_seats(self):
@@ -206,19 +175,9 @@ class CheckoutValidationTests(ProductTests):
         """
         with self.assertRaises(ValidationError) as ex:
             validate_cart([
-                {"upc": self.module.qualified_id, "seats": 0}
+                {"uuid": self.module.uuid, "seats": 0}
             ])
         assert ex.exception.detail[0] == "Number of seats is zero"
-
-    def test_purchase_of_course(self):
-        """
-        Assert that we don't allow purchases of courses, just individual modules.
-        """
-        with self.assertRaises(ValidationError) as ex:
-            validate_cart([
-                {"upc": self.course.qualified_id, "seats": 10}
-            ])
-        assert ex.exception.detail[0] == "Can only purchase Modules"
 
     def test_unavailable_items(self):
         """
@@ -229,7 +188,7 @@ class CheckoutValidationTests(ProductTests):
 
         with self.assertRaises(ValidationError) as ex:
             validate_cart([
-                {"upc": self.module.qualified_id, "seats": 10}
+                {"uuid": self.module.uuid, "seats": 10}
             ])
         assert ex.exception.detail[0] == "One or more products are unavailable"
 
@@ -239,7 +198,7 @@ class CheckoutValidationTests(ProductTests):
         """
         with self.assertRaises(ValidationError) as ex:
             validate_cart([
-                {"upc": make_qualified_id(MODULE_PRODUCT_TYPE, "missing"), "seats": 10}
+                {"uuid": "missing", "seats": 10}
             ])
         assert ex.exception.detail[0] == "One or more products are unavailable"
 
@@ -247,8 +206,8 @@ class CheckoutValidationTests(ProductTests):
         """
         Assert that missing keys cause a ValidationError.
         """
-        item = {"upc": self.module.qualified_id, "seats": 10}
-        for key in ('upc', 'seats'):
+        item = {"uuid": self.module.uuid, "seats": 10}
+        for key in ('uuid', 'seats'):
             with self.assertRaises(ValidationError) as ex:
                 item_copy = dict(item)
                 del item_copy[key]
@@ -260,7 +219,7 @@ class CheckoutValidationTests(ProductTests):
         Assert that non-int keys for number of seats are rejected.
         """
         for seats in ('6.5', 6.5, None, [], {}):
-            item = {"upc": self.module.qualified_id, "seats": seats}
+            item = {"uuid": self.module.uuid, "seats": seats}
             with self.assertRaises(ValidationError) as ex:
                 validate_cart([item])
             assert ex.exception.detail[0] == "Seats must be an integer"
@@ -271,8 +230,8 @@ class CheckoutValidationTests(ProductTests):
         """
         with self.assertRaises(ValidationError) as ex:
             validate_cart([
-                {"upc": self.module.qualified_id, "seats": 10},
-                {"upc": self.module.qualified_id, "seats": 5}
+                {"uuid": self.module.uuid, "seats": 10},
+                {"uuid": self.module.uuid, "seats": 5}
             ])
         assert ex.exception.detail[0] == "Duplicate item in cart"
 
@@ -292,13 +251,13 @@ class CheckoutValidationTests(ProductTests):
 
         with self.assertRaises(ValidationError) as ex:
             validate_cart([
-                {'upc': self.module.qualified_id, 'seats': 5},
+                {'uuid': self.module.uuid, 'seats': 5},
             ])
 
         assert ex.exception.detail[0] == 'You must purchase all modules for a course.'
 
 
-class CheckoutOrderTests(ProductTests):
+class CheckoutOrderTests(CourseTests):
     """
     Tests for creating an order
     """
@@ -327,7 +286,7 @@ class CheckoutOrderTests(ProductTests):
         """
         Assert that an order is created in the database
         """
-        # Create second product to test cart with multiple items
+        # Create second module to test cart with multiple items
         title = "other product title"
         second_price = 345
         second_module = ModuleFactory.create(
@@ -339,8 +298,8 @@ class CheckoutOrderTests(ProductTests):
         first_seats = 5
         second_seats = 10
         order = create_order([
-            {"upc": self.module.qualified_id, "seats": first_seats},
-            {"upc": second_module.qualified_id, "seats": second_seats},
+            {"uuid": self.module.uuid, "seats": first_seats},
+            {"uuid": second_module.uuid, "seats": second_seats},
         ], self.user)
         first_line_total = self.module.price_without_tax * first_seats
         second_line_total = second_price * second_seats

@@ -1,8 +1,8 @@
 import React from 'react';
 import CourseDetail from '../components/CourseDetail';
 import {
-  fetchProduct,
-  fetchProductList,
+  fetchCourse,
+  fetchCourseList,
   clearInvalidCartItems,
   showSnackBar,
   FETCH_FAILURE,
@@ -13,18 +13,18 @@ import { connect } from 'react-redux';
 class CourseDetailPage extends React.Component {
 
   componentDidMount() {
-    this.fetchProduct.call(this);
+    this.fetchCourse.call(this);
     this.handleError.call(this);
   }
 
   componentDidUpdate() {
-    this.fetchProduct.call(this);
+    this.fetchCourse.call(this);
     this.handleError.call(this);
   }
 
-  fetchProduct() {
+  fetchCourse() {
     const {
-      product,
+      course,
       authentication,
       dispatch,
       params: { uuid }
@@ -36,11 +36,11 @@ class CourseDetailPage extends React.Component {
       // this component is refreshed before action has a chance to dispatch,
       // but that shouldn't cause any problems
 
-      if (product.productStatus === undefined) {
-        dispatch(fetchProduct("Course_" + uuid));
+      if (course.courseStatus === undefined) {
+        dispatch(fetchCourse(uuid));
       }
-      if (product.productListStatus === undefined) {
-        dispatch(fetchProductList()).then(() => {
+      if (course.courseListStatus === undefined) {
+        dispatch(fetchCourseList()).then(() => {
           return dispatch(clearInvalidCartItems());
         });
       }
@@ -49,17 +49,12 @@ class CourseDetailPage extends React.Component {
 
   render() {
     const {
-      product,
-      authentication,
-      dispatch
+      course
     } = this.props;
 
-    let error;
-
     let detail = <CourseDetail
-      error={error}
-      product={product.product}
-      productList={product.productList}
+      course={course.course}
+      courseList={course.courseList}
     />;
 
     return <div>
@@ -70,13 +65,13 @@ class CourseDetailPage extends React.Component {
 
 
   handleError() {
-    const { product, dispatch, authentication } = this.props;
+    const { course, dispatch, authentication } = this.props;
 
     let error;
 
-    if (product.productStatus === FETCH_FAILURE) {
+    if (course.courseStatus === FETCH_FAILURE) {
       error = "An error occurred fetching information about this course.";
-    } else if (product.productListStatus === FETCH_FAILURE) {
+    } else if (course.courseListStatus === FETCH_FAILURE) {
       error = "An error occurred fetching information about other courses.";
     } else if (!authentication.isAuthenticated) {
       error = "Please log in to view the course information.";
@@ -88,7 +83,7 @@ class CourseDetailPage extends React.Component {
 }
 
 CourseDetailPage.propTypes = {
-  product: React.PropTypes.object.isRequired,
+  course: React.PropTypes.object.isRequired,
   authentication: React.PropTypes.object.isRequired,
   dispatch: React.PropTypes.func.isRequired,
   params: React.PropTypes.object.isRequired
@@ -96,7 +91,7 @@ CourseDetailPage.propTypes = {
 
 const mapStateToProps = (state) => {
   return {
-    product: state.product,
+    course: state.course,
     authentication: state.authentication
   };
 };

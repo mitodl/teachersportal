@@ -14,14 +14,14 @@ import { calculateTotal } from '../util/util';
 
 class BuyTabContainer extends React.Component {
   render() {
-    const { product, productList, cart, buyTab } = this.props;
+    const { course, courseList, cart, buyTab } = this.props;
 
     let total = this.updateTotal();
 
     return <BuyTab
       selectable={true}
-      product={product}
-      productList={productList}
+      course={course}
+      courseList={courseList}
       cart={cart}
       buyTab={buyTab}
       total={total}
@@ -37,15 +37,15 @@ class BuyTabContainer extends React.Component {
   }
 
   updateTotal() {
-    const { buyTab, product, productList } = this.props;
+    const { buyTab, course, courseList } = this.props;
 
-    let cart = buyTab.selectedChapters.map(upc => ({
-      upc: upc,
+    let cart = buyTab.selectedChapters.map(uuid => ({
+      uuid: uuid,
       seats: buyTab.seats,
-      courseUpc: product.upc
+      courseUuid: course.uuid
     }));
 
-    let total = calculateTotal(cart, productList);
+    let total = calculateTotal(cart, courseList);
 
     return total;
   }
@@ -56,15 +56,15 @@ class BuyTabContainer extends React.Component {
     dispatch(updateSeatCount(seats));
   }
 
-  onUpdateSelectedChapters(upcs, allRowsSelected) {
+  onUpdateSelectedChapters(uuids, allRowsSelected) {
     const { dispatch } = this.props;
 
-    dispatch(updateSelectedChapters(upcs, allRowsSelected));
+    dispatch(updateSelectedChapters(uuids, allRowsSelected));
   }
 
-  onUpdateCartItems(upcs, seats) {
-    const { dispatch, product } = this.props;
-    dispatch(updateCartItems(upcs, seats, product.upc));
+  onUpdateCartItems(uuids, seats) {
+    const { dispatch, course } = this.props;
+    dispatch(updateCartItems(uuids, seats, course.uuid));
   }
 
   onUpdateCartVisibility(visibility) {
@@ -73,9 +73,9 @@ class BuyTabContainer extends React.Component {
   }
 
   onCheckout() {
-    const { dispatch, cart, productList } = this.props;
+    const { dispatch, cart, courseList } = this.props;
 
-    let total = calculateTotal(cart.cart, productList);
+    let total = calculateTotal(cart.cart, courseList);
     if (total === 0) {
       dispatch(checkout(cart.cart, "", total));
     } else {
@@ -89,8 +89,8 @@ class BuyTabContainer extends React.Component {
 }
 
 BuyTabContainer.propTypes = {
-  product: React.PropTypes.object.isRequired,
-  productList: React.PropTypes.array.isRequired,
+  course: React.PropTypes.object.isRequired,
+  courseList: React.PropTypes.array.isRequired,
   cart: React.PropTypes.object.isRequired,
   buyTab: React.PropTypes.object.isRequired,
   selectable: React.PropTypes.bool.isRequired,

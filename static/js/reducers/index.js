@@ -5,13 +5,13 @@ import {
   authentication,
   registration,
   activation,
-  product,
+  course,
   cart,
   buyTab,
 } from './index_page';
 
 export default combineReducers({
-  product,
+  course,
   loginModal,
   snackBar,
   authentication,

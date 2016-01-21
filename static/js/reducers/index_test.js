@@ -11,18 +11,18 @@ import {
   activate,
   checkout,
   updateCartItems,
-  fetchProduct,
-  fetchProductList,
+  fetchCourse,
+  fetchCourseList,
   updateCartVisibility,
   updateSeatCount,
   updateSelectedChapters,
   clearInvalidCartItems,
-  receiveProductListSuccess,
+  receiveCourseListSuccess,
   FETCH_FAILURE,
   FETCH_SUCCESS,
 } from '../actions/index_page';
 import * as api from '../util/api';
-import { PRODUCT_RESPONSE, CART_WITH_ITEM } from '../constants';
+import { COURSE_RESPONSE, CART_WITH_ITEM } from '../constants';
 
 import configureTestStore from '../store/configureStore_test';
 import assert from 'assert';
@@ -30,12 +30,12 @@ import sinon from 'sinon';
 
 describe('reducers', () => {
 
-  let sandbox, store, productStub, productListStub, loginStub, logoutStub,
+  let sandbox, store, courseStub, courseListStub, loginStub, logoutStub,
     registerStub, activateStub, checkoutStub, dispatchThen;
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
-    productStub = sandbox.stub(api, 'getProduct');
-    productListStub = sandbox.stub(api, 'getProductList');
+    courseStub = sandbox.stub(api, 'getCourse');
+    courseListStub = sandbox.stub(api, 'getCourseList');
     logoutStub = sandbox.stub(api, 'logout');
     loginStub = sandbox.stub(api, 'login');
     registerStub = sandbox.stub(api, 'register');
@@ -51,57 +51,57 @@ describe('reducers', () => {
     dispatchThen = null;
   });
 
-  describe('product reducers', () => {
+  describe('course reducers', () => {
     beforeEach(() => {
-      dispatchThen = store.createDispatchThen(state => state.product);
+      dispatchThen = store.createDispatchThen(state => state.course);
     });
 
     it('should have an empty default state', done => {
       dispatchThen({type: 'unknown'}).then(state => {
         assert.deepEqual(state, {
-          productList: []
+          courseList: []
         });
         done();
       });
     });
 
-    it('should fetch a product successfully', done => {
-      productStub.returns(Promise.resolve("data"));
+    it('should fetch a course successfully', done => {
+      courseStub.returns(Promise.resolve("data"));
 
-      dispatchThen(fetchProduct("upc"), 2).then(productState => {
-        assert.equal(productState.product, "data");
-        assert.equal(productState.productStatus, FETCH_SUCCESS);
-
-        done();
-      });
-    });
-
-    it('should fail to fetch a product', done => {
-      productStub.returns(Promise.reject());
-
-      dispatchThen(fetchProduct("upc"), 2).then(productState => {
-        assert.equal(productState.productStatus, FETCH_FAILURE);
+      dispatchThen(fetchCourse("uuid"), 2).then(courseState => {
+        assert.equal(courseState.course, "data");
+        assert.equal(courseState.courseStatus, FETCH_SUCCESS);
 
         done();
       });
     });
 
-    it('should fetch a list of products successfully', done => {
-      productListStub.returns(Promise.resolve(["data"]));
+    it('should fail to fetch a course', done => {
+      courseStub.returns(Promise.reject());
 
-      dispatchThen(fetchProductList(), 2).then(productState => {
-        assert.deepEqual(productState.productList, ["data"]);
-        assert.equal(productState.productListStatus, FETCH_SUCCESS);
+      dispatchThen(fetchCourse("uuid"), 2).then(courseState => {
+        assert.equal(courseState.courseStatus, FETCH_FAILURE);
 
         done();
       });
     });
 
-    it('should fail to fetch a list of products', done => {
-      productListStub.returns(Promise.reject());
+    it('should fetch a list of courses successfully', done => {
+      courseListStub.returns(Promise.resolve(["data"]));
 
-      dispatchThen(fetchProductList(), 2).then(productState => {
-        assert.equal(productState.productListStatus, FETCH_FAILURE);
+      dispatchThen(fetchCourseList(), 2).then(courseState => {
+        assert.deepEqual(courseState.courseList, ["data"]);
+        assert.equal(courseState.courseListStatus, FETCH_SUCCESS);
+
+        done();
+      });
+    });
+
+    it('should fail to fetch a list of courses', done => {
+      courseListStub.returns(Promise.reject());
+
+      dispatchThen(fetchCourseList(), 2).then(courseState => {
+        assert.equal(courseState.courseListStatus, FETCH_FAILURE);
 
         done();
       });
@@ -351,40 +351,40 @@ describe('reducers', () => {
 
     it('updates the cart', done => {
       // Add item to empty cart
-      dispatchThen(updateCartItems(['upc'], 3, 'courseUpc')).then(cartState => {
+      dispatchThen(updateCartItems(['uuid'], 3, 'courseUuid')).then(cartState => {
         assert.deepEqual(cartState, {
           cart: [{
-            upc: 'upc',
+            uuid: 'uuid',
             seats: 3,
-            courseUpc: 'courseUpc'
+            courseUuid: 'courseUuid'
           }],
-          productList: []
+          courseList: []
         });
 
         // Update cart with item in it, which removes the other items in cart
-        dispatchThen(updateCartItems(['newUpc'], 5, 'courseUpc')).then(cartState => {
+        dispatchThen(updateCartItems(['newUuid'], 5, 'courseUuid')).then(cartState => {
           assert.deepEqual(cartState, {
             cart: [{
-              upc: 'newUpc',
+              uuid: 'newUuid',
               seats: 5,
-              courseUpc: 'courseUpc'
+              courseUuid: 'courseUuid'
             }],
-            productList: []
+            courseList: []
           });
 
-          // Update cart with a different courseUpc, ignoring existing items with a different courseUpc
-          dispatchThen(updateCartItems(['upc'], 4, 'othercourseUpc')).then(cartState => {
+          // Update cart with a different courseUuid, ignoring existing items with a different courseUuid
+          dispatchThen(updateCartItems(['uuid'], 4, 'othercourseUuid')).then(cartState => {
             assert.deepEqual(cartState, {
               cart: [{
-                upc: 'newUpc',
+                uuid: 'newUuid',
                 seats: 5,
-                courseUpc: 'courseUpc'
+                courseUuid: 'courseUuid'
               }, {
-                upc: 'upc',
+                uuid: 'uuid',
                 seats: 4,
-                courseUpc: 'othercourseUpc'
+                courseUuid: 'othercourseUuid'
               }],
-              productList: []
+              courseList: []
             });
             done();
           });
@@ -395,21 +395,21 @@ describe('reducers', () => {
     it('checks out the cart', done => {
       checkoutStub.returns(Promise.resolve());
 
-      dispatchThen(updateCartItems(['upc'], 5, 'courseUpc')).then(cartState => {
+      dispatchThen(updateCartItems(['uuid'], 5, 'courseUuid')).then(cartState => {
         let expectedCart = [{
-          upc: 'upc',
+          uuid: 'uuid',
           seats: 5,
-          courseUpc: 'courseUpc'
+          courseUuid: 'courseUuid'
         }];
         assert.deepEqual(cartState, {
           cart: expectedCart,
-          productList: []
+          courseList: []
         });
 
         dispatchThen(checkout(expectedCart, "token", 500), 2).then(cartState => {
           assert.deepEqual(cartState, {
             cart: [],
-            productList: []
+            courseList: []
           });
 
           done();
@@ -420,21 +420,21 @@ describe('reducers', () => {
     it('fails to checkout the cart', done => {
       checkoutStub.returns(Promise.reject());
 
-      dispatchThen(updateCartItems(['upc'], 5, 'courseUpc')).then(cartState => {
+      dispatchThen(updateCartItems(['uuid'], 5, 'courseUuid')).then(cartState => {
         let expectedCart = [{
-          upc: 'upc',
+          uuid: 'uuid',
           seats: 5,
-          courseUpc: 'courseUpc'
+          courseUuid: 'courseUuid'
         }];
         assert.deepEqual(cartState, {
           cart: expectedCart,
-          productList: []
+          courseList: []
         });
 
         dispatchThen(checkout(expectedCart, "token", 500)).then(cartState => {
           assert.deepEqual(cartState, {
             cart: expectedCart,
-            productList: []
+            courseList: []
           });
 
           done();
@@ -443,37 +443,37 @@ describe('reducers', () => {
     });
 
     it('clears the items from the cart which are missing', done => {
-      let upc = PRODUCT_RESPONSE.children[0].upc;
-      let courseUpc = PRODUCT_RESPONSE.upc;
-      dispatchThen(updateCartItems([upc], 5, courseUpc)).then(cartState => {
+      let uuid = COURSE_RESPONSE.modules[0].uuid;
+      let courseUuid = COURSE_RESPONSE.uuid;
+      dispatchThen(updateCartItems([uuid], 5, courseUuid)).then(cartState => {
         let expectedCart = [{
-          upc: upc,
+          uuid: uuid,
           seats: 5,
-          courseUpc: courseUpc
+          courseUuid: courseUuid
         }];
         assert.deepEqual(cartState, {
           cart: expectedCart,
-          productList: []
+          courseList: []
         });
 
-        // update product list
-        dispatchThen(receiveProductListSuccess([PRODUCT_RESPONSE])).then(() => {
+        // update course list
+        dispatchThen(receiveCourseListSuccess([COURSE_RESPONSE])).then(() => {
 
-          // don't filter anything since all cart items match some product
+          // don't filter anything since all cart items match some module
           dispatchThen(clearInvalidCartItems()).then(cartState => {
             assert.deepEqual(cartState, {
               cart: expectedCart,
-              productList: [PRODUCT_RESPONSE]
+              courseList: [COURSE_RESPONSE]
             });
 
-            // clear product list
-            dispatchThen(receiveProductListSuccess([])).then(() => {
+            // clear course list
+            dispatchThen(receiveCourseListSuccess([])).then(() => {
 
-              // filter everything since no cart items match any product
+              // filter everything since no cart items match any module
               dispatchThen(clearInvalidCartItems()).then(cartState => {
                 assert.deepEqual(cartState, {
                   cart: [],
-                  productList: []
+                  courseList: []
                 });
 
                 done();
