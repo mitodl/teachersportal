@@ -1,6 +1,7 @@
 import { combineReducers } from 'redux';
 import {
   loginModal,
+  snackBar,
   authentication,
   registration,
   activation,
@@ -12,6 +13,7 @@ import {
 export default combineReducers({
   product,
   loginModal,
+  snackBar,
   authentication,
   registration,
   activation,

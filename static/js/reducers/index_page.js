@@ -9,6 +9,8 @@ import {
   CLEAR_PRODUCT,
   SHOW_LOGIN,
   HIDE_LOGIN,
+  SHOW_SNACKBAR,
+  HIDE_SNACKBAR,
   FETCH_FAILURE,
   FETCH_PROCESSING,
   FETCH_SUCCESS,
@@ -33,7 +35,6 @@ import {
 import { filterCart } from '../util/util';
 import { handleActions } from 'redux-actions';
 
-
 // Helper function to avoid a commonly repeated pattern where we merge
 // state with something computed soley from the actions. Accepts a
 // function that will get the action, and should return the value to
@@ -43,6 +44,22 @@ function payloadMerge(fn) {
     return Object.assign({}, state, fn(action));
   };
 }
+
+const INITIAL_SNACKBAR_STATE = {
+  message: "",
+  open: false
+};
+
+export const snackBar = handleActions({
+  SHOW_SNACKBAR: payloadMerge((action) => ({
+    message: action.payload.message,
+    open: true
+  })),
+  HIDE_SNACKBAR: payloadMerge((action) => ({
+    message: "",
+    open: false
+  })),
+}, INITIAL_SNACKBAR_STATE);
 
 const INITIAL_PRODUCT_STATE = {
   productList: []

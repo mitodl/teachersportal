@@ -13,6 +13,9 @@ export const CLEAR_PRODUCT = 'CLEAR_PRODUCT';
 export const SHOW_LOGIN = 'SHOW_LOGIN';
 export const HIDE_LOGIN = 'HIDE_LOGIN';
 
+export const SHOW_SNACKBAR = 'SHOW_SNACKBAR';
+export const HIDE_SNACKBAR = 'HIDE_SNACKBAR';
+
 export const LOGIN_FAILURE = 'LOGIN_FAILURE';
 export const LOGIN_SUCCESS = 'LOGIN_SUCCESS';
 export const LOGOUT = 'LOGOUT';
@@ -56,6 +59,9 @@ export const receiveProductListSuccess = createAction(
 const receiveProductListFailure = createAction(RECEIVE_PRODUCT_LIST_FAILURE);
 
 export const showLogin = createAction(SHOW_LOGIN);
+
+export const showSnackBar = createAction(SHOW_SNACKBAR);
+export const hideSnackBar = createAction(HIDE_SNACKBAR);
 
 export function hideLogin() {
   return dispatch => {
