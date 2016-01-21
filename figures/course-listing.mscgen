@@ -2,8 +2,8 @@ msc {
     width = "800";
   JS [label="Javascript"], TP [label="Teachers' Portal"], CCX [label="CCXCon"];
   
-  JS => TP [label="GET oscar product listing"];
-  TP => JS [label="returns product SKUs"];
+  JS => TP [label="GET product listing"];
+  TP => JS [label="returns product qualified ids"];
   JS => TP [label="GET ccx get by id"];
   TP => CCX [label="GET enabled courses"];
   CCX => TP;

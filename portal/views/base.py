@@ -6,19 +6,9 @@ from __future__ import unicode_literals
 
 from django.contrib.auth.models import User
 from django.test import TestCase
-from oscar.apps.catalogue.models import (
-    Category,
-    Product,
-    ProductClass,
-    ProductCategory,
-)
 
+from portal.factories import CourseFactory, ModuleFactory
 from portal.models import UserInfo
-from portal.util import (
-    make_upc,
-    COURSE_PRODUCT_TYPE,
-    MODULE_PRODUCT_TYPE,
-)
 
 
 class AuthenticationTestCase(TestCase):
@@ -87,32 +77,12 @@ class ProductTests(TestCase):
     """
     def setUp(self):
         """
-        Create parent and child Products with no StockRecords to start with.
+        Create a course and module which aren't live.
         """
-        product_class = ProductClass.objects.get(name="Course")
-        parent_upc = make_upc(COURSE_PRODUCT_TYPE, "parent-uuid")
-        parent_title = "parent's title"
-        self.parent = Product.objects.create(
-            upc=parent_upc,
-            description="Parent description",
-            product_class=product_class,
-            structure=Product.PARENT,
-            parent=None,
-            title=parent_title
+        self.course = CourseFactory.create(
+            description=None,
+            live=False,
         )
-        # Assign category to parent
-        ProductCategory.objects.create(
-            product=self.parent,
-            category=Category.objects.get(name="Course")
-        )
-
-        child_upc = make_upc(MODULE_PRODUCT_TYPE, "child-uuid")
-        child_title = "child's title"
-        self.child = Product.objects.create(
-            upc=child_upc,
-            description="Child description",
-            product_class=None,
-            structure=Product.CHILD,
-            parent=self.parent,
-            title=child_title
+        self.module = ModuleFactory.create(
+            course=self.course,
         )

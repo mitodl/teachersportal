@@ -9,17 +9,18 @@ from mock import patch
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
-from oscar.apps.catalogue.models import Product, ProductClass
-from oscar.apps.partner.models import Partner, StockRecord
 import requests_mock
 
+from portal.models import Course, Module
 from portal.views.base import ProductTests
 from portal.views.util import as_json
 from portal.util import (
-    product_as_json,
-    get_external_pk,
+    course_as_product_json,
+    module_as_product_json,
     COURSE_PRODUCT_TYPE,
     MODULE_PRODUCT_TYPE,
+    get_product_type,
+    make_external_pk,
 )
 
 
@@ -37,15 +38,8 @@ class ProductAPITests(ProductTests):
         Set up the products and also add a StockRecord to make it available to purchase.
         """
         super(ProductAPITests, self).setUp()
-        partner = Partner.objects.first()
-        self.price = 123
-        StockRecord.objects.create(
-            product=self.child,
-            partner=partner,
-            partner_sku=self.child.upc,
-            price_currency="$",
-            price_excl_tax=self.price,
-        )
+        self.course.live = True
+        self.course.save()
 
         credentials = {"username": "auser", "password": "apass"}
         User.objects.create_user(**credentials)
@@ -57,36 +51,29 @@ class ProductAPITests(ProductTests):
         """
         for product_from_api in products_from_api:
             # Assert consistency between database and what API endpoint is returning.
-            product_from_db = Product.objects.get(
-                upc=product_from_api['upc']
-            )
-            assert product_from_db.title == product_from_api['title']
-            assert product_from_db.upc == product_from_api['upc']
-
-            parent = product_from_db.parent
-            if parent is None:
-                assert product_from_api['parent_upc'] is None
-                if product_from_db.children.count() == 0:
-                    assert product_from_db.structure == Product.STANDALONE
-                else:
-                    assert product_from_db.structure == Product.PARENT
-
-                assert product_from_db.product_class == ProductClass.objects.get(name="Course")
+            qualified_id = product_from_api['upc']
+            product_type = get_product_type(qualified_id)
+            uuid = make_external_pk(product_type, qualified_id)
+            if product_type == COURSE_PRODUCT_TYPE:
+                course = Course.objects.get(uuid=uuid)
+                assert course.title == product_from_api['title']
+                assert course.description == product_from_api['description']
+                assert product_from_api['price_without_tax'] is None
+            elif product_type == MODULE_PRODUCT_TYPE:
+                module = Module.objects.get(uuid=uuid)
+                assert module.title == product_from_api['title']
+                assert float(module.price_without_tax) == product_from_api['price_without_tax']
             else:
-                assert product_from_db.product_class is None
-                assert product_from_api['parent_upc'] == parent.upc
-                assert product_from_db.structure == Product.CHILD
+                raise Exception("Unexpected product type")
 
-                # Make sure there's one StockRecord and SKU matches UPC
-                assert product_from_db.stockrecords.count() == 1
-                assert product_from_db.upc == product_from_db.stockrecords.first().partner_sku
         return products_from_api
 
-    def test_no_stockrecord(self):
+    def test_not_live(self):
         """
-        Make sure API shows no products if none have StockRecords.
+        Make sure API shows no products if none are live.
         """
-        StockRecord.objects.all().delete()
+        self.course.live = False
+        self.course.save()
 
         resp = self.client.get(reverse("product-list"))
         assert resp.status_code == 200, resp.content.decode('utf-8')
@@ -95,9 +82,9 @@ class ProductAPITests(ProductTests):
         self.validate_product_api(products_from_api)
         assert products_from_api == []
 
-    def test_one_stockrecord(self):
+    def test_live(self):
         """
-        Make sure API returns this product since it has a StockRecord.
+        Make sure API returns this product since it's live.
         """
         # API only shows products with StockRecords
         resp = self.client.get(reverse("product-list"))
@@ -106,8 +93,8 @@ class ProductAPITests(ProductTests):
 
         self.validate_product_api(products_from_api)
         assert products_from_api == [
-            product_as_json(self.parent, {}),
-            product_as_json(self.child, {}),
+            course_as_product_json(self.course, {}),
+            module_as_product_json(self.module, {}),
         ]
 
     @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
@@ -116,12 +103,12 @@ class ProductAPITests(ProductTests):
         """
         Test that product detail for modules works properly.
         """
-        module_uuid = get_external_pk(self.child)
+        module_uuid = self.module.uuid
         ccxcon_title = "ccxcon title"
         subchapters = ["subchapter1", "subchapter2"]
         fetch_mock.get("{base}v1/coursexs/{course_uuid}/modules/{module_uuid}/".format(
             base=FAKE_CCXCON_API,
-            course_uuid=get_external_pk(self.child.parent),
+            course_uuid=self.module.course.uuid,
             module_uuid=module_uuid,
         ), text=json.dumps(
             {
@@ -133,7 +120,7 @@ class ProductAPITests(ProductTests):
             }
         ))
         resp = self.client.get(
-            reverse("product-detail", kwargs={"uuid": self.child.upc})
+            reverse("product-detail", kwargs={"qualified_id": self.module.qualified_id})
         )
         assert resp.status_code == 200
         assert json.loads(resp.content.decode('utf-8')) == {
@@ -141,14 +128,14 @@ class ProductAPITests(ProductTests):
                 "title": ccxcon_title,
                 "subchapters": subchapters
             },
-            "parent_upc": self.parent.upc,
+            "parent_upc": self.course.qualified_id,
             "product_type": MODULE_PRODUCT_TYPE,
-            "title": self.child.title,
-            "description": self.child.description,
-            "external_pk": get_external_pk(self.child),
+            "title": self.module.title,
+            "description": "",
+            "external_pk": self.module.uuid,
             "children": [],
-            "upc": self.child.upc,
-            "price_without_tax": self.price
+            "upc": self.module.qualified_id,
+            "price_without_tax": float(self.module.price_without_tax)
         }
 
     @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
@@ -157,8 +144,8 @@ class ProductAPITests(ProductTests):
         """
         Test that product detail for courses works properly.
         """
-        course_uuid = get_external_pk(self.parent)
-        module_uuid = get_external_pk(self.child)
+        course_uuid = self.course.uuid
+        module_uuid = self.module.uuid
 
         ccxcon_course_title = "ccxcon course title"
         ccxcon_module_title = "ccxcon module title"
@@ -199,7 +186,7 @@ class ProductAPITests(ProductTests):
         ]))
 
         resp = self.client.get(
-            reverse("product-detail", kwargs={"uuid": self.parent.upc})
+            reverse("product-detail", kwargs={"qualified_id": self.course.qualified_id})
         )
         assert resp.status_code == 200
         assert json.loads(resp.content.decode('utf-8')) == {
@@ -212,8 +199,8 @@ class ProductAPITests(ProductTests):
             },
             "parent_upc": None,
             "product_type": COURSE_PRODUCT_TYPE,
-            "title": self.parent.title,
-            "description": self.parent.description,
+            "title": self.course.title,
+            "description": self.course.description,
             "external_pk": course_uuid,
             "children": [
                 {
@@ -221,17 +208,17 @@ class ProductAPITests(ProductTests):
                         "title": ccxcon_module_title,
                         "subchapters": subchapters
                     },
-                    "parent_upc": self.parent.upc,
+                    "parent_upc": self.course.qualified_id,
                     "product_type": MODULE_PRODUCT_TYPE,
-                    "title": self.child.title,
-                    "description": self.child.description,
+                    "title": self.module.title,
+                    "description": "",
                     "external_pk": module_uuid,
                     "children": [],
-                    "upc": self.child.upc,
-                    "price_without_tax": self.price
+                    "upc": self.module.qualified_id,
+                    "price_without_tax": float(self.module.price_without_tax)
                 }
             ],
-            "upc": self.parent.upc,
+            "upc": self.course.qualified_id,
             "price_without_tax": None
         }
 
@@ -239,11 +226,16 @@ class ProductAPITests(ProductTests):
         """
         Test that product detail returns a 404 if the product is not available.
         """
-        # Make child unavailable for purchase
-        StockRecord.objects.all().delete()
+        self.course.live = False
+        self.course.save()
 
         resp = self.client.get(
-            reverse("product-detail", kwargs={"uuid": self.child.upc})
+            reverse("product-detail", kwargs={"qualified_id": self.course.qualified_id})
+        )
+        assert resp.status_code == 404, resp.content.decode('utf-8')
+
+        resp = self.client.get(
+            reverse("product-detail", kwargs={"qualified_id": self.module.qualified_id})
         )
         assert resp.status_code == 404, resp.content.decode('utf-8')
 
@@ -253,7 +245,7 @@ class ProductAPITests(ProductTests):
         """
         self.client.logout()
         resp = self.client.get(
-            reverse("product-detail", kwargs={"uuid": self.child.upc})
+            reverse("product-detail", kwargs={"qualified_id": self.module.qualified_id})
         )
         assert resp.status_code == 403, resp.content.decode('utf-8')
 
@@ -267,16 +259,16 @@ class ProductAPITests(ProductTests):
         Test that if the CCXCon connection is broken an exception is raised
         (producing a 500 error).
         """
-        module_uuid = get_external_pk(self.child)
+        module_uuid = self.module.uuid
         fetch_mock.get("{base}v1/coursexs/{course_uuid}/modules/{module_uuid}/".format(
             base=FAKE_CCXCON_API,
-            course_uuid=get_external_pk(self.child.parent),
+            course_uuid=self.course.uuid,
             module_uuid=module_uuid,
         ), status_code=500, text="{}")
 
         with self.assertRaises(Exception) as ex:
             self.client.get(
-                reverse("product-detail", kwargs={"uuid": self.child.upc})
+                reverse("product-detail", kwargs={"qualified_id": self.module.qualified_id})
             )
         assert "CCXCon returned a non 200 status code 500" in ex.exception.args[0]
 
