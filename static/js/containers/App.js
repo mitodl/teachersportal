@@ -2,8 +2,8 @@ import React from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SnackbarWrapper from '../components/SnackbarWrapper';
-import { connect } from 'react-redux';
 import RaisedButton from 'material-ui/lib/raised-button';
+import { connect } from 'react-redux';
 
 import {
   showLogin,
