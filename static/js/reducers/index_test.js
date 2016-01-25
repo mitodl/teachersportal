@@ -169,15 +169,16 @@ describe('reducers', () => {
     });
 
     it('should set snackbar open to false when triggered', done => {
-      dispatchThen(showSnackBar({ message: "Snackbar is open for business!" })).then(state => {
+      let message = "Snackbar is open for business!";
+      dispatchThen(showSnackBar({ message: message })).then(state => {
         assert.deepEqual(state, {
-          message: "Snackbar is open for business!",
+          message: message,
           open: true
         });
 
         dispatchThen(hideSnackBar()).then(state => {
           assert.deepEqual(state, {
-            message: "",
+            message: message,
             open: false
           });
           done();

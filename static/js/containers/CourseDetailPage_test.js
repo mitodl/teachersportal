@@ -304,8 +304,6 @@ describe('CourseDetailPage', () => {
       assert.ok(checkoutStub.calledOnce);
 
       done();
-    }).catch(e => {
-      console.log("ERROR", e);
     });
   });
 });
