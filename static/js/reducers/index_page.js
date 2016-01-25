@@ -36,7 +36,7 @@ import { filterCart } from '../util/util';
 import { handleActions } from 'redux-actions';
 
 // Helper function to avoid a commonly repeated pattern where we merge
-// state with something computed soley from the actions. Accepts a
+// state with something computed solely from the actions. Accepts a
 // function that will get the action, and should return the value to
 // be merged with the existing state.
 function payloadMerge(fn) {
@@ -56,7 +56,6 @@ export const snackBar = handleActions({
     open: true
   })),
   HIDE_SNACKBAR: payloadMerge((action) => ({
-    message: "",
     open: false
   })),
 }, INITIAL_SNACKBAR_STATE);

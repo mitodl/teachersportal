@@ -1,8 +1,8 @@
 import React from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SnackbarWrapper from '../components/SnackbarWrapper';
 import { connect } from 'react-redux';
-import Snackbar from 'material-ui/lib/snackbar';
 import RaisedButton from 'material-ui/lib/raised-button';
 
 import {
@@ -57,10 +57,9 @@ class App extends React.Component {
         loginModal={loginModal}
       />
         {content}
-      <Snackbar
+      <SnackbarWrapper
         open={snackBar.open}
         message={snackBar.message}
-        action="OK"
         autoHideDuration={3000}
         onActionTouchTap={() => dispatch(hideSnackBar())}
         onRequestClose={() => dispatch(hideSnackBar())}

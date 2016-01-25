@@ -44,7 +44,7 @@ class ActivatePage extends React.Component {
       message = "Activation failed.";
     }
     if (message) {
-      dispatch(showSnackBar({ message: message, open: true }));
+      dispatch(showSnackBar({ message: message }));
     }
 
     return <MessagePage
