@@ -82,7 +82,7 @@ class CourseDetailPage extends React.Component {
       error = "Please log in to view the course information.";
     }
     if (error) {
-      dispatch(showSnackBar({ message: error, open: true }));
+      dispatch(showSnackBar({ message: error }));
     }
   }
 }
