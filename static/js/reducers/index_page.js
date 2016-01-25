@@ -58,6 +58,14 @@ export const snackBar = handleActions({
   HIDE_SNACKBAR: payloadMerge((action) => ({
     open: false
   })),
+  CHECKOUT_SUCCESS: payloadMerge(action => ({
+    message: "Course successfully purchased!",
+    open: true
+  })),
+  CHECKOUT_FAILURE: payloadMerge(action => ({
+    message: "There was an error purchasing the course.",
+    open: true
+  }))
 }, INITIAL_SNACKBAR_STATE);
 
 const INITIAL_PRODUCT_STATE = {

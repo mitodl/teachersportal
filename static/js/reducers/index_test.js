@@ -10,6 +10,8 @@ import {
   register,
   activate,
   checkout,
+  checkoutSuccess,
+  checkoutFailure,
   updateCartItems,
   fetchProduct,
   fetchProductList,
@@ -183,6 +185,20 @@ describe('reducers', () => {
           });
           done();
         });
+      });
+    });
+
+    it('messages the snackbar on checkout success', done => {
+      dispatchThen(checkoutSuccess()).then(state => {
+        assert.equal(state.message, "Course successfully purchased!");
+        done();
+      });
+    });
+
+    it('messages the snackbar on checkout failure', done => {
+      dispatchThen(checkoutFailure()).then(state => {
+        assert.equal(state.message, "There was an error purchasing the course.");
+        done();
       });
     });
   });
@@ -481,6 +497,16 @@ describe('reducers', () => {
             });
           });
         });
+      });
+    });
+
+    it('fetches a list of products and stores it in the cart', done => {
+      productListStub.returns(Promise.resolve(["data"]));
+
+      dispatchThen(fetchProductList(), 2).then(cartState => {
+        assert.deepEqual(cartState.productList, ["data"]);
+
+        done();
       });
     });
   });
