@@ -132,7 +132,7 @@ def calculate_cart_subtotal(cart):
     Args:
         cart (list): A list of items in cart
     Returns:
-        float: Total price of cart
+        Decimal: Total price of cart
     """
     return sum(calculate_cart_item_total(item) for item in cart)
 
@@ -143,7 +143,7 @@ def calculate_cart_item_total(item):
     Args:
         item (dict): An item in the cart
     Returns:
-        float: Product price times number of seats
+        Decimal: Product price times number of seats
     """
     uuid = make_external_pk(MODULE_PRODUCT_TYPE, item['upc'])
     module = Module.objects.get(uuid=uuid)

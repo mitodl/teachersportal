@@ -52,11 +52,14 @@ class CheckoutView(APIView):
             try:
                 result = ccxcon.post(
                     '{api_base}v1/ccx/'.format(api_base=api_base),
-                    data={
+                    json={
                         'master_course_id': course_uuid,
                         'user_email': user.email,
                         'total_seats': line.seats,
                         'display_name': '{} for {}'.format(title, user.userinfo.full_name),
+                        'course_modules': [
+                            orderline.module.uuid for orderline in order.orderline_set.all()
+                        ]
                     }
                 )
             except Exception as e:  # pylint: disable=broad-except,invalid-name

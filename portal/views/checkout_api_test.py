@@ -8,6 +8,7 @@ import json
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from mock import patch
+import requests_mock
 from stripe import Charge
 
 from portal.factories import (
@@ -16,7 +17,7 @@ from portal.factories import (
     OrderLineFactory,
 )
 from portal.models import Order, OrderLine, UserInfo
-from portal.views.base import ProductTests
+from portal.views.base import ProductTests, FAKE_CCXCON_API
 from portal.util import (
     calculate_cart_subtotal,
     calculate_cart_item_total,
@@ -35,11 +36,17 @@ class CheckoutAPITests(ProductTests):
         self.course.live = True
         self.course.save()
 
-        credentials = {"username": "auser", "password": "apass"}
+        password = "apass"
+        self.user = User.objects.create_user(
+            username="auser",
+            password=password,
+            email="email@example.com"
+        )
         UserInfo.objects.create(
-            user=User.objects.create_user(**credentials),
-            full_name='Test User')
-        self.client.login(**credentials)
+            user=self.user,
+            full_name='Test User'
+        )
+        self.client.login(username=self.user.username, password=password)
 
     def test_empty_cart(self):
         """
@@ -101,10 +108,56 @@ class CheckoutAPITests(ProductTests):
         assert resp.status_code == 200, resp.content.decode('utf-8')
         assert mock_ccxcon.return_value.post.called
 
-    @patch('portal.views.checkout_api.ccxcon_request')
-    def test_cart_with_price(self, mock_ccxcon):
+    @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
+    @requests_mock.mock()
+    def test_ccx_creation(self, mock, mocked_request):  # pylint: disable=unused-argument
         """
-        Assert that if the total of a cart is not zero, checkout works.
+        Assert that the proper POST is being sent to create the CCX, on successful checkout.
+        """
+        total_seats = 5
+
+        def _mocked_request_callback(request, context):  # pylint: disable=unused-argument
+            """Assert that the data being sent is valid JSON"""
+            data = request.json()
+            assert data['course_modules'] == [self.module.uuid]
+            assert data['user_email'] == self.user.email
+            assert data['display_name'] == '{} for {}'.format(
+                self.course.title, self.user.userinfo.full_name
+            )
+            assert data['master_course_id'] == self.course.uuid
+            assert data['total_seats'] == total_seats
+
+        mocked_request.post("{base}v1/ccx/".format(
+            base=FAKE_CCXCON_API
+        ), text=_mocked_request_callback)
+
+        cart_item = {
+            "upc": self.module.qualified_id,
+            "seats": total_seats
+        }
+        cart = [cart_item]
+        total = calculate_cart_subtotal(cart)
+        # Note: autospec intentionally not used, we need an unbound method here
+        with patch.object(Charge, 'create') as create_mock:
+
+            resp = self.client.post(
+                reverse('checkout'),
+                content_type='application/json',
+                data=json.dumps({
+                    "cart": cart,
+                    "token": "token",
+                    "total": float(total)
+                })
+            )
+
+        assert resp.status_code == 200, resp.content.decode('utf-8')
+        assert create_mock.called
+        assert mocked_request.called
+
+    @patch('portal.views.checkout_api.ccxcon_request')
+    def test_stripe_charge(self, mock_ccxcon):
+        """
+        Assert that we execute the stripe charge with the proper arguments, on successful checkout.
         """
         mock_ccxcon.return_value.post.return_value.status_code = 200
         cart_item = {
@@ -133,18 +186,18 @@ class CheckoutAPITests(ProductTests):
                     "total": float(total)
                 })
             )
-            assert resp.status_code == 200, resp.content.decode('utf-8')
+        assert resp.status_code == 200, resp.content.decode('utf-8')
 
-            assert mocked_kwargs['source'] == 'token'
-            assert mocked_kwargs['amount'] == get_cents(total)
-            assert mocked_kwargs['currency'] == 'usd'
-            assert 'order_id' in mocked_kwargs['metadata']
-            assert mock_ccxcon.return_value.post.called
+        assert mocked_kwargs['source'] == 'token'
+        assert mocked_kwargs['amount'] == get_cents(total)
+        assert mocked_kwargs['currency'] == 'usd'
+        assert 'order_id' in mocked_kwargs['metadata']
+        assert mock_ccxcon.return_value.post.called
 
-            order = Order.objects.get(id=mocked_kwargs['metadata']['order_id'])
-            assert order.orderline_set.count() == 1
-            order_line = order.orderline_set.first()
-            assert calculate_cart_item_total(cart_item) == order_line.line_total
+        order = Order.objects.get(id=mocked_kwargs['metadata']['order_id'])
+        assert order.orderline_set.count() == 1
+        order_line = order.orderline_set.first()
+        assert calculate_cart_item_total(cart_item) == order_line.line_total
 
     def test_cart_with_price_not_matching_total(self):
         """
