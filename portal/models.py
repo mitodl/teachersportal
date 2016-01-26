@@ -14,15 +14,22 @@ from django.db.models.fields import (
     TextField,
     DateTimeField,
 )
+from django.utils.encoding import python_2_unicode_compatible
 
 
+@python_2_unicode_compatible
 class BackingInstance(models.Model):
     """
     The instance of edX where the course lives.
     """
     instance_url = TextField(unique=True)
 
+    def __str__(self):
+        """String representation to show in Django Admin console"""
+        return self.instance_url
 
+
+@python_2_unicode_compatible
 class Course(models.Model):
     """
     A CCX course
@@ -44,10 +51,15 @@ class Course(models.Model):
             return False
         return all(module.is_available_for_purchase for module in self.module_set.all())
 
+    def __str__(self):
+        """String representation to show in Django Admin console"""
+        return "{title} ({uuid})".format(title=self.title, uuid=self.uuid)
+
     class Meta:  # pylint: disable=missing-docstring, no-init, old-style-class, too-few-public-methods
         ordering = ('created_at', )
 
 
+@python_2_unicode_compatible
 class Module(models.Model):
     """
     A chapter in a CCX course
@@ -65,6 +77,10 @@ class Module(models.Model):
         Is the module available for purchase?
         """
         return self.course.live and self.price_without_tax is not None  # pylint: disable=no-member
+
+    def __str__(self):
+        """String representation to show in Django Admin console"""
+        return "{title} ({uuid})".format(title=self.title, uuid=self.uuid)
 
     class Meta:  # pylint: disable=missing-docstring, no-init, old-style-class, too-few-public-methods
         ordering = ('created_at', )
