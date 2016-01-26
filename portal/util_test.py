@@ -16,8 +16,8 @@ from portal.util import (
     calculate_cart_item_total,
     create_order,
     get_cents,
-    course_as_json,
-    module_as_json,
+    course_as_dict,
+    module_as_dict,
     validate_cart,
 )
 
@@ -46,8 +46,8 @@ class ProductUtilTests(CourseTests):
                 "type": "module"
             }
         }
-        assert module_as_json(self.module, modules_info[self.module.uuid]) == expected_module
-        assert course_as_json(self.course, course_info, modules_info) == {
+        assert module_as_dict(self.module, modules_info[self.module.uuid]) == expected_module
+        assert course_as_dict(self.course, course_info, modules_info) == {
             "title": self.course.title,
             "description": self.course.description,
             "uuid": self.course.uuid,

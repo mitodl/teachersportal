@@ -17,9 +17,9 @@ from portal.models import (
 log = logging.getLogger(__name__)
 
 
-def course_as_json(course, course_info=None, modules_info=None):
+def course_as_dict(course, course_info=None, modules_info=None):
     """
-    Serialize course to JSON
+    Serialize course to dict, ready for JSON serialization
     Args:
         course (Course): A Course
         course_info (dict): Information fetched from CCXCon about the course
@@ -32,9 +32,9 @@ def course_as_json(course, course_info=None, modules_info=None):
         modules_info = {}
 
     modules = [
-        module_as_json(module, modules_info.get(module.uuid))
+        module_as_dict(module, modules_info.get(module.uuid))
         for module in course.module_set.order_by('created_at')
-    ]
+        ]
     return {
         "title": course.title,
         "description": course.description,
@@ -44,9 +44,9 @@ def course_as_json(course, course_info=None, modules_info=None):
     }
 
 
-def module_as_json(module, ccxcon_module_info=None):
+def module_as_dict(module, ccxcon_module_info=None):
     """
-    Serialize module to JSON
+    Serialize module to dict, ready for JSON serialization
     Args:
         module (Module): A Module
         ccxcon_module_info (dict): Information fetched from CCXCon
