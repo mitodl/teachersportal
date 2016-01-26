@@ -13,11 +13,12 @@ from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.status import HTTP_200_OK
 
 from portal.models import Course
 from portal.serializers import CourseSerializer
 from portal.util import (
-    course_as_json,
+    course_as_dict,
 )
 
 
@@ -103,7 +104,7 @@ def fetch_ccxcon_info(uuid):
         course_uuid=uuid
     )
     response = oauth_ccxcon.get(course_url)
-    if response.status_code != 200:
+    if response.status_code != HTTP_200_OK:
         log.info(
             "Unable to fetch course from CCXCon: url: %s, code: %s, content: %s",
             course_url,
@@ -123,7 +124,7 @@ def fetch_ccxcon_info(uuid):
         course_uuid=uuid
     )
     response = oauth_ccxcon.get(modules_url)
-    if response.status_code != 200:
+    if response.status_code != HTTP_200_OK:
         log.info(
             "Unable to fetch modules from CCXCon: url: %s, code: %s, content: %s",
             modules_url,
@@ -154,10 +155,10 @@ class CourseListView(ListAPIView):
         """A queryset for courses that are available for purchase"""
 
         return [
-            course_as_json(course)
+            course_as_dict(course)
             for course in Course.objects.order_by("created_at")
             if course.is_available_for_purchase
-        ]
+            ]
 
 
 class CourseDetailView(RetrieveAPIView):
@@ -184,7 +185,7 @@ class CourseDetailView(RetrieveAPIView):
 
         course_info, modules_info = fetch_ccxcon_info(uuid)
 
-        return course_as_json(
+        return course_as_dict(
             course,
             filter_ccxcon_course_info(course_info),
             {

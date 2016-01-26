@@ -18,7 +18,7 @@ from portal.views.course_api import (
 from portal.views.base import CourseTests, FAKE_CCXCON_API
 from portal.views.util import as_json
 from portal.util import (
-    course_as_json,
+    course_as_dict,
 )
 
 
@@ -80,7 +80,7 @@ class CourseAPITests(CourseTests):
 
         self.validate_course_api(courses_from_api)
         assert courses_from_api == [
-            course_as_json(self.course)
+            course_as_dict(self.course)
         ]
 
     @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
@@ -100,33 +100,35 @@ class CourseAPITests(CourseTests):
         subchapters = ["subchapter1", "subchapter2"]
         image_url = "http://youtube.com/"
         fetch_mock.get("{base}v1/coursexs/{course_uuid}/".format(
-            base=FAKE_CCXCON_API,
-            course_uuid=course_uuid,
-        ), json={
-            "uuid": course_uuid,
-            "title": ccxcon_course_title,
-            "author_name": author,
-            "overview": overview,
-            "description": ccxcon_description,
-            "image_url": image_url,
-            "edx_instance": "http://mitx.edx.org",
-            "url": "https://example.com",
-            "modules": "https://example.com",
-            "instructors": [],
-            "course_id": "course_id"
-        })
-        fetch_mock.get("{base}v1/coursexs/{course_uuid}/modules/".format(
-            base=FAKE_CCXCON_API,
-            course_uuid=course_uuid
-        ), json=[
-            {
-                "uuid": module_uuid,
-                "title": ccxcon_module_title,
-                "subchapters": subchapters,
-                "course": "https://example.com/",
-                "url": "https://example.com/"
+                base=FAKE_CCXCON_API,
+                course_uuid=course_uuid,
+            ), json={
+                "uuid": course_uuid,
+                "title": ccxcon_course_title,
+                "author_name": author,
+                "overview": overview,
+                "description": ccxcon_description,
+                "image_url": image_url,
+                "edx_instance": "http://mitx.edx.org",
+                "url": "https://example.com",
+                "modules": "https://example.com",
+                "instructors": [],
+                "course_id": "course_id"
             }
-        ])
+        )
+        fetch_mock.get("{base}v1/coursexs/{course_uuid}/modules/".format(
+                base=FAKE_CCXCON_API,
+                course_uuid=course_uuid
+            ), json=[
+                {
+                    "uuid": module_uuid,
+                    "title": ccxcon_module_title,
+                    "subchapters": subchapters,
+                    "course": "https://example.com/",
+                    "url": "https://example.com/"
+                }
+            ]
+        )
 
         resp = self.client.get(
             reverse("course-detail", kwargs={"uuid": self.course.uuid})
@@ -195,13 +197,19 @@ class CourseAPITests(CourseTests):
         (producing a 500 error).
         """
         fetch_mock.get("{base}v1/coursexs/{course_uuid}/modules/".format(
-            base=FAKE_CCXCON_API,
-            course_uuid=self.course.uuid,
-        ), status_code=200, json={})
+                base=FAKE_CCXCON_API,
+                course_uuid=self.course.uuid,
+            ),
+            status_code=200,
+            json={}
+        )
         fetch_mock.get("{base}v1/coursexs/{course_uuid}/".format(
-            base=FAKE_CCXCON_API,
-            course_uuid=self.course.uuid,
-        ), status_code=500, json={})
+                base=FAKE_CCXCON_API,
+                course_uuid=self.course.uuid,
+            ),
+            status_code=500,
+            json={}
+        )
 
         with self.assertRaises(Exception) as ex:
             self.client.get(

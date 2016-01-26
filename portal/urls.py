@@ -19,11 +19,7 @@ urlpatterns = (
     url(r'^api/v1/login/$', LoginView.as_view(), name='login'),
     url(r'^api/v1/logout/$', logout_view, name='logout'),
     url(r'^api/v1/courses/$', CourseListView.as_view(), name='course-list'),
-    url(
-        r'^api/v1/courses/(?P<uuid>[-\w]+)/$',
-        CourseDetailView.as_view(),
-        name='course-detail'
-    ),
+    url(r'^api/v1/courses/(?P<uuid>[-\w]+)/$', CourseDetailView.as_view(), name='course-detail'),
     url(r'^api/v1/register/$', register_view, name='register'),
     url(r'^api/v1/activate/$', activate_view, name='activate'),
     url(r'^api/v1/checkout/$', CheckoutView.as_view(), name='checkout'),
