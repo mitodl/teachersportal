@@ -149,7 +149,8 @@ class CourseListView(ListAPIView):
     Lists courses available for purchase
     """
     serializer_class = CourseSerializer
-    permission_classes = (IsAuthenticated,)
+    # No authentication for course list, we want the public to see this
+    permission_classes = ()
 
     def get_queryset(self):
         """A queryset for courses that are available for purchase"""

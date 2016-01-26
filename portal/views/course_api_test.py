@@ -180,7 +180,7 @@ class CourseAPITests(CourseTests):
 
     def test_not_logged_in(self):
         """
-        Test that course list and detail are only available to logged in users.
+        Test that course detail are only available to logged in users.
         """
         self.client.logout()
         resp = self.client.get(
@@ -188,8 +188,9 @@ class CourseAPITests(CourseTests):
         )
         assert resp.status_code == 403, resp.content.decode('utf-8')
 
+        # Course list is available to users not logged in
         resp = self.client.get(reverse("course-list"))
-        assert resp.status_code == 403, resp.content.decode('utf-8')
+        assert resp.status_code == 200, resp.content.decode('utf-8')
 
     @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
     @requests_mock.mock()
