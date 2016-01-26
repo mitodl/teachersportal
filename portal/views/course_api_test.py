@@ -99,7 +99,8 @@ class CourseAPITests(CourseTests):
         overview = "overview"
         subchapters = ["subchapter1", "subchapter2"]
         image_url = "http://youtube.com/"
-        fetch_mock.get("{base}v1/coursexs/{course_uuid}/".format(
+        fetch_mock.get(
+            "{base}v1/coursexs/{course_uuid}/".format(
                 base=FAKE_CCXCON_API,
                 course_uuid=course_uuid,
             ), json={
@@ -116,7 +117,8 @@ class CourseAPITests(CourseTests):
                 "course_id": "course_id"
             }
         )
-        fetch_mock.get("{base}v1/coursexs/{course_uuid}/modules/".format(
+        fetch_mock.get(
+            "{base}v1/coursexs/{course_uuid}/modules/".format(
                 base=FAKE_CCXCON_API,
                 course_uuid=course_uuid
             ), json=[
@@ -196,14 +198,16 @@ class CourseAPITests(CourseTests):
         Test that if the CCXCon connection is broken an exception is raised
         (producing a 500 error).
         """
-        fetch_mock.get("{base}v1/coursexs/{course_uuid}/modules/".format(
+        fetch_mock.get(
+            "{base}v1/coursexs/{course_uuid}/modules/".format(
                 base=FAKE_CCXCON_API,
                 course_uuid=self.course.uuid,
             ),
             status_code=200,
             json={}
         )
-        fetch_mock.get("{base}v1/coursexs/{course_uuid}/".format(
+        fetch_mock.get(
+            "{base}v1/coursexs/{course_uuid}/".format(
                 base=FAKE_CCXCON_API,
                 course_uuid=self.course.uuid,
             ),
