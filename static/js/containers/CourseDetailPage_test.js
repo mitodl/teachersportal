@@ -10,11 +10,11 @@ import TestUtils from 'react-addons-test-utils';
 
 import App from './App';
 import CourseDetailPage from './CourseDetailPage';
-import { PRODUCT_RESPONSE } from '../constants';
+import { COURSE_RESPONSE } from '../constants';
 import * as api from '../util/api';
 import {
-  receiveProductListSuccess,
-  receiveProductSuccess,
+  receiveCourseListSuccess,
+  receiveCourseSuccess,
   loginSuccess,
   updateSeatCount,
   updateSelectedChapters,
@@ -26,10 +26,10 @@ import {
   LOGIN_SUCCESS,
   CLEAR_AUTHENTICATION_ERROR,
   CLEAR_REGISTRATION_ERROR,
-  REQUEST_PRODUCT,
-  REQUEST_PRODUCT_LIST,
-  RECEIVE_PRODUCT_SUCCESS,
-  RECEIVE_PRODUCT_LIST_SUCCESS,
+  REQUEST_COURSE,
+  REQUEST_COURSE_LIST,
+  RECEIVE_COURSE_SUCCESS,
+  RECEIVE_COURSE_LIST_SUCCESS,
   CLEAR_INVALID_CART_ITEMS,
   UPDATE_SELECTED_CHAPTERS,
   UPDATE_CART_ITEMS,
@@ -76,7 +76,7 @@ describe('CourseDetailPage', () => {
 
   // Helper function to render CourseDetailPage
   const renderCourseDetail = () => new Promise(resolve => {
-    const uuid = PRODUCT_RESPONSE.external_pk;
+    const uuid = COURSE_RESPONSE.uuid;
 
     const afterMount = component => {
       resolve(component);
@@ -107,8 +107,8 @@ describe('CourseDetailPage', () => {
   it('can check off items in the buy tab', done => {
     // Set up state as if we logged in already
     store.dispatch(loginSuccess());
-    store.dispatch(receiveProductListSuccess([PRODUCT_RESPONSE]));
-    store.dispatch(receiveProductSuccess(PRODUCT_RESPONSE));
+    store.dispatch(receiveCourseListSuccess([COURSE_RESPONSE]));
+    store.dispatch(receiveCourseSuccess(COURSE_RESPONSE));
 
     renderCourseDetail().then(component => {
       const node = ReactDOM.findDOMNode(component);
@@ -121,10 +121,10 @@ describe('CourseDetailPage', () => {
 
           // Make sure we're in the right table by asserting its text
           let titleNode = cells[1];
-          assert.equal(titleNode.textContent, PRODUCT_RESPONSE.children[rowCount].title);
+          assert.equal(titleNode.textContent, COURSE_RESPONSE.modules[rowCount].title);
           let priceNode = cells[2];
           assert.equal(priceNode.textContent, "$" +
-            PRODUCT_RESPONSE.children[rowCount].price_without_tax + " / seat");
+            COURSE_RESPONSE.modules[rowCount].price_without_tax + " / seat");
 
           // Technically the td still, but close enough
           let checkboxNode = ReactDOM.findDOMNode(cells[0]);
@@ -135,7 +135,7 @@ describe('CourseDetailPage', () => {
       });
     }).then(state => {
       // Assert that the buyTab state now has the chapters we selected, but the cart does not yet
-      assert.deepEqual(state.buyTab.selectedChapters, PRODUCT_RESPONSE.children.map(child => child.upc));
+      assert.deepEqual(state.buyTab.selectedChapters, COURSE_RESPONSE.modules.map(child => child.uuid));
       assert.deepEqual(state.cart.cart, []);
       done();
     });
@@ -145,10 +145,10 @@ describe('CourseDetailPage', () => {
   it('can add items to the cart', done => {
     // Alter state as if we logged in, selected all chapters and updated seat count
     store.dispatch(loginSuccess());
-    store.dispatch(receiveProductListSuccess([PRODUCT_RESPONSE]));
-    store.dispatch(receiveProductSuccess(PRODUCT_RESPONSE));
+    store.dispatch(receiveCourseListSuccess([COURSE_RESPONSE]));
+    store.dispatch(receiveCourseSuccess(COURSE_RESPONSE));
     store.dispatch(updateSeatCount(newSeatCount));
-    store.dispatch(updateSelectedChapters(PRODUCT_RESPONSE.children.map(child => child.upc), false));
+    store.dispatch(updateSelectedChapters(COURSE_RESPONSE.modules.map(child => child.uuid), false));
 
 
     renderCourseDetail().then(component => {
@@ -159,10 +159,10 @@ describe('CourseDetailPage', () => {
         TestUtils.Simulate.click(button);
       });
     }).then(state => {
-      assert.deepEqual(state.cart.cart, PRODUCT_RESPONSE.children.map(child => ({
-        courseUpc: PRODUCT_RESPONSE.upc,
+      assert.deepEqual(state.cart.cart, COURSE_RESPONSE.modules.map(child => ({
+        courseUuid: COURSE_RESPONSE.uuid,
         seats: newSeatCount,
-        upc: child.upc
+        uuid: child.uuid
       })));
 
       done();
@@ -174,17 +174,17 @@ describe('CourseDetailPage', () => {
 
     // Alter state as if we logged in, selected all chapters and updated seat count,
     // and updated the cart
-    const upcs = PRODUCT_RESPONSE.children.map(child => child.upc);
+    const uuids = COURSE_RESPONSE.modules.map(child => child.uuid);
     store.dispatch(loginSuccess());
-    store.dispatch(receiveProductListSuccess([PRODUCT_RESPONSE]));
-    store.dispatch(receiveProductSuccess(PRODUCT_RESPONSE));
+    store.dispatch(receiveCourseListSuccess([COURSE_RESPONSE]));
+    store.dispatch(receiveCourseSuccess(COURSE_RESPONSE));
     store.dispatch(updateSeatCount(newSeatCount));
-    store.dispatch(updateSelectedChapters(upcs, false));
-    store.dispatch(updateCartItems(upcs, newSeatCount, PRODUCT_RESPONSE.upc));
+    store.dispatch(updateSelectedChapters(uuids, false));
+    store.dispatch(updateCartItems(uuids, newSeatCount, COURSE_RESPONSE.uuid));
 
     // Calculate our expected total
     let expectedTotal = 0;
-    for (let child of PRODUCT_RESPONSE.children) {
+    for (let child of COURSE_RESPONSE.modules) {
       expectedTotal += newSeatCount * child.price_without_tax;
     }
 
@@ -193,7 +193,7 @@ describe('CourseDetailPage', () => {
       open: data => {
         assert.deepEqual(data, {
           name: "MIT Teacher's Portal",
-          description: PRODUCT_RESPONSE.children.length + " item(s)",
+          description: COURSE_RESPONSE.modules.length + " item(s)",
           amount: Math.floor(expectedTotal * 100)
         });
 
@@ -223,24 +223,24 @@ describe('CourseDetailPage', () => {
   });
 
   it('can checkout the cart with an empty price', done => {
-    const zeroPriceProducts = Object.assign(PRODUCT_RESPONSE,
+    const zeroPriceCourse = Object.assign(COURSE_RESPONSE,
       {
-        children: PRODUCT_RESPONSE.children.map(child =>
+        modules: COURSE_RESPONSE.modules.map(child =>
           Object.assign(child, {"price_without_tax": 0})
         )
       }
     );
 
-    const upcs = zeroPriceProducts.children.map(child => child.upc);
+    const uuids = zeroPriceCourse.modules.map(child => child.uuid);
 
     // Alter state as if we logged in, selected all chapters and updated seat count,
     // and updated the cart
     store.dispatch(loginSuccess());
-    store.dispatch(receiveProductListSuccess([zeroPriceProducts]));
-    store.dispatch(receiveProductSuccess(zeroPriceProducts));
+    store.dispatch(receiveCourseListSuccess([zeroPriceCourse]));
+    store.dispatch(receiveCourseSuccess(zeroPriceCourse));
     store.dispatch(updateSeatCount(newSeatCount));
-    store.dispatch(updateSelectedChapters(upcs, false));
-    store.dispatch(updateCartItems(upcs, newSeatCount, zeroPriceProducts.upc));
+    store.dispatch(updateSelectedChapters(uuids, false));
+    store.dispatch(updateCartItems(uuids, newSeatCount, zeroPriceCourse.uuid));
 
     // Note that we are not mocking StripeHandler here like in the other test
     // Mock checkout api to succeed
@@ -265,24 +265,24 @@ describe('CourseDetailPage', () => {
   });
 
   it('fails to checkout', done => {
-    const zeroPriceProducts = Object.assign(PRODUCT_RESPONSE,
+    const zeroPriceCourse = Object.assign(COURSE_RESPONSE,
       {
-        children: PRODUCT_RESPONSE.children.map(child =>
+        modules: COURSE_RESPONSE.modules.map(child =>
           Object.assign(child, {"price_without_tax": 0})
         )
       }
     );
 
-    const upcs = zeroPriceProducts.children.map(child => child.upc);
+    const uuids = zeroPriceCourse.modules.map(child => child.uuid);
 
     // Alter state as if we logged in, selected all chapters and updated seat count,
     // and updated the cart
     store.dispatch(loginSuccess());
-    store.dispatch(receiveProductListSuccess([zeroPriceProducts]));
-    store.dispatch(receiveProductSuccess(zeroPriceProducts));
+    store.dispatch(receiveCourseListSuccess([zeroPriceCourse]));
+    store.dispatch(receiveCourseSuccess(zeroPriceCourse));
     store.dispatch(updateSeatCount(newSeatCount));
-    store.dispatch(updateSelectedChapters(upcs, false));
-    store.dispatch(updateCartItems(upcs, newSeatCount, zeroPriceProducts.upc));
+    store.dispatch(updateSelectedChapters(uuids, false));
+    store.dispatch(updateCartItems(uuids, newSeatCount, zeroPriceCourse.uuid));
 
     // Mock checkout api to reject
     checkoutStub.returns(Promise.reject());
@@ -299,7 +299,7 @@ describe('CourseDetailPage', () => {
       // Assert that things haven't changed in the UI
       assert.deepEqual(state.cart.cart, oldCart);
       assert.equal(state.buyTab.seats, newSeatCount);
-      assert.deepEqual(state.buyTab.selectedChapters, upcs);
+      assert.deepEqual(state.buyTab.selectedChapters, uuids);
 
       assert.ok(checkoutStub.calledOnce);
 

@@ -20,7 +20,7 @@ from portal.util import (
     get_cents,
 )
 from ..models import OrderLine
-from .product_api import ccxcon_request
+from portal.views.course_api import ccxcon_request
 
 log = logging.getLogger(__name__)
 

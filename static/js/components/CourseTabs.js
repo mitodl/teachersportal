@@ -16,12 +16,12 @@ class CourseTabs extends React.Component {
 
   render() {
 
-    const { product, productList } = this.props;
+    const { course, courseList } = this.props;
 
     return <Card id="course-tabs-card">
         <Tabs id="course-tabs">
             <Tab label="About" id="about" className="tab" onActive={this.handleActive}>
-                <AboutTab content={product.info.overview} />
+                <AboutTab content={course.info.overview} />
             </Tab>
             <Tab label="Content" id="content" className="tab" onActive={this.handleActive}>
                 <ChapterTab
@@ -32,8 +32,8 @@ class CourseTabs extends React.Component {
                   showRowHover={true}
                   deselectOnClickaway={true}
                   height={'auto'}
-                  product={product}
-                  productList={productList}
+                  course={course}
+                  courseList={courseList}
                  />
             </Tab>
             <Tab label="Buy" id="buy" className="tab" onActive={this.handleActive}>
@@ -45,8 +45,8 @@ class CourseTabs extends React.Component {
                   showRowHover={true}
                   deselectOnClickaway={true}
                   height={'auto'}
-                  product={product}
-                  productList={productList}
+                  course={course}
+                  courseList={courseList}
                 />
             </Tab>
         </Tabs>
@@ -65,6 +65,6 @@ class CourseTabs extends React.Component {
 export default CourseTabs;
 
 CourseTabs.propTypes = {
-  product: React.PropTypes.object.isRequired,
-  productList: React.PropTypes.array.isRequired
+  course: React.PropTypes.object.isRequired,
+  courseList: React.PropTypes.array.isRequired
 };

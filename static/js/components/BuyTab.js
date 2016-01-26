@@ -8,7 +8,7 @@ import IconButton from 'material-ui/lib/icon-button';
 import NavigationClose from 'material-ui/lib/svg-icons/navigation/close';
 import ChapterTab from './ChapterTab';
 import StripeButton from './StripeButton';
-import { getProduct } from '../util/util';
+import { getModule } from '../util/util';
 
 class BuyTab extends React.Component {
   componentWillReceiveProps(nextProps) {
@@ -27,8 +27,8 @@ class BuyTab extends React.Component {
   render() {
     const {
       selectable,
-      product,
-      productList,
+      course,
+      courseList,
       cart,
       buyTab,
       total,
@@ -38,16 +38,16 @@ class BuyTab extends React.Component {
     let cartContents = <MenuItem>No chapters selected</MenuItem>;
 
     if (cart.cart.length > 0) {
-      cartContents = cart.cart.map((module, i) => {
-        let cartProduct = getProduct(module.upc, productList);
+      cartContents = cart.cart.map((item, i) => {
+        let module = getModule(item.uuid, courseList);
         let title = "";
-        if (cartProduct !== undefined) {
-          title = cartProduct.title;
+        if (module !== undefined) {
+          title = module.title;
         }
 
         return <MenuItem
-          key={module.upc}>{i}: {title}:
-          Seats: {module.seats}
+          key={item.uuid}>{i}: {title}:
+          Seats: {item.seats}
         </MenuItem>;
       });
     }
@@ -93,7 +93,7 @@ class BuyTab extends React.Component {
         displaySelectAll={selectable}
         adjustForCheckbox={false}
         displayRowCheckbox={selectable}
-        product={product}
+        course={course}
         updateSelectedChapters={updateSelectedChapters}
         deselectOnClickaway={false}
         buyTab={buyTab}
@@ -116,7 +116,7 @@ class BuyTab extends React.Component {
         />
         {cartContents}
         <div className="cart-actions">
-          <StripeButton cart={cart} product={product} checkout={this.onCheckout.bind(this)}/>
+          <StripeButton cart={cart} course={course} checkout={this.onCheckout.bind(this)}/>
         </div>
         <div className="cart-status">
           <span className="cart-total">${total}<br /><span className="cart-total-label">total cost</span></span>
@@ -157,8 +157,8 @@ class BuyTab extends React.Component {
 export default BuyTab;
 
 BuyTab.propTypes = {
-  product: React.PropTypes.object.isRequired,
-  productList: React.PropTypes.array.isRequired,
+  course: React.PropTypes.object.isRequired,
+  courseList: React.PropTypes.array.isRequired,
   selectable: React.PropTypes.bool.isRequired,
   cart: React.PropTypes.object.isRequired,
   buyTab: React.PropTypes.object.isRequired,

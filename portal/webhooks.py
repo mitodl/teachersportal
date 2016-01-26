@@ -26,23 +26,23 @@ def course(action, payload):
     if action == 'update':
         try:
             title = payload['title']
-            external_pk = payload['external_pk']
+            uuid = payload['external_pk']
         except KeyError as ex:
             raise ValidationError("Missing key {key}".format(key=ex.args[0]))
         except TypeError as ex:
             raise ValidationError("Invalid key {key}".format(key=ex.args[0]))
 
-        if not external_pk:
+        if not uuid:
             raise ValidationError('Invalid external_pk')
 
         with transaction.atomic():
             try:
-                existing_course = Course.objects.get(uuid=external_pk)
+                existing_course = Course.objects.get(uuid=uuid)
                 existing_course.title = title
                 existing_course.save()
             except Course.DoesNotExist:
                 Course.objects.create(
-                    uuid=external_pk,
+                    uuid=uuid,
                     title=title,
                     live=False
                 )
@@ -72,24 +72,24 @@ def module(action, payload):
     if action == 'update':
         try:
             title = payload['title']
-            external_pk = payload['external_pk']
-            course_external_pk = payload['course_external_pk']
+            uuid = payload['external_pk']
+            course_uuid = payload['course_external_pk']
         except KeyError as ex:
             raise ValidationError("Missing key {key}".format(key=ex.args[0]))
         except TypeError as ex:
             raise ValidationError("Invalid key {key}".format(key=ex.args[0]))
 
-        if not external_pk:
+        if not uuid:
             raise ValidationError("Invalid external_pk")
 
         with transaction.atomic():
             try:
-                existing_course = Course.objects.get(uuid=course_external_pk)
+                existing_course = Course.objects.get(uuid=course_uuid)
             except Course.DoesNotExist:
                 raise ValidationError("Invalid course_external_pk")
 
             try:
-                existing_module = Module.objects.get(uuid=external_pk)
+                existing_module = Module.objects.get(uuid=uuid)
 
                 if existing_course != existing_module.course:
                     raise ValidationError("Invalid course_external_pk")
@@ -97,7 +97,7 @@ def module(action, payload):
                 existing_module.save()
             except Module.DoesNotExist:
                 Module.objects.create(
-                    uuid=external_pk,
+                    uuid=uuid,
                     course=existing_course,
                     title=title
                 )

@@ -8,121 +8,60 @@ import logging
 
 from rest_framework.exceptions import ValidationError
 
-from portal.exceptions import ProductException
 from portal.models import (
     Module,
     Order,
     OrderLine,
 )
 
-MODULE_PRODUCT_TYPE = "Module"
-COURSE_PRODUCT_TYPE = "Course"
 log = logging.getLogger(__name__)
 
 
-def make_qualified_id(product_type, external_pk):
+def course_as_dict(course, course_info=None, modules_info=None):
     """
-    Helper function to create unique id for use in the client.
-
-    Args:
-        product_type (basestring):
-            The product_type (either Course or Module).
-        external_pk (basestring):
-            An identifier string, unique to the product_type
-    Returns:
-        basestring: A unique string id.
-    """
-    return "{type}_{pk}".format(type=product_type, pk=external_pk)
-
-
-def make_external_pk(product_type, qualified_id):
-    """
-    We concatenate the product type with the UUID to guarantee uniqueness because
-    the incoming UUIDs are only guaranteed to be unique within the product type.
-    This chops off the product type and returns the UUID to be exposed via REST API.
-
-    Args:
-        product_type (basestring):
-            The name of the product type.
-        qualified_id (basestring):
-            The qualified_id used inside the database.
-    Returns:
-        basestring: The external_pk value used in creating this UUID
-    """
-    prefix = "{product_type}_".format(product_type=product_type)
-    if qualified_id.startswith(prefix):
-        return qualified_id[len(prefix):]
-
-    # Should never happen since only the webhooks should update this listing
-    raise ProductException("Unexpected prefix found")
-
-
-def get_product_type(qualified_id):
-    """
-    Parse product type from qualified_id.
-
-    Args:
-        qualified_id (basestring):
-            A string used in the product API to uniquely identify a course or module
-    Returns:
-        basestring: The product type, or None if the product type is invalid
-    """
-    for product_type in (COURSE_PRODUCT_TYPE, MODULE_PRODUCT_TYPE):
-        if qualified_id.startswith("{product_type}_".format(product_type=product_type)):
-            return product_type
-    return None
-
-
-def course_as_product_json(course, ccxcon_info):
-    """
-    Serialize course to product API JSON
+    Serialize course to dict, ready for JSON serialization
     Args:
         course (Course): A Course
-        ccxcon_info (dict): Information fetched from CCXCon
+        course_info (dict): Information fetched from CCXCon about the course
+        modules_info (dict): Information about each module, in fetched order
 
     Returns:
-        dict: The product as a dictionary
+        dict: The course as a dictionary
     """
-    uuid = course.uuid
+    if modules_info is None:
+        modules_info = {}
+
+    modules = [
+        module_as_dict(module, modules_info.get(module.uuid))
+        for module in course.module_set.order_by('created_at')
+        ]
     return {
-        "upc": course.qualified_id,
         "title": course.title,
         "description": course.description,
-        "external_pk": uuid,
-        "product_type": COURSE_PRODUCT_TYPE,
-        "price_without_tax": None,
-        "parent_upc": None,
-        "info": ccxcon_info.get(course.qualified_id),
-        "children": [
-            module_as_product_json(child, ccxcon_info)
-            for child in course.module_set.order_by('created_at')
-        ],
+        "uuid": course.uuid,
+        "info": course_info,
+        "modules": modules,
     }
 
 
-def module_as_product_json(module, ccxcon_info):
+def module_as_dict(module, ccxcon_module_info=None):
     """
-    Serialize module to product API JSON
+    Serialize module to dict, ready for JSON serialization
     Args:
         module (Module): A Module
-        ccxcon_info (dict): Information fetched from CCXCon
+        ccxcon_module_info (dict): Information fetched from CCXCon
 
     Returns:
-        dict: The product as a dictionary
+        dict: The module as a dictionary
     """
     price_without_tax = None
     if module.price_without_tax is not None:
         price_without_tax = float(module.price_without_tax)
     return {
-        "upc": module.qualified_id,
         "title": module.title,
-        "description": "",
-        "external_pk": module.uuid,
-        "product_type": MODULE_PRODUCT_TYPE,
+        "uuid": module.uuid,
         "price_without_tax": price_without_tax,
-        "parent_upc": module.course.qualified_id,
-        "info": ccxcon_info.get(module.qualified_id),
-        "children": [],
+        "info": ccxcon_module_info,
     }
 
 
@@ -145,7 +84,7 @@ def calculate_cart_item_total(item):
     Returns:
         Decimal: Product price times number of seats
     """
-    uuid = make_external_pk(MODULE_PRODUCT_TYPE, item['upc'])
+    uuid = item['uuid']
     module = Module.objects.get(uuid=uuid)
     num_seats = int(item['seats'])
     return module.price_without_tax * num_seats
@@ -161,7 +100,7 @@ def validate_cart(cart):
 
     for item in cart:
         try:
-            qualified_id = item['upc']
+            uuid = item['uuid']
             seats = item['seats']
         except KeyError as ex:
             raise ValidationError("Missing key {}".format(ex.args[0]))
@@ -169,14 +108,6 @@ def validate_cart(cart):
         if not isinstance(seats, int):
             # Hopefully we're never entering long territory here
             raise ValidationError("Seats must be an integer")
-
-        product_type = get_product_type(qualified_id)
-        if product_type is None:
-            raise ValidationError("Invalid product type")
-
-        uuid = make_external_pk(product_type, qualified_id)
-        if product_type != MODULE_PRODUCT_TYPE:
-            raise ValidationError("Can only purchase Modules")
 
         try:
             module = Module.objects.get(uuid=uuid)
@@ -197,8 +128,8 @@ def validate_cart(cart):
 
     for module_uuid in items_in_cart:
         module = Module.objects.get(uuid=module_uuid)
-        children_qualified_ids = module.course.module_set.values_list('uuid', flat=True)
-        if not items_in_cart.issuperset(children_qualified_ids):
+        uuids = module.course.module_set.values_list('uuid', flat=True)
+        if not items_in_cart.issuperset(uuids):
             raise ValidationError("You must purchase all modules for a course.")
 
 
@@ -220,7 +151,7 @@ def create_order(cart, user):
         total_paid=subtotal,
     )
     for item in cart:
-        uuid = make_external_pk(MODULE_PRODUCT_TYPE, item['upc'])
+        uuid = item['uuid']
         module = Module.objects.get(uuid=uuid)
         OrderLine.objects.create(
             order=order,

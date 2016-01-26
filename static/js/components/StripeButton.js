@@ -21,5 +21,5 @@ export default StripeButton;
 StripeButton.propTypes = {
   checkout: React.PropTypes.func.isRequired,
   cart: React.PropTypes.object.isRequired,
-  product: React.PropTypes.object.isRequired
+  course: React.PropTypes.object.isRequired
 };

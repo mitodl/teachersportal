@@ -18,27 +18,27 @@ class ChapterTab extends React.Component {
       showRowHover,
       deselectOnClickaway,
       height,
-      product,
+      course,
       buyTab
     } = this.props;
 
     let rows = [];
 
-    if (product) {
-      rows = product.children.map((module, i) => {
+    if (course) {
+      rows = course.modules.map(module => {
         let selected = false;
         if (buyTab !== undefined &&
-          buyTab.selectedChapters.find(upc => upc === module.upc) !== undefined) {
+          buyTab.selectedChapters.find(uuid => uuid === module.uuid) !== undefined) {
           selected = true;
         }
 
         if (selectable === true) {
-          return <TableRow key={module.upc} selected={selected}>
+          return <TableRow key={module.uuid} selected={selected}>
             <TableRowColumn>{module.title}</TableRowColumn>
             <TableRowColumn>${module.price_without_tax} / seat</TableRowColumn>
           </TableRow>;
         } else {
-          return <TableRow key={module.upc} selected={selected}>
+          return <TableRow key={module.uuid} selected={selected}>
             <TableRowColumn>{module.title}</TableRowColumn>
           </TableRow>;
         }
@@ -80,19 +80,19 @@ class ChapterTab extends React.Component {
   }
 
   _onRowSelection(selectedRows) {
-    const { product, updateSelectedChapters } = this.props;
+    const { course, updateSelectedChapters } = this.props;
     // dispatch action to update global state with the currently selected modules, number of seats
-    let upcs = [], allRowsSelected = false;
+    let uuids = [], allRowsSelected = false;
 
     if (selectedRows === 'all') {
       allRowsSelected = true;
-      upcs = Array.from(product.children, child => child.upc);
+      uuids = Array.from(course.modules, child => child.uuid);
     } else {
       // Workaround for material-ui quirk
       selectedRows = selectedRows.filter(i => i !== undefined);
-      upcs = selectedRows.map(i => product.children[i].upc);
+      uuids = selectedRows.map(i => course.modules[i].uuid);
     }
-    updateSelectedChapters(upcs, allRowsSelected);
+    updateSelectedChapters(uuids, allRowsSelected);
   }
 }
 
@@ -108,5 +108,5 @@ ChapterTab.propTypes = {
   showRowHover: React.PropTypes.bool,
   deselectOnClickaway: React.PropTypes.bool,
   height: React.PropTypes.string,
-  product: React.PropTypes.object.isRequired,
+  course: React.PropTypes.object.isRequired,
 };
