@@ -1,3 +1,5 @@
+import ga from 'react-ga';
+
 function makeModuleLookup(courses) {
   let moduleLookup = {};
 
@@ -34,4 +36,25 @@ export function filterCart(cart, courses) {
   let moduleLookup = makeModuleLookup(courses);
 
   return cart.filter(item => moduleLookup[item.uuid] !== undefined);
+}
+
+export function sendGoogleAnalyticsEvent(category, action, label, value) {
+  let event = {
+    category: category,
+    action: action,
+    label: label,
+  };
+  if (value !== undefined) {
+    event.value = value;
+  }
+  ga.event(event);
+}
+
+export function sendGoogleEcommerceTransaction(id, revenue) {
+  ga.plugin.require('ecommerce');
+  ga.plugin.execute('ecommerce', 'addTransaction', {
+    'Transaction ID': id,
+    'revenue': revenue
+  });
+  ga.plugin.execute('ecommerce', 'send');
 }
