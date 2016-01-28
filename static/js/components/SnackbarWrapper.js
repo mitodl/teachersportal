@@ -11,7 +11,9 @@ class SnackbarWrapper extends React.Component {
   }
 
   render() {
-    return <Snackbar {...this.props} />;
+    return <Snackbar
+      {...this.props}
+    />;
   }
 }
 

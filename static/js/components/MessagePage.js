@@ -10,22 +10,20 @@ class MessagePage extends Component {
 
     let content;
 
-    if (error !== undefined) {
-      content = <CardText>{error}</CardText>;
+    if (error !== undefined && error !== "") {
+      content = <CardTitle className="message-title">{error}</CardTitle>;
     } else {
       content = <div>
         <CardTitle
           title={message}
-          id="message-title"
+          className="message-title"
         />
-        <CardText id="message-description">
-        {explanation}
-        </CardText>
+        <CardText className="message-description"  dangerouslySetInnerHTML={{__html: explanation }} />
       </div>;
     }
 
-    return <div id="message-body">
-      <Card id="message-content">
+    return <div className="message-body">
+      <Card className="message-content" style={{ 'height': "400px" }}>
         {content}
       </Card>
     </div>
@@ -34,8 +32,8 @@ class MessagePage extends Component {
 }
 
 MessagePage.propTypes = {
-  message: React.PropTypes.object,
-  explanation: React.PropTypes.array.isRequired,
+  message: React.PropTypes.string,
+  explanation: React.PropTypes.string,
   error: React.PropTypes.string
 };
 
