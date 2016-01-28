@@ -14,6 +14,31 @@ import {
 
 class App extends React.Component {
 
+  componentDidMount() {
+    this.handleMessage.call(this);
+  }
+
+  componentDidUpdate() {
+    this.handleMessage.call(this);
+  }
+
+  handleMessage() {
+    const {
+      registration,
+      dispatch
+    } = this.props;
+
+    let message;
+
+    if (registration.status === FETCH_FAILURE) {
+      message = "An error occurred registering the user.";
+      dispatch(showSnackBar({ message: message }));
+    } else if (registration.status === FETCH_SUCCESS) {
+      message = "User registered successfully! Check your email for an activation link.";
+      dispatch(showSnackBar({ message: message }));
+    }
+  }
+
   render() {
     const {
       authentication,
@@ -23,18 +48,7 @@ class App extends React.Component {
       dispatch
     } = this.props;
 
-    let content;
-    let sbMessage;
-
-    if (registration.status === FETCH_FAILURE) {
-      sbMessage = "An error occurred registering the user.";
-      dispatch(showSnackBar({ message: sbMessage }));
-    } else if (registration.status === FETCH_SUCCESS) {
-      sbMessage = "User registered successfully! Check your email for an activation link.";
-      dispatch(showSnackBar({ message: sbMessage }));
-    } else {
-      content = this.props.children;
-    }
+    let content = this.props.children;
 
     return <div>
       <Header
@@ -50,6 +64,7 @@ class App extends React.Component {
         autoHideDuration={3000}
         onActionTouchTap={() => dispatch(hideSnackBar())}
         onRequestClose={() => dispatch(hideSnackBar())}
+        bodyStyle={{ 'backgroundColor': 'rgba(100, 100, 100, 0.9)' }}
       />
       <Footer/>
     </div>;

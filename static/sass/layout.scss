@@ -35,6 +35,26 @@ body {
 
     }
 
+
+    .message-body {
+      @include pad($block-padding);
+      @include fill-parent;
+      background-color: $lightgrey;
+      border: 1px solid #ddd;
+
+      .message-title {
+        @include pad($block-padding);
+        margin: 40px;
+        font-weight: 700;
+        font-size: 1.5em;
+      }
+
+      .message-description {
+        @include pad($block-padding);
+        margin: 40px;
+      }
+    }
+
     #course-body {
       @include pad($block-padding);
       @include fill-parent;

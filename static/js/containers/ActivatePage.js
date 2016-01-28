@@ -15,6 +15,11 @@ class ActivatePage extends React.Component {
     let token = query.token;
 
     dispatch(activate(token));
+    this.handleMessage.call(this);
+  }
+
+  componentDidUpdate() {
+    this.handleMessage.call(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -22,22 +27,16 @@ class ActivatePage extends React.Component {
 
     if (nextProps.activation.status === FETCH_SUCCESS &&
       this.props.activation.status !== nextProps.activation.status) {
-      setTimeout(() => {
-        // After 3 seconds redirect to page the user was on before.
-        window.location = query.redirect;
-      }, 3000);
+      window.location = query.redirect;
     }
   }
 
-  render() {
+  handleMessage() {
     const { activation, location: { query }, dispatch } = this.props;
     let message;
 
     if (activation.status === FETCH_SUCCESS) {
-      message = <span>
-        Activation succeeded! Click <a href={query.redirect}>here</a> to
-        return to the page you were on, or wait a few seconds.
-      </span>;
+      message = "Activation succeeded!";
     } else if (activation.status === FETCH_PROCESSING) {
       message = "Activation processing...";
     } else if (activation.status === FETCH_FAILURE) {
@@ -46,11 +45,18 @@ class ActivatePage extends React.Component {
     if (message) {
       dispatch(showSnackBar({ message: message }));
     }
+  }
+
+  render() {
+    const { message, location: { query } } = this.props;
+
+    let redirectLink = "<a href=" + query.redirect + ">here</a>";
+    let explanation = "Click " + redirectLink + " to return to the page you were on, or wait a few seconds.";
 
     return <MessagePage
       message={message}
       error=""
-      explanation=""
+      explanation={explanation}
     />;
   }
 }
@@ -58,12 +64,14 @@ class ActivatePage extends React.Component {
 ActivatePage.propTypes = {
   location: React.PropTypes.object.isRequired,
   dispatch: React.PropTypes.func.isRequired,
-  activation: React.PropTypes.object.isRequired
+  activation: React.PropTypes.object.isRequired,
+  message: React.PropTypes.string
 };
 
 const mapStateToProps = (state) => {
   return {
-    activation: state.activation
+    activation: state.activation,
+    message: state.snackBar.message
   };
 };
 
