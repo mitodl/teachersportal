@@ -499,16 +499,6 @@ describe('reducers', () => {
         });
       });
     });
-
-    it('fetches a list of products and stores it in the cart', done => {
-      productListStub.returns(Promise.resolve(["data"]));
-
-      dispatchThen(fetchProductList(), 2).then(cartState => {
-        assert.deepEqual(cartState.productList, ["data"]);
-
-        done();
-      });
-    });
   });
 
   describe('buyTab reducers', () => {
