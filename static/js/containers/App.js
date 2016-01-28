@@ -6,15 +6,8 @@ import RaisedButton from 'material-ui/lib/raised-button';
 import { connect } from 'react-redux';
 
 import {
-  showLogin,
-  hideLogin,
   showSnackBar,
   hideSnackBar,
-  logout,
-  login,
-  loginFailure,
-  register,
-  registerFailure,
   FETCH_FAILURE,
   FETCH_SUCCESS,
 } from '../actions/index_page';
@@ -27,7 +20,7 @@ class App extends React.Component {
       registration,
       loginModal,
       snackBar,
-      dispatch,
+      dispatch
     } = this.props;
 
     let content;
@@ -45,14 +38,8 @@ class App extends React.Component {
 
     return <div>
       <Header
-        showSignIn={() => dispatch(showLogin())}
-        hideSignIn={() => dispatch(hideLogin())}
-        onSignOut={() => dispatch(logout())}
-        signIn={this.signIn.bind(this)}
-        register={this.register.bind(this)}
+        dispatch={dispatch}
         authentication={authentication}
-        reportLoginError={error => dispatch(loginFailure(error))}
-        reportRegisterError={error => dispatch(registerFailure(error))}
         registration={registration}
         loginModal={loginModal}
       />
@@ -67,18 +54,6 @@ class App extends React.Component {
       <Footer/>
     </div>;
   }
-
-  signIn(username, password) {
-    const { dispatch } = this.props;
-
-    dispatch(login(username, password));
-  }
-
-  register(fullName, email, organization, password, redirect) {
-    const { dispatch } = this.props;
-
-    dispatch(register(fullName, email, organization, password, redirect));
-  }
 }
 
 App.propTypes = {
@@ -86,7 +61,7 @@ App.propTypes = {
   authentication: React.PropTypes.object.isRequired,
   registration: React.PropTypes.object.isRequired,
   loginModal: React.PropTypes.object.isRequired,
-  snackBar: React.PropTypes.object.isRequired,
+  snackBar: React.PropTypes.object.isRequired
 };
 
 const mapStateToProps = (state) => {
@@ -94,7 +69,7 @@ const mapStateToProps = (state) => {
     authentication: state.authentication,
     registration: state.registration,
     loginModal: state.loginModal,
-    snackBar: state.snackBar,
+    snackBar: state.snackBar
   };
 };
 
