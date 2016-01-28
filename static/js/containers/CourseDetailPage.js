@@ -1,5 +1,7 @@
 import React from 'react';
 import CourseDetail from '../components/CourseDetail';
+import Card from 'material-ui/lib/card/card';
+import LinearProgress from 'material-ui/lib/linear-progress';
 import {
   fetchCourse,
   fetchCourseList,
@@ -52,10 +54,19 @@ class CourseDetailPage extends React.Component {
       course
     } = this.props;
 
-    let detail = <CourseDetail
-      course={course.course}
-      courseList={course.courseList}
-    />;
+    let detail;
+    if (course.course === undefined) {
+      detail = <div id="course-body">
+        <Card id="course-content">
+          <LinearProgress mode="indeterminate" size="1" className="progress" />
+        </Card>
+      </div>;
+    } else {
+      detail = <CourseDetail
+        course={course.course}
+        courseList={course.courseList}
+      />;
+    }
 
     return <div>
       {detail}
