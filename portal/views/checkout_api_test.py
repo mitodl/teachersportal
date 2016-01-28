@@ -90,13 +90,13 @@ class CheckoutAPITests(CourseTests):
         def make_cart_without(key):
             """Helper function to generate a cart without a item key"""
             item = {
-                "uuid": "uuid",
+                "uuids": ["uuid"],
                 "seats": 5
             }
             del item[key]
             return item
 
-        for key in ('uuid', 'seats'):
+        for key in ('uuids', 'seats'):
             resp = self.client.post(
                 reverse('checkout'),
                 content_type='application/json',

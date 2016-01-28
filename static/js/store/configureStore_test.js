@@ -2,56 +2,72 @@
 import { createStore, applyMiddleware } from 'redux';
 import thunkMiddleware from 'redux-thunk';
 import rootReducer from '../reducers';
+import { HIDE_SNACKBAR } from '../actions/index_page';
+import assert from 'assert';
 
 import _ from 'lodash';
+
+// HACK: after a while material-ui will send a HIDE_SNACKBAR from onRequestClose on the snackbar
+// even if we aren't touching the DOM at all.
+const blacklistedActionTypes = [HIDE_SNACKBAR];
 
 /**
  * Helper function to aid in async dispatch testing.
  * @param {Store} store The redux store
  * @param {Function} stateFunc When called, returns the part of the state we care about
+ * @param {Function} actionListFunc When called, returns the list of actions
  * @returns {Function} Returns a function which will dispatch an action and take a callback
  * to be executed after the store updates its state. Looks like:
- *   (action, expectedCalls) => Promise
+ *   (action, expectedActions) => Promise
  * where
  *   action is an action to be dispatched (or falsey if no action)
- *   expectedCalls is the number of actions to listen for (default: 1)
+ *   expectedActions is a list of actions to listen for
  *   The returned Promise is executed after the number of actions in expectedCalls
  *   is met
  */
-function createDispatchThen(store, stateFunc) {
+function createDispatchThen(store, stateFunc, actionListFunc) {
   let unsubscribe;
+  let actionTypesFunc = () => actionListFunc().map(action => action.type).sort();
 
-  return (action, expectedCallsArg) => {
+  return (action, actionTypes) => {
+    if (typeof actionTypes !== 'object') {
+      assert(false, "Expected a list of actions for second parameter of dispatchThen");
+    }
     return new Promise(resolve => {
-      let expectedCalls = 1;
-      if (expectedCallsArg !== undefined) {
-        expectedCalls = expectedCallsArg;
-      }
-
-      let count = 0;
+      // Note: we are not using Sets because we care about preserving duplicate values
+      const expectedActionTypes = Array.from(actionTypes).concat(actionTypesFunc()).sort().filter(
+        type => blacklistedActionTypes.indexOf(type) === -1
+      );
 
       // If we called this twice unsubscribe the old instance from the store
       if (unsubscribe !== undefined) {
         unsubscribe();
       }
-      if (expectedCalls === 0) {
+      if (_.isEqual(expectedActionTypes, actionTypesFunc())) {
         // No actions expected, run callback now
-        resolve(stateFunc(store.getState()));
-        count++;
-      }
-      unsubscribe = store.subscribe(() => {
-        if (count + 1 < expectedCalls) {
-          count++;
-        } else if (count + 1 === expectedCalls) {
-          resolve(stateFunc(store.getState()));
-          count++;
-        } else {
-          throw `Expected ${expectedCalls} calls but got at least one extra call`;
+        if (action) {
+          store.dispatch(action);
         }
-      });
-      if (action) {
-        store.dispatch(action);
+        resolve(stateFunc(store.getState()));
+      } else {
+        unsubscribe = store.subscribe(() => {
+          // Get current action list
+          let actionListTypes = actionTypesFunc();
+          if (_.isEqual(actionListTypes, expectedActionTypes)) {
+            resolve(stateFunc(store.getState()));
+          } else if (actionListTypes.length > expectedActionTypes.length) {
+            console.error("Expected actions vs actual", expectedActionTypes, actionListTypes);
+            assert.fail(actionListTypes, expectedActionTypes, "Received more actions than expected");
+          }
+        });
+        if (action) {
+          store.dispatch(action);
+        }
       }
+    }).catch(e => {
+      // Make sure we don't accidentally silence errors
+      console.error(e);
+      return Promise.reject(e);
     });
   };
 }
@@ -83,33 +99,42 @@ function createDispatchThen(store, stateFunc) {
  */
 function createListenForActions(store, stateFunc, actionListFunc) {
   let unsubscribe;
+  let actionTypesFunc = () => actionListFunc().map(action => action.type).sort();
 
   return (actionTypes, callback) => {
     return new Promise(resolve => {
       // Note: we are not using Sets because we care about preserving duplicate values
-      const startingActionListTypes = actionListFunc().map(action => action.type);
-      const expectedActionTypes = Array.from(actionTypes).concat(startingActionListTypes).sort();
+      const expectedActionTypes = Array.from(actionTypes).concat(actionTypesFunc()).sort().filter(
+        type => blacklistedActionTypes.indexOf(type) === -1
+      );
 
       // If we called this twice unsubscribe the old instance from the store
-      let actionCount = 0;
       if (unsubscribe !== undefined) {
         unsubscribe();
       }
+      if (_.isEqual(actionTypesFunc(), expectedActionTypes)) {
+        // No actions expected, run callback now
+        callback();
 
-      unsubscribe = store.subscribe(() => {
-        actionCount++;
+        resolve(stateFunc(store.getState()));
+      } else {
+        unsubscribe = store.subscribe(() => {
+          // Get current action list
+          let actionListTypes = actionTypesFunc();
+          if (_.isEqual(actionListTypes, expectedActionTypes)) {
+            resolve(stateFunc(store.getState()));
+          } else if (actionListTypes.length > expectedActionTypes.length) {
+            console.error("Expected actions vs actual", expectedActionTypes, actionListTypes);
+            assert.fail(actionListTypes, expectedActionTypes, "Received more actions than expected");
+          }
+        });
 
-        // Get current action list
-        let actionListTypes = actionListFunc().map(action => action.type).sort();
-        if (_.isEqual(actionListTypes, expectedActionTypes)) {
-          resolve(stateFunc(store.getState()));
-        } else if (actionListTypes.length > expectedActionTypes.length) {
-          console.error("Expected actions vs actual", expectedActionTypes, actionListTypes);
-          throw "Expected " + expectedActionTypes.length + " actions but got at least one more";
-        }
-      });
-
-      callback();
+        callback();
+      }
+    }).catch(e => {
+      // Make sure we don't accidentally silence errors
+      console.error(e);
+      return Promise.reject(e);
     });
   };
 }
@@ -132,8 +157,12 @@ export default function configureTestStore(initialState) {
     })
   )(createStore);
 
+  let actionListFunc = () => actionList.filter(
+    action => blacklistedActionTypes.indexOf(action.type) === -1
+  );
+
   const store = createStoreWithMiddleware(rootReducer, initialState);
-  store.createDispatchThen = stateFunc => createDispatchThen(store, stateFunc);
-  store.createListenForActions = stateFunc => createListenForActions(store, stateFunc, () => actionList);
+  store.createDispatchThen = stateFunc => createDispatchThen(store, stateFunc, actionListFunc);
+  store.createListenForActions = stateFunc => createListenForActions(store, stateFunc, actionListFunc);
   return store;
 }
