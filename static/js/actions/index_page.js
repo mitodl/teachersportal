@@ -1,5 +1,6 @@
 import * as api from '../util/api';
 import { createAction } from 'redux-actions';
+import { sendGoogleAnalyticsEvent, sendGoogleEcommerceTransaction } from '../util/util';
 
 // action type constants
 export const REQUEST_COURSE = 'REQUEST_COURSE';
@@ -157,8 +158,10 @@ export function activate(token) {
     return api.activate(token).
       then(() => {
         dispatch(activateSuccess());
+        sendGoogleAnalyticsEvent("User", "Activation", "Success");
       }).catch(e => {
         dispatch(activateFailure());
+        sendGoogleAnalyticsEvent("User", "Activation", "Failure");
         // let anything afterwards catch the error too
         return Promise.reject(e);
       });
@@ -180,9 +183,11 @@ export function checkout(cart, token, total) {
         dispatch(checkoutSuccess());
         dispatch(clearCart());
         dispatch(resetBuyTab());
+        sendGoogleEcommerceTransaction(token, total);
       }).
       catch(e => {
         dispatch(checkoutFailure());
+        sendGoogleAnalyticsEvent("Purchase", "Rejected", "Failure", total);
         return Promise.reject(e);
       });
   };
