@@ -24,7 +24,7 @@ import {
   FETCH_SUCCESS,
 } from '../actions/index_page';
 import * as api from '../util/api';
-import { COURSE_RESPONSE, CART_WITH_ITEM } from '../constants';
+import { COURSE_RESPONSE1 } from '../constants';
 
 import configureTestStore from '../store/configureStore_test';
 import assert from 'assert';
@@ -459,8 +459,8 @@ describe('reducers', () => {
     });
 
     it('clears the items from the cart which are missing', done => {
-      let uuid = COURSE_RESPONSE.modules[0].uuid;
-      let courseUuid = COURSE_RESPONSE.uuid;
+      let uuid = COURSE_RESPONSE1.modules[0].uuid;
+      let courseUuid = COURSE_RESPONSE1.uuid;
       dispatchThen(updateCartItems([uuid], 5, courseUuid)).then(cartState => {
         let expectedCart = [{
           uuid: uuid,
@@ -473,13 +473,13 @@ describe('reducers', () => {
         });
 
         // update course list
-        dispatchThen(receiveCourseListSuccess([COURSE_RESPONSE])).then(() => {
+        dispatchThen(receiveCourseListSuccess([COURSE_RESPONSE1])).then(() => {
 
           // don't filter anything since all cart items match some module
           dispatchThen(clearInvalidCartItems()).then(cartState => {
             assert.deepEqual(cartState, {
               cart: expectedCart,
-              courseList: [COURSE_RESPONSE]
+              courseList: [COURSE_RESPONSE1]
             });
 
             // clear course list

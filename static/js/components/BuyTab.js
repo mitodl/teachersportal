@@ -8,7 +8,7 @@ import IconButton from 'material-ui/lib/icon-button';
 import NavigationClose from 'material-ui/lib/svg-icons/navigation/close';
 import ChapterTab from './ChapterTab';
 import StripeButton from './StripeButton';
-import { getModule } from '../util/util';
+import { getModule, calculateTotal } from '../util/util';
 
 class BuyTab extends React.Component {
   componentWillReceiveProps(nextProps) {
@@ -31,7 +31,7 @@ class BuyTab extends React.Component {
       courseList,
       cart,
       buyTab,
-      total,
+      buyTabTotal,
       updateSelectedChapters,
       } = this.props;
 
@@ -53,6 +53,7 @@ class BuyTab extends React.Component {
     }
 
     const maxSeats = 200;
+    let cartTotal = calculateTotal(cart.cart, courseList);
 
     return <div className="course-purchase-selector">
       <div className="seat-number-selector">
@@ -76,7 +77,7 @@ class BuyTab extends React.Component {
           </div>
         </div>
         <div className="seatCount">{buyTab.seats}<br /><span className="seatCountLabel">Seats</span></div>
-        <div className="selectionTotal">${total}<br /><span className="selectionTotalLabel">Total</span></div>
+        <div className="selectionTotal">${buyTabTotal}<br /><span className="selectionTotalLabel">Total</span></div>
         <RaisedButton
           label="Update Cart"
           className="add-to-cart"
@@ -119,7 +120,7 @@ class BuyTab extends React.Component {
           <StripeButton cart={cart} course={course} checkout={this.onCheckout.bind(this)}/>
         </div>
         <div className="cart-status">
-          <span className="cart-total">${total}<br /><span className="cart-total-label">total cost</span></span>
+          <span className="cart-total">${cartTotal}<br /><span className="cart-total-label">total cost</span></span>
         </div>
       </LeftNav>
     </div>;

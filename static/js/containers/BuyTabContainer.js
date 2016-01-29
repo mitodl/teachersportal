@@ -24,7 +24,7 @@ class BuyTabContainer extends React.Component {
       courseList={courseList}
       cart={cart}
       buyTab={buyTab}
-      total={total}
+      buyTabTotal={total}
 
       updateCartItems={this.onUpdateCartItems.bind(this)}
       updateSelectedChapters={this.onUpdateSelectedChapters.bind(this)}

@@ -10,8 +10,9 @@ import TestUtils from 'react-addons-test-utils';
 
 import App from './App';
 import CourseDetailPage from './CourseDetailPage';
-import { COURSE_RESPONSE } from '../constants';
+import { COURSE_LIST, COURSE_RESPONSE1, COURSE_RESPONSE2 } from '../constants';
 import * as api from '../util/api';
+import { calculateTotal } from '../util/util';
 import {
   receiveCourseListSuccess,
   receiveCourseSuccess,
@@ -76,7 +77,7 @@ describe('CourseDetailPage', () => {
 
   // Helper function to render CourseDetailPage
   const renderCourseDetail = () => new Promise(resolve => {
-    const uuid = COURSE_RESPONSE.uuid;
+    const uuid = COURSE_RESPONSE1.uuid;
 
     const afterMount = component => {
       resolve(component);
@@ -107,8 +108,8 @@ describe('CourseDetailPage', () => {
   it('can check off items in the buy tab', done => {
     // Set up state as if we logged in already
     store.dispatch(loginSuccess());
-    store.dispatch(receiveCourseListSuccess([COURSE_RESPONSE]));
-    store.dispatch(receiveCourseSuccess(COURSE_RESPONSE));
+    store.dispatch(receiveCourseListSuccess(COURSE_LIST));
+    store.dispatch(receiveCourseSuccess(COURSE_RESPONSE1));
 
     renderCourseDetail().then(component => {
       const node = ReactDOM.findDOMNode(component);
@@ -121,10 +122,10 @@ describe('CourseDetailPage', () => {
 
           // Make sure we're in the right table by asserting its text
           let titleNode = cells[1];
-          assert.equal(titleNode.textContent, COURSE_RESPONSE.modules[rowCount].title);
+          assert.equal(titleNode.textContent, COURSE_RESPONSE1.modules[rowCount].title);
           let priceNode = cells[2];
           assert.equal(priceNode.textContent, "$" +
-            COURSE_RESPONSE.modules[rowCount].price_without_tax + " / seat");
+            COURSE_RESPONSE1.modules[rowCount].price_without_tax + " / seat");
 
           // Technically the td still, but close enough
           let checkboxNode = ReactDOM.findDOMNode(cells[0]);
@@ -135,23 +136,38 @@ describe('CourseDetailPage', () => {
       });
     }).then(state => {
       // Assert that the buyTab state now has the chapters we selected, but the cart does not yet
-      assert.deepEqual(state.buyTab.selectedChapters, COURSE_RESPONSE.modules.map(child => child.uuid));
+      assert.deepEqual(state.buyTab.selectedChapters, COURSE_RESPONSE1.modules.map(child => child.uuid));
       assert.deepEqual(state.cart.cart, []);
       done();
     });
   });
 
-  const newSeatCount = 100;
   it('can add items to the cart', done => {
     // Alter state as if we logged in, selected all chapters and updated seat count
+    const course1SeatCount = 77;
+    const course2SeatCount = 88;
+    const coursePairs = [{
+      seatCount: course1SeatCount,
+      course: COURSE_RESPONSE1
+    }, {
+      seatCount: course2SeatCount,
+      course: COURSE_RESPONSE2
+    }];
+    // The current course is COURSE_RESPONSE2. COURSE_RESPONSE1 is already in cart
     store.dispatch(loginSuccess());
-    store.dispatch(receiveCourseListSuccess([COURSE_RESPONSE]));
-    store.dispatch(receiveCourseSuccess(COURSE_RESPONSE));
-    store.dispatch(updateSeatCount(newSeatCount));
-    store.dispatch(updateSelectedChapters(COURSE_RESPONSE.modules.map(child => child.uuid), false));
+    store.dispatch(receiveCourseListSuccess(COURSE_LIST));
+    store.dispatch(receiveCourseSuccess(COURSE_RESPONSE2));
+    store.dispatch(updateSeatCount(course2SeatCount));
+    store.dispatch(updateSelectedChapters(COURSE_RESPONSE2.modules.map(child => child.uuid), false));
+
+    // Populate cart
+    store.dispatch(updateCartItems(
+      COURSE_RESPONSE1.modules.map(child => child.uuid), course1SeatCount, COURSE_RESPONSE1.uuid));
 
 
+    let node;
     renderCourseDetail().then(component => {
+      node = ReactDOM.findDOMNode(component);
       // Listen for UPDATE_CART_ITEMS and UPDATE_CART_VISIBILITY
       return listenForActions([UPDATE_CART_ITEMS, UPDATE_CART_VISIBILITY], () => {
         // Click the Update cart button
@@ -159,11 +175,24 @@ describe('CourseDetailPage', () => {
         TestUtils.Simulate.click(button);
       });
     }).then(state => {
-      assert.deepEqual(state.cart.cart, COURSE_RESPONSE.modules.map(child => ({
-        courseUuid: COURSE_RESPONSE.uuid,
-        seats: newSeatCount,
-        uuid: child.uuid
-      })));
+      let expectedCart = [];
+      for (let pair of coursePairs) {
+        let { seatCount, course } = pair;
+        for (let module of course.modules) {
+          expectedCart.push({
+            courseUuid: course.uuid,
+            seats: seatCount,
+            uuid: module.uuid
+          });
+        }
+      }
+      assert.deepEqual(state.cart.cart, expectedCart);
+      let expectedTotal = calculateTotal(state.cart.cart, state.course.courseList);
+
+      assert.equal(
+        node.querySelector(".cart-total").textContent,
+        `$${expectedTotal}total cost`
+      );
 
       done();
     });
@@ -172,28 +201,37 @@ describe('CourseDetailPage', () => {
   it('can checkout the cart', done => {
     const fakeToken = "FAKE_TOKEN";
 
+    const course1SeatCount = 77;
+    const course2SeatCount = 88;
+    const coursePairs = [{
+      seatCount: course1SeatCount,
+      course: COURSE_RESPONSE1
+    }, {
+      seatCount: course2SeatCount,
+      course: COURSE_RESPONSE2
+    }];
+
     // Alter state as if we logged in, selected all chapters and updated seat count,
     // and updated the cart
-    const uuids = COURSE_RESPONSE.modules.map(child => child.uuid);
     store.dispatch(loginSuccess());
-    store.dispatch(receiveCourseListSuccess([COURSE_RESPONSE]));
-    store.dispatch(receiveCourseSuccess(COURSE_RESPONSE));
-    store.dispatch(updateSeatCount(newSeatCount));
-    store.dispatch(updateSelectedChapters(uuids, false));
-    store.dispatch(updateCartItems(uuids, newSeatCount, COURSE_RESPONSE.uuid));
-
-    // Calculate our expected total
-    let expectedTotal = 0;
-    for (let child of COURSE_RESPONSE.modules) {
-      expectedTotal += newSeatCount * child.price_without_tax;
+    store.dispatch(receiveCourseListSuccess(COURSE_LIST));
+    store.dispatch(receiveCourseSuccess(COURSE_RESPONSE1));
+    // Cart will contain two courses
+    for (let pair of coursePairs) {
+      let { course, seatCount } = pair;
+      store.dispatch(updateCartItems(
+        course.modules.map(module => module.uuid), seatCount, course.uuid));
     }
+
+    // We calculate the expected total after the component renders
+    let expectedTotal, expectedNumCartItems;
 
     // Mock Stripe to immediately call the checkout api
     global.StripeHandler = {
       open: data => {
         assert.deepEqual(data, {
           name: "MIT Teacher's Portal",
-          description: COURSE_RESPONSE.modules.length + " item(s)",
+          description: expectedNumCartItems + " item(s)",
           amount: Math.floor(expectedTotal * 100)
         });
 
@@ -207,6 +245,11 @@ describe('CourseDetailPage', () => {
     renderCourseDetail().then(component => {
       // Click Checkout.
       return listenForActions([UPDATE_CART_VISIBILITY, CHECKOUT_SUCCESS, CLEAR_CART, RESET_BUYTAB], () => {
+        // Make sure the total shown in stripe is the same as what we calculate here
+        let cart = store.getState().cart.cart;
+        expectedTotal = calculateTotal(cart, store.getState().course.courseList);
+        expectedNumCartItems = cart.length;
+
         let button = TestUtils.findRenderedDOMComponentWithClass(component, "checkout-button");
         TestUtils.Simulate.click(button);
       });
@@ -223,15 +266,16 @@ describe('CourseDetailPage', () => {
   });
 
   it('can checkout the cart with an empty price', done => {
-    const zeroPriceCourse = Object.assign(COURSE_RESPONSE,
+    const zeroPriceCourse = Object.assign(COURSE_RESPONSE1,
       {
-        modules: COURSE_RESPONSE.modules.map(child =>
+        modules: COURSE_RESPONSE1.modules.map(child =>
           Object.assign(child, {"price_without_tax": 0})
         )
       }
     );
 
     const uuids = zeroPriceCourse.modules.map(child => child.uuid);
+    const newSeatCount = 40;
 
     // Alter state as if we logged in, selected all chapters and updated seat count,
     // and updated the cart
@@ -265,15 +309,16 @@ describe('CourseDetailPage', () => {
   });
 
   it('fails to checkout', done => {
-    const zeroPriceCourse = Object.assign(COURSE_RESPONSE,
+    const zeroPriceCourse = Object.assign(COURSE_RESPONSE1,
       {
-        modules: COURSE_RESPONSE.modules.map(child =>
+        modules: COURSE_RESPONSE1.modules.map(child =>
           Object.assign(child, {"price_without_tax": 0})
         )
       }
     );
 
     const uuids = zeroPriceCourse.modules.map(child => child.uuid);
+    const newSeatCount = 30;
 
     // Alter state as if we logged in, selected all chapters and updated seat count,
     // and updated the cart
