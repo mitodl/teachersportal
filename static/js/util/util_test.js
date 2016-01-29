@@ -2,7 +2,7 @@
 import '../global_init';
 import assert from 'assert';
 import { calculateTotal, filterCart, getModule } from './util';
-import { CART_WITH_ITEM, COURSE_RESPONSE } from './../constants';
+import { CART, COURSE_RESPONSE1, COURSE_LIST } from './../constants';
 
 describe('utility functions', () => {
   it('calculates the total of an empty cart', () => {
@@ -10,9 +10,13 @@ describe('utility functions', () => {
   });
 
   it('calculates the total of a cart', () => {
-    let sum = CART_WITH_ITEM[0].seats * COURSE_RESPONSE.modules[0].price_without_tax;
+    let sum = 0;
+    for (let item of CART) {
+      let module = getModule(item.uuid, COURSE_LIST);
+      sum += item.seats * module.price_without_tax;
+    }
     assert.equal(
-      calculateTotal(CART_WITH_ITEM, [COURSE_RESPONSE]),
+      calculateTotal(CART, COURSE_LIST),
       sum
     );
   });
@@ -24,38 +28,38 @@ describe('utility functions', () => {
     }];
 
     assert.deepEqual(
-      calculateTotal(cart, [COURSE_RESPONSE]),
+      calculateTotal(cart, COURSE_LIST),
       0
     );
   });
 
   it('looks up a module', () => {
     assert.deepEqual(
-      getModule(COURSE_RESPONSE.modules[0].uuid, [COURSE_RESPONSE]),
-      COURSE_RESPONSE.modules[0]
+      getModule(COURSE_RESPONSE1.modules[0].uuid, COURSE_LIST),
+      COURSE_RESPONSE1.modules[0]
     );
     // No courses in module lookup
     assert.deepEqual(
-      getModule(COURSE_RESPONSE.uuid, [COURSE_RESPONSE]),
+      getModule(COURSE_RESPONSE1.uuid, COURSE_LIST),
       undefined
     );
   });
 
   it('fails to look up a module if it is missing', () => {
     assert.deepEqual(
-      getModule("missing", [COURSE_RESPONSE]),
+      getModule("missing", COURSE_LIST),
       undefined
     );
   });
 
   it('filters out missing items from a cart', () => {
     assert.deepEqual(
-      filterCart(CART_WITH_ITEM, [COURSE_RESPONSE]),
-      CART_WITH_ITEM
+      filterCart(CART, COURSE_LIST),
+      CART
     );
     // No courses, so all items filtered out
     assert.deepEqual(
-      filterCart(CART_WITH_ITEM, []),
+      filterCart(CART, []),
       []
     );
   });
