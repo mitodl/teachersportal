@@ -74,6 +74,11 @@ body {
 
       #course-content {
         @include pad($page-padding);
+        min-height: 400px;
+        .progress {
+          margin-top: 100px;
+        }
+
         #course-title {
           padding: 0 16px 26px 0 !important;
           span:nth-child(1) {
