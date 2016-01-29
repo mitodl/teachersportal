@@ -14,28 +14,28 @@ import {
   activate,
   checkout,
 } from './api';
-import { COURSE_RESPONSE } from '../constants';
+import { COURSE_RESPONSE1 } from '../constants';
 
 
 describe('common api functions', function() {
   this.timeout(5000);  // eslint-disable-line no-invalid-this
 
   it('gets a course', done => {
-    const uuid = COURSE_RESPONSE.uuid;
+    const uuid = COURSE_RESPONSE1.uuid;
 
-    fetchMock.mock(`/api/v1/courses/${uuid}/`, COURSE_RESPONSE);
+    fetchMock.mock(`/api/v1/courses/${uuid}/`, COURSE_RESPONSE1);
     getCourse(uuid).then(receivedCourse => {
-      assert.deepEqual(receivedCourse, COURSE_RESPONSE);
+      assert.deepEqual(receivedCourse, COURSE_RESPONSE1);
 
       done();
     });
   });
 
   it('fails to get a course', done => {
-    const uuid = COURSE_RESPONSE.uuid;
+    const uuid = COURSE_RESPONSE1.uuid;
 
     fetchMock.mock(`/api/v1/courses/${uuid}/`, {
-      body: COURSE_RESPONSE,
+      body: COURSE_RESPONSE1,
       status: 400
     });
     getCourse(uuid).catch(() => {
