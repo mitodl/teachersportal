@@ -22,7 +22,7 @@ class CourseDetail extends Component {
     let content;
 
     if (course === undefined) {
-      content = <LinearProgress mode="indeterminate"/>;
+      content = <LinearProgress mode="indeterminate" size="1" className="progress" />;
     } else {
 
       content = <div>
