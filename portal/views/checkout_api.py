@@ -18,6 +18,7 @@ from portal.util import (
     calculate_cart_subtotal,
     create_order,
     get_cents,
+    validate_cart,
 )
 from ..models import OrderLine
 from portal.views.course_api import ccxcon_request
@@ -97,6 +98,7 @@ class CheckoutView(APIView):
             raise ValidationError("Cart must be a list of items")
         if len(cart) == 0:
             raise ValidationError("Cannot checkout an empty cart")
+        validate_cart(cart)
 
         total = calculate_cart_subtotal(cart)
         if get_cents(total) != get_cents(estimated_total):
