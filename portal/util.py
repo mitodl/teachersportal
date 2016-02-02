@@ -9,6 +9,7 @@ import logging
 from rest_framework.exceptions import ValidationError
 
 from portal.models import (
+    Course,
     Module,
     Order,
     OrderLine,
@@ -73,35 +74,41 @@ def calculate_cart_subtotal(cart):
     Returns:
         Decimal: Total price of cart
     """
-    return sum(calculate_cart_item_total(item) for item in cart)
+    total = Decimal()
+    for item in cart:
+        for uuid in item['uuids']:
+            total += calculate_orderline_total(uuid, item['seats'])
+    return total
 
 
-def calculate_cart_item_total(item):
+def calculate_orderline_total(uuid, seats):
     """
-    Calculate total for a particular line.
+    Calculate total for a particular item.
     Args:
-        item (dict): An item in the cart
+        uuid (str): A UUID
+        seats (int): A number of seats
     Returns:
         Decimal: Product price times number of seats
     """
-    uuid = item['uuid']
     module = Module.objects.get(uuid=uuid)
-    num_seats = int(item['seats'])
-    return module.price_without_tax * num_seats
+    return module.price_without_tax * seats
 
 
+# pylint: disable=too-many-branches
 def validate_cart(cart):
     """
     Validate cart contents.
     Args:
         cart (list): A list of items in cart
     """
-    items_in_cart = set()
+    modules_in_cart = set()
+    courses_in_cart = set()
 
     for item in cart:
         try:
-            uuid = item['uuid']
+            uuids = item['uuids']
             seats = item['seats']
+            course_uuid = item['course_uuid']
         except KeyError as ex:
             raise ValidationError("Missing key {}".format(ex.args[0]))
 
@@ -109,27 +116,54 @@ def validate_cart(cart):
             # Hopefully we're never entering long territory here
             raise ValidationError("Seats must be an integer")
 
-        try:
-            module = Module.objects.get(uuid=uuid)
-        except Module.DoesNotExist:
-            log.debug('Could not find module with uuid %s', uuid)
-            raise ValidationError("One or more products are unavailable")
-
-        if not module.course.live:
-            raise ValidationError("One or more products are unavailable")
-
         if seats == 0:
             raise ValidationError("Number of seats is zero")
 
-        if uuid in items_in_cart:
-            raise ValidationError("Duplicate item in cart")
+        if not isinstance(uuids, list):
+            raise ValidationError("uuids must be a list")
 
-        items_in_cart.add(uuid)
+        if len(uuids) == 0:
+            raise ValidationError("uuids must not be empty")
 
-    for module_uuid in items_in_cart:
+        if course_uuid in courses_in_cart:
+            log.debug("Duplicate course %s in cart", course_uuid)
+            raise ValidationError("Duplicate course in cart")
+        try:
+            course = Course.objects.get(uuid=course_uuid)
+        except Course.DoesNotExist:
+            log.debug("Could not find course with uuid %s", course_uuid)
+            raise ValidationError("One or more courses are unavailable")
+
+        courses_in_cart.add(course_uuid)
+
+        for uuid in uuids:
+            try:
+                module = Module.objects.get(uuid=uuid)
+            except Module.DoesNotExist:
+                log.debug('Could not find module with uuid %s', uuid)
+                raise ValidationError("One or more modules are unavailable")
+
+            if module.course != course:
+                log.debug(
+                    'Course with uuid %s does not match up with module with uuid %s',
+                    course_uuid,
+                    uuid
+                )
+                raise ValidationError("Course does not match up with module")
+
+            if not module.is_available_for_purchase:
+                raise ValidationError("One or more modules are unavailable")
+
+            if uuid in modules_in_cart:
+                log.debug("Duplicate module uuid %s", uuid)
+                raise ValidationError("Duplicate module in cart")
+
+            modules_in_cart.add(uuid)
+
+    for module_uuid in modules_in_cart:
         module = Module.objects.get(uuid=module_uuid)
         uuids = module.course.module_set.values_list('uuid', flat=True)
-        if not items_in_cart.issuperset(uuids):
+        if not modules_in_cart.issuperset(uuids):
             raise ValidationError("You must purchase all modules for a course.")
 
 
@@ -151,15 +185,17 @@ def create_order(cart, user):
         total_paid=subtotal,
     )
     for item in cart:
-        uuid = item['uuid']
-        module = Module.objects.get(uuid=uuid)
-        OrderLine.objects.create(
-            order=order,
-            seats=int(item['seats']),
-            module=module,
-            price_without_tax=module.price_without_tax,
-            line_total=calculate_cart_item_total(item)
-        )
+        seats = item['seats']
+        uuids = item['uuids']
+        for uuid in uuids:
+            module = Module.objects.get(uuid=uuid)
+            OrderLine.objects.create(
+                order=order,
+                seats=seats,
+                module=module,
+                price_without_tax=module.price_without_tax,
+                line_total=calculate_orderline_total(uuid, seats)
+            )
     return order
 
 

@@ -8,7 +8,7 @@ import IconButton from 'material-ui/lib/icon-button';
 import NavigationClose from 'material-ui/lib/svg-icons/navigation/close';
 import ChapterTab from './ChapterTab';
 import StripeButton from './StripeButton';
-import { getModule, calculateTotal } from '../util/util';
+import { getModule, getCourse, calculateTotal } from '../util/util';
 
 class BuyTab extends React.Component {
   componentWillReceiveProps(nextProps) {
@@ -39,14 +39,14 @@ class BuyTab extends React.Component {
 
     if (cart.cart.length > 0) {
       cartContents = cart.cart.map((item, i) => {
-        let module = getModule(item.uuid, courseList);
+        let course = getCourse(item.courseUuid, courseList);
         let title = "";
-        if (module !== undefined) {
-          title = module.title;
+        if (course !== undefined) {
+          title = course.title;
         }
 
         return <MenuItem
-          key={item.uuid}>{i}: {title}:
+          key={item.courseUuid}>{i}: {title}:
           Seats: {item.seats}
         </MenuItem>;
       });

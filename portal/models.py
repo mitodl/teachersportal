@@ -109,7 +109,7 @@ class Order(models.Model):
 
 class OrderLine(models.Model):
     """
-    An item purchased
+    A module which is purchased.
     """
     order = ForeignKey(Order)
     seats = IntegerField()

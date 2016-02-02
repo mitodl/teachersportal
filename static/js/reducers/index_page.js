@@ -147,14 +147,10 @@ export const cart = handleActions({
 
   UPDATE_CART_ITEMS: (state, action) => {
     const { uuids, seats, courseUuid } = action.payload;
-    // Remove all items for this particular course
     let newCart = state.cart.filter(item => item.courseUuid !== courseUuid);
-    let newItems = uuids.map(uuid => ({
-      uuid: uuid,
-      seats: seats,
-      courseUuid: courseUuid
-    }));
-    newCart = newCart.concat(newItems);
+    if (uuids.length > 0) {
+      newCart = newCart.concat({uuids, seats, courseUuid});
+    }
 
     return Object.assign({}, state, {
       cart: newCart

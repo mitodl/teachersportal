@@ -370,7 +370,7 @@ describe('reducers', () => {
       dispatchThen(updateCartItems(['uuid'], 3, 'courseUuid')).then(cartState => {
         assert.deepEqual(cartState, {
           cart: [{
-            uuid: 'uuid',
+            uuids: ['uuid'],
             seats: 3,
             courseUuid: 'courseUuid'
           }],
@@ -381,7 +381,7 @@ describe('reducers', () => {
         dispatchThen(updateCartItems(['newUuid'], 5, 'courseUuid')).then(cartState => {
           assert.deepEqual(cartState, {
             cart: [{
-              uuid: 'newUuid',
+              uuids: ['newUuid'],
               seats: 5,
               courseUuid: 'courseUuid'
             }],
@@ -392,11 +392,11 @@ describe('reducers', () => {
           dispatchThen(updateCartItems(['uuid'], 4, 'othercourseUuid')).then(cartState => {
             assert.deepEqual(cartState, {
               cart: [{
-                uuid: 'newUuid',
+                uuids: ['newUuid'],
                 seats: 5,
                 courseUuid: 'courseUuid'
               }, {
-                uuid: 'uuid',
+                uuids: ['uuid'],
                 seats: 4,
                 courseUuid: 'othercourseUuid'
               }],
@@ -413,7 +413,7 @@ describe('reducers', () => {
 
       dispatchThen(updateCartItems(['uuid'], 5, 'courseUuid')).then(cartState => {
         let expectedCart = [{
-          uuid: 'uuid',
+          uuids: ['uuid'],
           seats: 5,
           courseUuid: 'courseUuid'
         }];
@@ -438,7 +438,7 @@ describe('reducers', () => {
 
       dispatchThen(updateCartItems(['uuid'], 5, 'courseUuid')).then(cartState => {
         let expectedCart = [{
-          uuid: 'uuid',
+          uuids: ['uuid'],
           seats: 5,
           courseUuid: 'courseUuid'
         }];
@@ -463,7 +463,7 @@ describe('reducers', () => {
       let courseUuid = COURSE_RESPONSE1.uuid;
       dispatchThen(updateCartItems([uuid], 5, courseUuid)).then(cartState => {
         let expectedCart = [{
-          uuid: uuid,
+          uuids: [uuid],
           seats: 5,
           courseUuid: courseUuid
         }];

@@ -42,7 +42,7 @@ import {
 } from '../actions/index_page';
 
 describe('CourseDetailPage', () => {
-  let store, sandbox, container, checkoutStub, listenForActions;
+  let store, sandbox, container, checkoutStub, listenForActions, dispatchThen;
 
   beforeEach(() => {
     // Fake getSelection so material-ui doesn't complain about not being
@@ -56,6 +56,7 @@ describe('CourseDetailPage', () => {
 
     store = configureTestStore();
     listenForActions = store.createListenForActions(state => state);
+    dispatchThen = store.createDispatchThen(state => state);
 
     const body = document.getElementsByTagName("body")[0];
     container = document.createElement("div");
@@ -65,6 +66,7 @@ describe('CourseDetailPage', () => {
   afterEach(() => {
     store = null;
     listenForActions = null;
+    dispatchThen = null;
 
     container.parentNode.removeChild(container);
     container = null;
@@ -178,13 +180,11 @@ describe('CourseDetailPage', () => {
       let expectedCart = [];
       for (let pair of coursePairs) {
         let { seatCount, course } = pair;
-        for (let module of course.modules) {
-          expectedCart.push({
-            courseUuid: course.uuid,
-            seats: seatCount,
-            uuid: module.uuid
-          });
-        }
+        expectedCart.push({
+          courseUuid: course.uuid,
+          seats: seatCount,
+          uuids: course.modules.map(module => module.uuid)
+        });
       }
       assert.deepEqual(state.cart.cart, expectedCart);
       let expectedTotal = calculateTotal(state.cart.cart, state.course.courseList);
@@ -195,6 +195,63 @@ describe('CourseDetailPage', () => {
       );
 
       done();
+    });
+  });
+
+  it('shows items in the cart panel', done => {
+    const course1SeatCount = 77;
+    const course2SeatCount = 88;
+    const coursePairs = [{
+      seatCount: course1SeatCount,
+      course: COURSE_RESPONSE1
+    }, {
+      seatCount: course2SeatCount,
+      course: COURSE_RESPONSE2
+    }];
+
+    // Alter state as if we logged in, selected all chapters and updated seat count,
+    // and updated the cart
+    store.dispatch(loginSuccess());
+    store.dispatch(receiveCourseListSuccess(COURSE_LIST));
+    store.dispatch(receiveCourseSuccess(COURSE_RESPONSE1));
+    // Cart will contain two courses
+    for (let pair of coursePairs) {
+      let { course, seatCount } = pair;
+      store.dispatch(updateCartItems(
+        course.modules.map(module => module.uuid), seatCount, course.uuid));
+    }
+
+    // We calculate the expected total after the component renders
+    let component;
+    renderCourseDetail().then(_component => {
+      component = _component;
+      let node = ReactDOM.findDOMNode(component);
+      // Check that items show up properly
+
+      let shoppingCartText = node.querySelector(".shopping-cart").textContent;
+      for (let pair of coursePairs) {
+        let { course, seatCount } = pair;
+        assert.ok(shoppingCartText.includes(course.title));
+        assert.ok(!shoppingCartText.includes(course.modules[0].title));
+        assert.ok(shoppingCartText.includes("Seats: " + seatCount));
+        assert.ok(!shoppingCartText.includes('No chapters selected'));
+      }
+
+      return listenForActions([UPDATE_CART_ITEMS, UPDATE_CART_ITEMS], () => {
+        // Clear courses
+        for (let pair of coursePairs) {
+          let { course, seatCount } = pair;
+          store.dispatch(updateCartItems([], seatCount, course.uuid));
+        }
+      });
+    }).then(() => {
+      component.forceUpdate(() => {
+        let node = ReactDOM.findDOMNode(component);
+        let shoppingCartText = node.querySelector(".shopping-cart").textContent;
+        assert.ok(shoppingCartText.includes('No chapters selected'));
+
+        done();
+      });
     });
   });
 
@@ -231,7 +288,7 @@ describe('CourseDetailPage', () => {
       open: data => {
         assert.deepEqual(data, {
           name: "MIT Teacher's Portal",
-          description: expectedNumCartItems + " item(s)",
+          description: expectedNumCartItems + " course(s)",
           amount: Math.floor(expectedTotal * 100)
         });
 

@@ -10,10 +10,13 @@ from rest_framework.exceptions import ValidationError
 
 from portal.models import Order, OrderLine
 from portal.views.base import CourseTests
-from portal.factories import ModuleFactory
+from portal.factories import (
+    CourseFactory,
+    ModuleFactory,
+)
 from portal.util import (
     calculate_cart_subtotal,
-    calculate_cart_item_total,
+    calculate_orderline_total,
     create_order,
     get_cents,
     course_as_dict,
@@ -22,9 +25,9 @@ from portal.util import (
 )
 
 
-class ProductUtilTests(CourseTests):
+class CourseUtilTests(CourseTests):
     """
-    Test for Product utility functions.
+    Test for utility functions.
     """
 
     def test_course_module_json(self):
@@ -123,7 +126,11 @@ class CheckoutValidationTests(CourseTests):
         self.module.save()
 
         assert calculate_cart_subtotal([
-            {"uuid": self.module.uuid, "seats": 10}
+            {
+                "uuids": [self.module.uuid],
+                "seats": 10,
+                "course_uuid": self.course.uuid
+            }
         ]) == 0
 
     def test_empty_cart_total(self):  # pylint: disable=no-self-use
@@ -136,46 +143,59 @@ class CheckoutValidationTests(CourseTests):
         """
         Assert that the cart total is calculated correctly (seats * price)
         """
+        module2 = ModuleFactory.create(
+            course=self.course,
+        )
+        seats = 10
         assert calculate_cart_subtotal([
-            {"uuid": self.module.uuid, "seats": 10}
-        ]) == self.module.price_without_tax * 10
+            {
+                "uuids": [self.module.uuid, module2.uuid],
+                "seats": seats,
+                "course_uuid": self.course.uuid
+            }
+        ]) == (
+            self.module.price_without_tax * seats +
+            module2.price_without_tax * seats
+        )
 
     def test_empty_line_total(self):
         """
-        Assert that an empty line has a total of 0
+        Assert that an line with a module with price $0 has a total of $0
         """
         self.module.price_without_tax = 0
         self.module.save()
 
-        assert calculate_cart_item_total({
-            "uuid": self.module.uuid,
-            "seats": 10
-        }) == 0
+        assert calculate_orderline_total(self.module.uuid, 10) == 0
 
     def test_line_total(self):
         """
         Assert that a line total is the price times quantity.
         """
-        assert calculate_cart_item_total({
-            "uuid": self.module.uuid,
-            "seats": 10
-        }) == self.module.price_without_tax * 10
+        assert calculate_orderline_total(self.module.uuid, 10) == self.module.price_without_tax * 10
 
     def test_validation(self):
         """
         Assert that a valid cart will pass validation.
         """
         validate_cart([
-            {"uuid": self.module.uuid, "seats": 10}
+            {
+                "uuids": [self.module.uuid],
+                "seats": 10,
+                "course_uuid": self.course.uuid
+            }
         ])
 
     def test_no_seats(self):
         """
-        Assert that a valid cart will pass validation.
+        Assert that a cart item cannot have zero seats.
         """
         with self.assertRaises(ValidationError) as ex:
             validate_cart([
-                {"uuid": self.module.uuid, "seats": 0}
+                {
+                    "uuids": [self.module.uuid],
+                    "seats": 0,
+                    "course_uuid": self.course.uuid
+                }
             ])
         assert ex.exception.detail[0] == "Number of seats is zero"
 
@@ -188,26 +208,67 @@ class CheckoutValidationTests(CourseTests):
 
         with self.assertRaises(ValidationError) as ex:
             validate_cart([
-                {"uuid": self.module.uuid, "seats": 10}
+                {
+                    "uuids": [self.module.uuid],
+                    "seats": 10,
+                    "course_uuid": self.course.uuid
+                }
             ])
-        assert ex.exception.detail[0] == "One or more products are unavailable"
+        assert ex.exception.detail[0] == "One or more modules are unavailable"
 
-    def test_missing_items(self):
+        self.course.live = True
+        self.course.save()
+        self.module.price_without_tax = None
+        self.module.save()
+
+        with self.assertRaises(ValidationError) as ex:
+            validate_cart([
+                {
+                    "uuids": [self.module.uuid],
+                    "seats": 10,
+                    "course_uuid": self.course.uuid
+                }
+            ])
+        assert ex.exception.detail[0] == "One or more modules are unavailable"
+
+    def test_missing_module(self):
         """
-        Assert that references to items that are missing will cause a validation error.
+        Assert that references to modules that are missing will cause a validation error.
         """
         with self.assertRaises(ValidationError) as ex:
             validate_cart([
-                {"uuid": "missing", "seats": 10}
+                {
+                    "uuids": ["missing"],
+                    "seats": 10,
+                    "course_uuid": self.course.uuid
+                }
             ])
-        assert ex.exception.detail[0] == "One or more products are unavailable"
+        assert ex.exception.detail[0] == "One or more modules are unavailable"
+
+    def test_missing_courses(self):
+        """
+        Assert that references to courses that are missing will cause a validation error.
+        """
+        with self.assertRaises(ValidationError) as ex:
+            validate_cart([
+                {
+                    "uuids": [self.module.uuid],
+                    "seats": 10,
+                    "course_uuid": "missing"
+                }
+            ])
+        assert ex.exception.detail[0] == "One or more courses are unavailable"
 
     def test_missing_keys(self):
         """
         Assert that missing keys cause a ValidationError.
         """
-        item = {"uuid": self.module.uuid, "seats": 10}
-        for key in ('uuid', 'seats'):
+        item = {
+            "uuids": [self.module.uuid],
+            "seats": 10,
+            "course_uuid": self.course.uuid
+        }
+        for key in ('uuids', 'seats', 'course_uuid'):
             with self.assertRaises(ValidationError) as ex:
                 item_copy = dict(item)
                 del item_copy[key]
@@ -219,21 +280,66 @@ class CheckoutValidationTests(CourseTests):
         Assert that non-int keys for number of seats are rejected.
         """
         for seats in ('6.5', 6.5, None, [], {}):
-            item = {"uuid": self.module.uuid, "seats": seats}
+            item = {
+                "uuids": [self.module.uuid],
+                "seats": seats,
+                "course_uuid": self.course.uuid
+            }
             with self.assertRaises(ValidationError) as ex:
                 validate_cart([item])
             assert ex.exception.detail[0] == "Seats must be an integer"
 
-    def test_duplicate_order(self):
+    def test_duplicate_modules(self):
         """
-        Assert that we don't allow duplicate items in cart
+        Assert that we don't allow duplicate modules in cart
         """
         with self.assertRaises(ValidationError) as ex:
             validate_cart([
-                {"uuid": self.module.uuid, "seats": 10},
-                {"uuid": self.module.uuid, "seats": 5}
+                {
+                    "uuids": [self.module.uuid, self.module.uuid],
+                    "seats": 10,
+                    "course_uuid": self.course.uuid
+                }
             ])
-        assert ex.exception.detail[0] == "Duplicate item in cart"
+        assert ex.exception.detail[0] == "Duplicate module in cart"
+
+    def test_duplicate_courses(self):
+        """
+        Assert that we don't allow duplicate courses in cart
+        """
+        module2 = ModuleFactory.create(
+            course=self.course
+        )
+        with self.assertRaises(ValidationError) as ex:
+            validate_cart([
+                {
+                    "uuids": [self.module.uuid],
+                    "seats": 10,
+                    "course_uuid": self.course.uuid
+                },
+                {
+                    "uuids": [module2.uuid],
+                    "seats": 15,
+                    "course_uuid": self.course.uuid
+                }
+            ])
+        assert ex.exception.detail[0] == "Duplicate course in cart"
+
+    def test_course_module_mismatch(self):
+        """
+        Assert that we don't allow duplicate items in cart
+        """
+        # Also creates a new course
+        module2 = ModuleFactory.create()
+        with self.assertRaises(ValidationError) as ex:
+            validate_cart([
+                {
+                    "uuids": [self.module.uuid],
+                    "seats": 10,
+                    "course_uuid": module2.course.uuid
+                }
+            ])
+        assert ex.exception.detail[0] == "Course does not match up with module"
 
     def test_must_have_all_children_in_cart(self):  # pylint: disable=invalid-name
         """
@@ -251,10 +357,29 @@ class CheckoutValidationTests(CourseTests):
 
         with self.assertRaises(ValidationError) as ex:
             validate_cart([
-                {'uuid': self.module.uuid, 'seats': 5},
+                {
+                    'uuids': [self.module.uuid],
+                    'seats': 5,
+                    'course_uuid': self.course.uuid
+                },
             ])
 
         assert ex.exception.detail[0] == 'You must purchase all modules for a course.'
+
+    def test_dont_allow_empty_uuids(self):
+        """
+        Raise a ValidationError if uuids list is empty
+        """
+        with self.assertRaises(ValidationError) as ex:
+            validate_cart([
+                {
+                    'uuids': [],
+                    'seats': 5,
+                    'course_uuid': self.course.uuid
+                },
+            ])
+
+        assert ex.exception.detail[0] == 'uuids must not be empty'
 
 
 class CheckoutOrderTests(CourseTests):
@@ -289,8 +414,11 @@ class CheckoutOrderTests(CourseTests):
         # Create second module to test cart with multiple items
         title = "other product title"
         second_price = 345
+        second_course = CourseFactory.create(
+            live=True
+        )
         second_module = ModuleFactory.create(
-            course=self.course,
+            course=second_course,
             title=title,
             price_without_tax=second_price
         )
@@ -298,8 +426,16 @@ class CheckoutOrderTests(CourseTests):
         first_seats = 5
         second_seats = 10
         order = create_order([
-            {"uuid": self.module.uuid, "seats": first_seats},
-            {"uuid": second_module.uuid, "seats": second_seats},
+            {
+                "uuids": [self.module.uuid],
+                "seats": first_seats,
+                "course_uuid": self.course.uuid
+            },
+            {
+                "uuids": [second_module.uuid],
+                "seats": second_seats,
+                "course_uuid": second_module.course.uuid
+            },
         ], self.user)
         first_line_total = self.module.price_without_tax * first_seats
         second_line_total = second_price * second_seats
