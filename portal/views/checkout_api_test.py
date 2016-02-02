@@ -20,7 +20,7 @@ from portal.models import Order, OrderLine, UserInfo
 from portal.views.base import CourseTests, FAKE_CCXCON_API
 from portal.util import (
     calculate_cart_subtotal,
-    calculate_cart_item_total,
+    calculate_orderline_total,
     get_cents,
 )
 
@@ -98,8 +98,9 @@ class CheckoutAPITests(CourseTests):
             content_type='application/json',
             data=json.dumps({
                 "cart": [{
-                    "uuid": self.module.uuid,
-                    "seats": 5
+                    "uuids": [self.module.uuid],
+                    "seats": 5,
+                    "course_uuid": self.course.uuid
                 }],
                 "token": "",
                 "total": 0
@@ -132,8 +133,9 @@ class CheckoutAPITests(CourseTests):
         ), text=_mocked_request_callback)
 
         cart_item = {
-            "uuid": self.module.uuid,
-            "seats": total_seats
+            "uuids": [self.module.uuid],
+            "seats": total_seats,
+            "course_uuid": self.course.uuid
         }
         cart = [cart_item]
         total = calculate_cart_subtotal(cart)
@@ -161,8 +163,9 @@ class CheckoutAPITests(CourseTests):
         """
         mock_ccxcon.return_value.post.return_value.status_code = 200
         cart_item = {
-            "uuid": self.module.uuid,
-            "seats": 5
+            "uuids": [self.module.uuid],
+            "seats": 5,
+            "course_uuid": self.course.uuid
         }
         cart = [cart_item]
         total = calculate_cart_subtotal(cart)
@@ -197,7 +200,10 @@ class CheckoutAPITests(CourseTests):
         order = Order.objects.get(id=mocked_kwargs['metadata']['order_id'])
         assert order.orderline_set.count() == 1
         order_line = order.orderline_set.first()
-        assert calculate_cart_item_total(cart_item) == order_line.line_total
+        assert calculate_orderline_total(
+            cart_item['uuids'][0],
+            cart_item['seats']
+        ) == order_line.line_total
 
     def test_cart_with_price_not_matching_total(self):
         """
@@ -205,8 +211,9 @@ class CheckoutAPITests(CourseTests):
         we raise a ValidationError.
         """
         cart_item = {
-            "uuid": self.module.uuid,
-            "seats": 5
+            "uuids": [self.module.uuid],
+            "seats": 5,
+            "course_uuid": self.course.uuid
         }
         cart = [cart_item]
 
@@ -228,8 +235,9 @@ class CheckoutAPITests(CourseTests):
         Assert that we clean up everything if checkout failed.
         """
         cart_item = {
-            "uuid": self.module.uuid,
-            "seats": 5
+            "uuids": [self.module.uuid],
+            "seats": 5,
+            "course_uuid": self.course.uuid
         }
         cart = [cart_item]
         # Note: autospec intentionally not used, we need an unbound method here
@@ -277,8 +285,9 @@ class CheckoutAPITests(CourseTests):
         start_ol = OrderLine.objects.count()
         requester.return_value.post.side_effect = AttributeError()
         cart_item = {
-            "uuid": self.module.uuid,
-            "seats": 5
+            "uuids": [self.module.uuid],
+            "seats": 5,
+            "course_uuid": self.course.uuid
         }
         cart = [cart_item]
 
@@ -310,11 +319,9 @@ class CheckoutAPITests(CourseTests):
             AttributeError("Another Error"),
         ]
         cart = [{
-            "uuid": self.module.uuid,
-            "seats": 5
-        }, {
-            "uuid": module2.uuid,
-            "seats": 4
+            "uuids": [self.module.uuid, module2.uuid],
+            "seats": 5,
+            "course_uuid": self.course.uuid
         }]
 
         with patch.object(Charge, 'create'):
@@ -339,8 +346,9 @@ class CheckoutAPITests(CourseTests):
         self.client.logout()
 
         cart_item = {
-            "uuid": self.module.uuid,
-            "seats": 5
+            "uuids": [self.module.uuid],
+            "seats": 5,
+            "course_uuid": self.course.uuid
         }
         cart = [cart_item]
         resp = self.client.post(

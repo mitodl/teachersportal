@@ -10,15 +10,27 @@ function makeModuleLookup(courses) {
   return moduleLookup;
 }
 
+function makeCourseLookup(courses) {
+  let courseLookup = {};
+
+  for (let course of courses) {
+    courseLookup[course.uuid] = course;
+  }
+
+  return courseLookup;
+}
+
 export function calculateTotal(cart, courses) {
   let total = 0;
 
   let moduleLookup = makeModuleLookup(courses);
 
   for (let item of cart) {
-    let module = moduleLookup[item.uuid];
-    if (module !== undefined) {
-      total += item.seats * module.price_without_tax;
+    for (let uuid of item.uuids) {
+      let module = moduleLookup[uuid];
+      if (module !== undefined) {
+        total += item.seats * module.price_without_tax;
+      }
     }
   }
 
@@ -30,8 +42,55 @@ export function getModule(moduleUuid, courses) {
   return moduleLookup[moduleUuid];
 }
 
+export function getCourse(courseUuid, courses) {
+  let courseLookup = makeCourseLookup(courses);
+  return courseLookup[courseUuid];
+}
+
+/**
+ * Validates a cart. If the input cart was invalid, an empty list is returned.
+ * If a course uuid doesn't match, that course is excluded from the cart.
+ * If a module uuid doesn't match, that module is excluded from the cart (and
+ * maybe the course too if all modules from the course are missing).
+ *
+ * Because the cart is stored in localStorage, the user can't just refresh their page
+ * if the state is corrupted. This function aims to sanitize this part of the state.
+ *
+ * @param {Array} cart The cart (probably from state.cart.cart)
+ * @param {Array} courses The courses (probably from state.course.courseList)
+ * @returns {Array} A copy of the cart with invalid items or modules filtered out
+ */
 export function filterCart(cart, courses) {
   let moduleLookup = makeModuleLookup(courses);
+  let courseLookup = {};
+  for (let course of courses) {
+    courseLookup[course.uuid] = course;
+  }
 
-  return cart.filter(item => moduleLookup[item.uuid] !== undefined);
+  if (!(cart instanceof Array)) {
+    return [];
+  }
+
+  // Filter type for each item
+  let filteredCart = cart.filter(item => {
+    if (typeof item.seats !== 'number') {
+      return false;
+    }
+    if (!(item.uuids instanceof Array)) {
+      return false;
+    }
+    let course = courseLookup[item.courseUuid];
+    if (course === undefined) {
+      return false;
+    }
+    return true;
+  });
+
+  // Filter out missing modules
+  filteredCart = filteredCart.map(item => Object.assign({}, item, {
+    uuids: item.uuids.filter(uuid => moduleLookup[uuid] !== undefined)
+  }));
+
+  // If the module list is now empty filter out the course too
+  return filteredCart.filter(item => item.uuids.length > 0);
 }
