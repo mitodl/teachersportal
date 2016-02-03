@@ -11,284 +11,333 @@ body {
   margin-top: 0;
 }
 
+a {
+  color: #358CDD;
+}
+
 #container {
     @include outer-container;
-
-    #header {
-      @include pad($block-padding);
-      h1 {
-          font-size: large;
-      }
-      background-color: white;
-      border: 1px solid #ddd;
-      #navigation {
-        display: inline-block;
-        button div span {
-          text-transform: initial;
-        }
-      }
-      img {
-        width: 200px;
-        display: inline-block;
-        vertical-align: middle;
-      }
-
-    }
-
-
-    .message-body {
-      @include pad($block-padding);
-      @include fill-parent;
-      background-color: $lightgrey;
-      border: 1px solid #ddd;
-
-      .message-title {
-        @include pad($block-padding);
-        margin: 40px;
-        font-weight: 700;
-        font-size: 1.5em;
-      }
-
-      .message-description {
-        @include pad($block-padding);
-        margin: 40px;
-      }
-    }
-
-    #course-body {
-      @include pad($block-padding);
-      @include fill-parent;
-      background-color: $lightgrey;
-      border: 1px solid #ddd;
-
-      h2.course-listing-header {
-        padding: 0 40px;
-        font-weight: 700;
-        font-size: 1.5em;
-        color: #B30000;
-      }
-
-      ul.course-listing {
-        @include outer-container;
-        li.course-card-item {
-          @include span-columns(3);
-          @include omega(4n);
-          margin-bottom: 20px;
-          .course-card-body {
-            .course-card-content {
-              .course-card {
-                a {
-                  text-decoration: none;
-                  .course-card-title {
-                    font-size: 18px;
-                    line-height: 30px;
-                    font-weight: 700;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-
-
-      #course-content {
-        @include pad($page-padding);
-        min-height: 400px;
-        .progress {
-          margin-top: 100px;
-        }
-
-        #course-title {
-          padding: 0 16px 26px 0 !important;
-          span:nth-child(1) {
-            font-weight: 800;
-            font-size: 30px !important;
-          }
-
-          span:nth-child(2) {
-            font-size: 20px !important;
-            font-weight: 400 !important;
-          }
-        }
-
-        #course-image {
-          display: inline-block;
-          max-width: 400px;
-        }
-
-        #course-description {
-          display: inline-block;
-          padding: 0 0 0 30px !important;
-          vertical-align: top;
-          font-size: 18px !important;
-          line-height: 2em;
-          width: 700px;
-        }
-
-        #course-about-tab {
-          display: inline-block;
-          padding: 30px !important;
-          vertical-align: top;
-          font-size: 18px !important;
-          line-height: 2em;
-        }
-
-
-        .shopping-cart {
-
-          .cart-actions {
-            @include pad($block-padding);
-            @include span-columns(6);
-            .checkout-button {
-            }
-          }
-
-          .cart-status {
-            @include pad($block-padding);
-            @include span-columns(6);
-            .cart-total {
-              color: green;
-              font-size: 2em;
-              font-weight: 700;
-              text-align: center;
-              .cart-total-label {
-                color: black;
-                font-size: 0.9em;
-                text-align: center;
-                font-variant: small-caps;
-              }
-            }
-          }
-        }
-
-        .course-purchase-selector {
-          .seat-number-selector {
-            padding: 40px 20px;
-            @include clearfix;
-
-            .slider-label {
-              @include span-columns(1);
-              vertical-align: top;
-              font-size: 1.5em;
-              text-align: right;
-            }
-
-            .scaled-slider {
-              @include span-columns(5);
-              .left {
-                @include span-columns(1 of 5);
-                text-align: left;
-              }
-              .left-quarter {
-                @include span-columns(1 of 5);
-                text-align: left;
-              }
-              .middle {
-                @include span-columns(1 of 5);
-                text-align: center;
-              }
-              .right-quarter {
-                @include span-columns(1 of 5);
-                text-align: right;
-              }
-              .right {
-                @include span-columns(1 of 5);
-                text-align: right;
-              }
-            }
-            .seatCount {
-              @include span-columns(2);
-              font-size: 2em;
-              text-align: center;
-              font-weight: 700;
-
-              .seatCountLabel {
-                font-size: 0.5em;
-                text-align: center;
-              }
-            }
-            .selectionTotal {
-              @include span-columns(2);
-              color: green;
-              font-size: 2em;
-              font-weight: 700;
-              text-align: center;
-              .selectionTotalLabel {
-                font-size: 0.5em;
-                text-align: center;
-              }
-            }
-            .add-to-cart {
-              @include span-columns(2);
-            }
-          }
-          .chapter-label {
-            @include pad($block-padding);
-            padding-bottom: 0;
-            font-size: 1.5em;
-            text-align: left;
-          }
-          .moduleSelector {
-            @include clearfix;
-          }
-        }
-
-
-        #course-tabs-card {
-          margin-top: 20px;
-          #course-tabs {
-            font-size: 14px;
-
-            .mui-table-header-column {
-              width:100px;
-              background-color: #eff5f7 !important;
-
-              span {
-                font-weight: 700;
-                font-size: 13pt;
-                color: black;
-              }
-            }
-
-            div {
-              .tab {
-                background-color: white;
-                color: black !important;
-                text-transform: uppercase;
-                & > div > div div {
-                  padding:20px;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    #footer {
-      @include pad($block-padding);
-      background-color: black;
-      color: white;
-      img {
-        width: 100px;
-      }
-      #links, #address {
-        margin-left: 10px;
-        font-size: 12px;
-        a {
-          padding-right: 10px;
-          color: #358CDD;
-        }
-      }
-    }
 }
 
-.login-container {
-  @include outer-container;
+#header {
   @include pad($block-padding);
-  > div {
-    @include span-columns(6);
+  h1 {
+    font-size: large;
+  }
+  background-color: white;
+  border: 1px solid #ddd;
+  #navigation {
     display: inline-block;
+    button div span {
+      text-transform: initial;
+    }
+  }
+  img {
+    width: 200px;
+    display: inline-block;
+    vertical-align: middle;
   }
 }
+
+.message-body {
+  @include pad($block-padding);
+  @include fill-parent;
+  background-color: $lightgrey;
+  border: 1px solid #ddd;
+
+  .message-title {
+    @include pad($block-padding);
+    margin: 40px;
+    font-weight: 700;
+    font-size: 1.5em;
+  }
+
+  .message-description {
+    @include pad($block-padding);
+    margin: 40px;
+  }
+}
+
+#course-body {
+  @include pad($block-padding);
+  @include fill-parent;
+  background-color: $lightgrey;
+  border: 1px solid #ddd;
+}
+
+.course-listing-header {
+  padding: 0 40px;
+  font-weight: 700;
+  color: #B30000;
+}
+
+
+h3.course-listing-header {
+  font-size: 1.3em;
+}
+
+#course-listing .course-list-container {
+  @include pad($block-padding);
+}
+
+.course-list-container {
+  @include fill-parent;
+  background-color: $lightgrey;
+
+  ul.course-listing {
+    @include outer-container;
+    
+    li.course-card-item {
+      @include span-columns(3);
+      @include omega(4n);
+      margin-bottom: 20px;
+
+      .course-card a {
+        text-decoration: none;
+      }
+
+      .course-card-title span {
+        /* !important as necessary, because we can't override the CardTitle's styling. */
+        font-size: .9em !important;
+        line-height: 1.2em !important;
+        font-weight: 700;
+      }
+    }
+  }
+}
+
+#course-listing {
+  background-color: #eee;
+}
+
+#course-content {
+  @include pad($page-padding);
+  min-height: 400px;
+  .progress {
+    margin-top: 100px;
+  }
+
+  #course-title {
+    padding: 0 16px 26px 0 !important;
+    span:nth-child(1) {
+      font-weight: 800;
+      font-size: 30px !important;
+    }
+
+    span:nth-child(2) {
+      font-size: 20px !important;
+      font-weight: 400 !important;
+    }
+  }
+
+  #course-image {
+    display: inline-block;
+    max-width: 400px;
+  }
+
+  #course-description {
+    display: inline-block;
+    padding: 0 0 0 30px !important;
+    vertical-align: top;
+    font-size: 18px !important;
+    line-height: 2em;
+    width: 700px;
+  }
+
+  #course-about-tab {
+    display: inline-block;
+    padding: 30px !important;
+    vertical-align: top;
+    font-size: 18px !important;
+    line-height: 2em;
+  }
+
+
+  .shopping-cart {
+
+    .cart-actions {
+      @include pad($block-padding);
+      @include span-columns(6);
+      .checkout-button {
+      }
+    }
+
+    .cart-status {
+      @include pad($block-padding);
+      @include span-columns(6);
+      .cart-total {
+        color: green;
+        font-size: 2em;
+        font-weight: 700;
+        text-align: center;
+        .cart-total-label {
+          color: black;
+          font-size: 0.9em;
+          text-align: center;
+          font-variant: small-caps;
+        }
+      }
+    }
+  }
+
+  .course-purchase-selector {
+    .seat-number-selector {
+      padding: 40px 20px;
+      @include clearfix;
+
+      .slider-label {
+        @include span-columns(1);
+        vertical-align: top;
+        font-size: 1.5em;
+        text-align: right;
+      }
+
+      .scaled-slider {
+        @include span-columns(5);
+        .left {
+          @include span-columns(1 of 5);
+          text-align: left;
+        }
+        .left-quarter {
+          @include span-columns(1 of 5);
+          text-align: left;
+        }
+        .middle {
+          @include span-columns(1 of 5);
+          text-align: center;
+        }
+        .right-quarter {
+          @include span-columns(1 of 5);
+          text-align: right;
+        }
+        .right {
+          @include span-columns(1 of 5);
+          text-align: right;
+        }
+      }
+      .seatCount {
+        @include span-columns(2);
+        font-size: 2em;
+        text-align: center;
+        font-weight: 700;
+
+        .seatCountLabel {
+          font-size: 0.5em;
+          text-align: center;
+        }
+      }
+      .selectionTotal {
+        @include span-columns(2);
+        color: green;
+        font-size: 2em;
+        font-weight: 700;
+        text-align: center;
+        .selectionTotalLabel {
+          font-size: 0.5em;
+          text-align: center;
+        }
+      }
+      .add-to-cart {
+        @include span-columns(2);
+      }
+    }
+    .chapter-label {
+      @include pad($block-padding);
+      padding-bottom: 0;
+      font-size: 1.5em;
+      text-align: left;
+    }
+    .moduleSelector {
+      @include clearfix;
+    }
+  }
+
+
+  #course-tabs-card {
+    margin-top: 20px;
+    #course-tabs {
+      font-size: 14px;
+
+      .mui-table-header-column {
+        width:100px;
+        background-color: #eff5f7 !important;
+
+        span {
+          font-weight: 700;
+          font-size: 13pt;
+          color: black;
+        }
+      }
+
+      div {
+        .tab {
+          background-color: white;
+          color: black !important;
+          text-transform: uppercase;
+          & > div > div div {
+            padding:20px;
+          }
+        }
+      }
+    }
+  }
+}
+
+#footer {
+  @include pad($block-padding);
+  background-color: black;
+  color: white;
+  img {
+    width: 100px;
+  }
+  #links, #address {
+    margin-left: 10px;
+    font-size: 12px;
+    a {
+      padding-right: 10px;
+      text-decoration: none;
+    }
+  }
+}
+
+ .login-container {
+   @include outer-container;
+   @include pad($block-padding);
+   > div {
+     @include span-columns(6);
+     display: inline-block;
+   }
+ }
+
+
+ .homepage-header {
+   @include span-columns(8);
+   @include shift(2);
+   padding-bottom: 30px;
+
+   h2 {
+     font-size: 1.6em;
+   }
+
+   p {
+     color: #666;
+     line-height: 2em;
+   }
+
+   .learn-more {
+     color: white;
+     padding: 0px 20px !important;
+   }
+ }
+
+ .homepage-course-listing {
+   @include span-columns(12);
+   border: 1px solid #ddd;
+   background: #eee;
+
+   .see-all {
+     float: right;
+     margin-right: 30px;
+     margin-top: 20px;
+   }
+ }
