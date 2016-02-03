@@ -6,7 +6,11 @@ from __future__ import unicode_literals
 from django.db import models
 
 from django.contrib.auth.models import User
-from django.db.models.fields.related import ForeignKey, OneToOneField
+from django.db.models.fields.related import (
+    ForeignKey,
+    OneToOneField,
+    ManyToManyField,
+)
 from django.db.models.fields import (
     BooleanField,
     DecimalField,
@@ -15,6 +19,12 @@ from django.db.models.fields import (
     DateTimeField,
 )
 from django.utils.encoding import python_2_unicode_compatible
+
+from portal.permissions import (
+    EDIT_OWN_CONTENT,
+    EDIT_OWN_LIVENESS,
+    EDIT_OWN_PRICE,
+)
 
 
 @python_2_unicode_compatible
@@ -41,6 +51,7 @@ class Course(models.Model):
     created_at = DateTimeField(auto_now_add=True, blank=True)
     modified_at = DateTimeField(auto_now=True, blank=True)
     instance = ForeignKey(BackingInstance)
+    owners = ManyToManyField(to=User, related_name="courses_owned")
 
     @property
     def is_available_for_purchase(self):
@@ -57,6 +68,10 @@ class Course(models.Model):
 
     class Meta:  # pylint: disable=missing-docstring, no-init, old-style-class, too-few-public-methods
         ordering = ('created_at', )
+        permissions = (
+            (EDIT_OWN_CONTENT, 'Can edit descriptive content for a course and related modules'),
+            (EDIT_OWN_LIVENESS, 'Can mark a course live or not live'),
+        )
 
 
 @python_2_unicode_compatible
@@ -84,6 +99,9 @@ class Module(models.Model):
 
     class Meta:  # pylint: disable=missing-docstring, no-init, old-style-class, too-few-public-methods
         ordering = ('created_at', )
+        permissions = (
+            (EDIT_OWN_PRICE, 'Can edit the price of a module'),
+        )
 
 
 class UserInfo(models.Model):
