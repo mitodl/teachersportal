@@ -118,8 +118,8 @@ export function logout() {
 export function login(username, password) {
   return dispatch => {
     return api.login(username, password).
-      then(() => {
-        return dispatch(loginSuccess());
+      then((data) => {
+        return dispatch(loginSuccess(data));
       }).
       catch((e) => {
         dispatch(loginFailure("Unable to log in"));

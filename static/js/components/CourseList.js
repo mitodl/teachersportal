@@ -27,9 +27,14 @@ class CourseList extends React.Component {
   }
 
   render() {
-    const { course } = this.props;
+    const { course, limit } = this.props;
 
-    let list = course.courseList.map((course) => {
+    let courseList = course.courseList;
+    if (limit) {
+      courseList = courseList.slice(0, limit);
+    }
+
+    let list = courseList.map((course) => {
       return <li className="course-card-item" key={course.uuid}>
         <CourseCard course={course} />
       </li>;
@@ -45,7 +50,8 @@ class CourseList extends React.Component {
 
 CourseList.propTypes = {
   dispatch: React.PropTypes.func.isRequired,
-  course: React.PropTypes.object.isRequired
+  course: React.PropTypes.object.isRequired,
+  limit: React.PropTypes.number
 };
 
 export default CourseList;

@@ -1,6 +1,7 @@
 // Define globals we would usually get from Django
 global.SETTINGS = {
-  isAuthenticated: false
+  isAuthenticated: false,
+  name: ""
 };
 
 // Make sure window and document are available for testing

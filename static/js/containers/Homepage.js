@@ -10,11 +10,9 @@ import {
 import { Link } from 'react-router';
 
 class Homepage extends React.Component {
-
   render() {
     const { dispatch, course } = this.props;
-
-    return <Card id='homepage-body'>
+    return <Card id='homepage-body' style={{'box-shadow': 'none', 'border-radius': 0}}>
       <div className="homepage-header">
         <h2>Introducing MIT's Courseware Marketplace</h2>
         <p>Gluten-free VHS asymmetrical sriracha heirloom
@@ -30,7 +28,7 @@ class Homepage extends React.Component {
       <div className="homepage-course-listing">
       <p className="see-all"><Link to="/courses">See all courses</Link></p>
       <h3 className="course-listing-header">Use MIT's courses in your teachings</h3>
-      <CourseList dispatch={dispatch} course={course} />
+      <CourseList dispatch={dispatch} course={course} limit={4} />
       </div>
       </Card>;
   }

@@ -17,11 +17,10 @@ class Header extends React.Component {
       dispatch,
       loginModal,
       authentication,
-      registration,
+      registration
     } = this.props;
 
     return <div id="header">
-      <img src="/static/images/mit-white.png" className="logo" />
       <Navigation
         onShowSignIn={() => dispatch(showLogin())}
         onSignOut={() => dispatch(logout())}
