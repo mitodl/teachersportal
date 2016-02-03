@@ -19,23 +19,69 @@ a {
     @include outer-container;
 }
 
+.nav-link {
+  text-decoration: none;
+  padding: 0 40px;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+#course-listing, #homepage-body {
+  @include fill-parent();
+  @include span-columns(12);
+  @include omega();
+}
+
 #header {
   @include pad($block-padding);
+  @include fill-parent();
+  @include span-columns(12);
+  @include omega();
+  background-color: white;
+
   h1 {
     font-size: large;
   }
-  background-color: white;
-  border: 1px solid #ddd;
   #navigation {
-    display: inline-block;
     button div span {
       text-transform: initial;
     }
   }
-  img {
+  .logo {
     width: 200px;
+    height: 62px;
+    text-indent: -9999em;
+    overflow: hidden;
+    background: url('/static/images/mit-white.png');
     display: inline-block;
     vertical-align: middle;
+
+    a {
+      display: block;
+      float: left;
+      width: 100%;
+      height: 62px;
+    }
+  }
+
+  .left-nav {
+    @include span-columns(8);
+  }
+  .right-nav {
+    @include span-columns(4);
+    @include omega();
+    /* padding: 12px 0; */
+    padding-top: 23px;
+    text-align: right;
+  }
+
+  .login-info {  // Signed in right-side header
+    margin-top: -10px;
+  }
+
+  .user-settings svg {
+    margin-bottom: -5px;
   }
 }
 
@@ -70,7 +116,6 @@ a {
   font-weight: 700;
   color: #B30000;
 }
-
 
 h3.course-listing-header {
   font-size: 1.3em;
@@ -296,48 +341,51 @@ h3.course-listing-header {
     a {
       padding-right: 10px;
       text-decoration: none;
+      &:hover {
+        text-decoration: underline;
+      }
     }
   }
 }
 
- .login-container {
-   @include outer-container;
-   @include pad($block-padding);
-   > div {
-     @include span-columns(6);
-     display: inline-block;
-   }
- }
+.login-container {
+  @include outer-container;
+  @include pad($block-padding);
+  > div {
+    @include span-columns(6);
+    display: inline-block;
+  }
+}
 
 
- .homepage-header {
-   @include span-columns(8);
-   @include shift(2);
-   padding-bottom: 30px;
+.homepage-header {
+  @include span-columns(8);
+  @include shift(2);
+  padding-bottom: 30px;
 
-   h2 {
-     font-size: 1.6em;
-   }
+  h2 {
+    font-size: 1.6em;
+  }
 
-   p {
-     color: #666;
-     line-height: 2em;
-   }
+  p {
+    color: #666;
+    line-height: 2em;
+  }
 
-   .learn-more {
-     color: white;
-     padding: 0px 20px !important;
-   }
- }
+  .learn-more {
+    color: white;
+    padding: 0px 20px !important;
+  }
+}
 
- .homepage-course-listing {
-   @include span-columns(12);
-   border: 1px solid #ddd;
-   background: #eee;
+.homepage-course-listing {
+  @include span-columns(12);
+  border: 1px solid #ddd;
+  background: #eee;
 
-   .see-all {
-     float: right;
-     margin-right: 30px;
-     margin-top: 20px;
-   }
- }
+  .see-all {
+    float: right;
+    margin-right: 30px;
+    margin-top: 20px;
+  }
+}

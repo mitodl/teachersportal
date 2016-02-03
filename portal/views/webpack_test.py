@@ -4,8 +4,9 @@ Test end to end django views.
 
 from __future__ import unicode_literals
 
-from django.test import TestCase
+from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.test import TestCase
 
 
 class TestViews(TestCase):
@@ -29,3 +30,18 @@ class TestViews(TestCase):
                     expected_url,
                     status_code=200
                 )
+
+    def test_empty_name_no_user(self):
+        """
+        If there is no userinfo object, it should still render the homepage
+        appropriately.
+        """
+        user = User.objects.create(username='test')
+        user.set_password('asdf')
+        self.client.login(username=user.username, password='asdf')
+
+        response = self.client.get(reverse('portal-index'))
+        self.assertContains(
+            response,
+            '''name": ""'''
+        )
