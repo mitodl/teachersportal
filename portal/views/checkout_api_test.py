@@ -83,6 +83,32 @@ class CheckoutAPITests(CourseTests):
             assert resp.status_code == 400, resp.content.decode('utf-8')
             assert "Missing key {}".format(key) in resp.content.decode('utf-8')
 
+    def test_missing_item_keys(self):
+        """
+        Assert that missing keys within the cart cause a 400.
+        """
+        def make_cart_without(key):
+            """Helper function to generate a cart without a item key"""
+            item = {
+                "uuid": "uuid",
+                "seats": 5
+            }
+            del item[key]
+            return item
+
+        for key in ('uuid', 'seats'):
+            resp = self.client.post(
+                reverse('checkout'),
+                content_type='application/json',
+                data=json.dumps({
+                    "cart": [make_cart_without(key)],
+                    "token": "",
+                    "total": 0
+                })
+            )
+            assert resp.status_code == 400, resp.content.decode('utf-8')
+            assert "Missing key {}".format(key) in resp.content.decode('utf-8')
+
     @patch('portal.views.checkout_api.ccxcon_request')
     def test_cart_without_price(self, mock_ccxcon):
         """
