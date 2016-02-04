@@ -2,6 +2,7 @@ db:
   image: postgres
   ports:
     - "5432"
+
 web:
   build: .
   command: >
@@ -22,10 +23,19 @@ web:
   env_file: .env
   ports:
     - "8075:8075"
+
+web_bare:
+  extends: web
+  links:
+    - db
+
+web_integration:
+  extends: web
   external_links:
     - "ccxcon_web_1:localhost.daplie.com"
   links:
     - db
+
 watch:
   image: teachersportal_web
   command: >
