@@ -17,6 +17,8 @@ from rest_framework.permissions import BasePermission
 log = logging.getLogger(__name__)
 
 
+# Note that the codename for each permission is exposed in our REST API, in order
+# to tell the UI what changes to make based on user permissions.
 EDIT_OWN_CONTENT = (
     'edit_own_content',
     'Can edit descriptive content for a course and related modules'
@@ -105,7 +107,7 @@ class AuthorizationHelpers(object):
         Returns:
             bool: True if the user owns the course
         """
-        return user.courses_owned.filter(id=course.id).exists()
+        return course.owners.filter(id=user.id).exists()
 
     @classmethod
     def has_edit_own_price_perm(cls, course, user):

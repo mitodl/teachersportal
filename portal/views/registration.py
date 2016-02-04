@@ -10,7 +10,7 @@ from django.conf import settings
 from django.db import transaction
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 
@@ -18,6 +18,7 @@ from portal.models import UserInfo
 
 
 @api_view(["POST"])
+@permission_classes([])
 def register_view(request):
     """
     Register a new user.
