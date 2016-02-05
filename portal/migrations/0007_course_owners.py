@@ -17,6 +17,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='course',
             name='owners',
-            field=models.ManyToManyField(related_name='courses_owned', to=settings.AUTH_USER_MODEL),
+            field=models.ManyToManyField(related_name='courses_owned', to=settings.AUTH_USER_MODEL, blank=True),
         ),
     ]

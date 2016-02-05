@@ -17,9 +17,18 @@ from rest_framework.permissions import BasePermission
 log = logging.getLogger(__name__)
 
 
-EDIT_OWN_CONTENT = 'edit_own_content'
-EDIT_OWN_LIVENESS = 'edit_own_liveness'
-EDIT_OWN_PRICE = 'edit_own_price'
+EDIT_OWN_CONTENT = (
+    'edit_own_content',
+    'Can edit descriptive content for a course and related modules'
+)
+EDIT_OWN_LIVENESS = (
+    'edit_own_liveness',
+    'Can mark a course live or not live'
+)
+EDIT_OWN_PRICE = (
+    'edit_own_price',
+    'Can edit the price of a module'
+)
 
 
 class HmacPermission(BasePermission):
@@ -44,89 +53,110 @@ class HmacPermission(BasePermission):
         return is_valid
 
 
-def get_courses():
+class AuthorizationHelpers(object):
     """
-    Returns a list of courses accessible by user.
-
-    Returns:
-        generator: A list of courses
+    Functions used to ensure permissions are applied.
     """
-    from portal.models import Course
-    return [
-        course for course in Course.objects.all()
-        if course.is_available_for_purchase
-    ]
 
+    @staticmethod
+    def get_courses():
+        """
+        Returns a list of courses accessible by user.
 
-def get_course(course_uuid):
-    """
-    Returns a course, or None if no course exists or is not available for purchase.
+        Returns:
+            list: A list of courses
+        """
+        from portal.models import Course
+        return [
+            course for course in Course.objects.all()
+            if course.is_available_for_purchase
+        ]
 
-    Args:
-        course_uuid (str): A course
-    Returns:
-        Course: A course, or None if course is not accessible to the user
-    """
-    from portal.models import Course
-    try:
-        course = Course.objects.get(uuid=course_uuid)
-    except Course.DoesNotExist:
-        log.debug("Couldn't find a course with uuid %s in the portal", course_uuid)
-        return None
+    @staticmethod
+    def get_course(course_uuid):
+        """
+        Returns a course, or None if no course exists or is not available for purchase.
 
-    if not course.is_available_for_purchase:
-        log.debug("Course %s isn't available for sale.", course)
-        return None
-    return course
+        Args:
+            course_uuid (str): A course
+        Returns:
+            Course: A course, or None if course is not accessible to the user
+        """
+        from portal.models import Course
+        try:
+            course = Course.objects.get(uuid=course_uuid)
+        except Course.DoesNotExist:
+            log.debug("Couldn't find a course with uuid %s in the portal", course_uuid)
+            return None
 
+        if not course.is_available_for_purchase:
+            log.debug("Course %s isn't available for sale.", course)
+            return None
+        return course
 
-def is_owner(course, user):
-    """
-    Returns True if user owns the course.
-    Args:
-        course (Course): A course
-        user (django.contrib.auth.models.User): A User
+    @staticmethod
+    def is_owner(course, user):
+        """
+        Returns True if user owns the course.
+        Args:
+            course (Course): A course
+            user (django.contrib.auth.models.User): A User
 
-    Returns:
-        bool: True if the user owns the course
-    """
-    return user.courses_owned.filter(id=course.id).exists()
+        Returns:
+            bool: True if the user owns the course
+        """
+        return user.courses_owned.filter(id=course.id).exists()
 
+    @classmethod
+    def has_edit_own_price_perm(cls, course, user):
+        """
+        Does user have permission to edit their own course's price?
 
-def has_edit_own_price_perm(course, user):
-    """
-    Returns True if user has this permission for this course.
-    Args:
-        course (Course): A course
-        user (django.contrib.auth.models.User): A User
+        Args:
+            cls (AuthorizationHelpers): This class
+            course (Course): A course
+            user (django.contrib.auth.models.User): A User
 
-    Returns:
-        bool: True if user has this permission for this course.
-    """
-    return user.has_perm("portal.{}".format(EDIT_OWN_PRICE)) and is_owner(course, user)
+        Returns:
+            bool: True if user has this permission for this course.
+        """
+        return (
+            user.has_perm("portal.{}".format(EDIT_OWN_PRICE[0])) and
+            cls.is_owner(course, user)
+        )
 
+    @classmethod
+    def has_edit_own_content_perm(cls, course, user):
+        """
+        Does user have permission to edit their own course's descriptive content?
 
-def has_edit_own_content_perm(course, user):
-    """
-    Returns True if user has this permission for this course.
-    Args:
-        course (Course): A course
-        user (django.contrib.auth.models.User): A User
+        Args:
+            cls (AuthorizationHelpers): This class
+            course (Course): A course
+            user (django.contrib.auth.models.User): A User
 
-    Returns:
-        bool: True if user has this permission for this course.
-    """
-    return user.has_perm("portal.{}".format(EDIT_OWN_CONTENT)) and is_owner(course, user)
+        Returns:
+            bool: True if user has this permission for this course.
+        """
+        return (
+            user.has_perm("portal.{}".format(EDIT_OWN_CONTENT[0])) and
+            cls.is_owner(course, user)
+        )
 
+    @classmethod
+    def has_edit_own_liveness_perm(cls, course, user):
+        """
+        Does user have permission to edit their own course's live flag?
 
-def has_edit_own_liveness_perm(course, user):
-    """
-    Returns True if user has this permission for this course.
-    Args:
-        course (Course): A course
-        user (django.contrib.auth.models.User): A User
+        Args:
+            cls (AuthorizationHelpers): This class
+            course (Course): A course
+            user (django.contrib.auth.models.User): A User
 
-    Returns:
-        bool: True if user has this permission for this course.
-    """
-    return user.has_perm("portal.{}".format(EDIT_OWN_LIVENESS)) and is_owner(course, user)
+        Returns:
+            bool: True if user has this permission for this course.
+        """
+        return (
+            user.has_perm("portal.{}".format(EDIT_OWN_LIVENESS[0])) and
+            cls.is_owner(course, user)
+        )

@@ -15,7 +15,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.status import HTTP_200_OK
 
-from portal.models import Course
+from portal.permissions import AuthorizationHelpers
 from portal.serializers import CourseSerializer
 from portal.util import (
     course_as_dict,
@@ -157,9 +157,8 @@ class CourseListView(ListAPIView):
 
         return [
             course_as_dict(course)
-            for course in Course.objects.order_by("created_at")
-            if course.is_available_for_purchase
-            ]
+            for course in AuthorizationHelpers.get_courses()
+        ]
 
 
 class CourseDetailView(RetrieveAPIView):
@@ -174,14 +173,8 @@ class CourseDetailView(RetrieveAPIView):
         Looks up information for a course from CCXCon and Course model.
         """
         uuid = self.kwargs['uuid']
-        try:
-            course = Course.objects.get(uuid=uuid)
-        except Course.DoesNotExist:
-            log.debug("Couldn't find a course with uuid %s in the portal", uuid)
-            raise Http404
-
-        if not course.is_available_for_purchase:
-            log.debug("Course %s isn't available for sale.", course)
+        course = AuthorizationHelpers.get_course(uuid)
+        if course is None:
             raise Http404
 
         course_info, modules_info = fetch_ccxcon_info(uuid)
