@@ -51,7 +51,7 @@ class Course(models.Model):
     created_at = DateTimeField(auto_now_add=True, blank=True)
     modified_at = DateTimeField(auto_now=True, blank=True)
     instance = ForeignKey(BackingInstance)
-    owners = ManyToManyField(to=User, related_name="courses_owned")
+    owners = ManyToManyField(to=User, related_name="courses_owned", blank=True)
 
     @property
     def is_available_for_purchase(self):
@@ -69,8 +69,8 @@ class Course(models.Model):
     class Meta:  # pylint: disable=missing-docstring, no-init, old-style-class, too-few-public-methods
         ordering = ('created_at', )
         permissions = (
-            (EDIT_OWN_CONTENT, 'Can edit descriptive content for a course and related modules'),
-            (EDIT_OWN_LIVENESS, 'Can mark a course live or not live'),
+            EDIT_OWN_CONTENT,
+            EDIT_OWN_LIVENESS,
         )
 
 
@@ -100,7 +100,7 @@ class Module(models.Model):
     class Meta:  # pylint: disable=missing-docstring, no-init, old-style-class, too-few-public-methods
         ordering = ('created_at', )
         permissions = (
-            (EDIT_OWN_PRICE, 'Can edit the price of a module'),
+            EDIT_OWN_PRICE,
         )
 
 
