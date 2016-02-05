@@ -85,6 +85,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.flatpages',
     'rest_framework',
+    'server_status',
+
     # Our INSTALLED_APPS
     'portal',
 )
@@ -287,7 +289,10 @@ CCXCON_OAUTH_CLIENT_SECRET = get_var("CCXCON_OAUTH_CLIENT_SECRET", "")
 STRIPE_PUBLISHABLE_KEY = get_var("STRIPE_PUBLISHABLE_KEY", "")
 stripe.api_key = get_var("STRIPE_SECRET_KEY", "")
 
+# status
 STATUS_TOKEN = get_var("STATUS_TOKEN", "")
+HEALTH_CHECK = ['POSTGRES']
+
 
 GA_TRACKING_ID = get_var("GA_TRACKING_ID", "")
 REACT_GA_DEBUG = get_var("REACT_GA_DEBUG", False)
