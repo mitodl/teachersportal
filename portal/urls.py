@@ -9,7 +9,6 @@ from portal.views.checkout_api import CheckoutView
 from portal.views.login import LoginView, logout_view
 from portal.views.course_api import CourseListView, CourseDetailView
 from portal.views.registration import register_view
-from portal.views.status import status
 from portal.views.webhooks import WebhooksCCXConView
 from portal.views.webpack import index_view
 
@@ -23,7 +22,7 @@ urlpatterns = (
     url(r'^api/v1/register/$', register_view, name='register'),
     url(r'^api/v1/activate/$', activate_view, name='activate'),
     url(r'^api/v1/checkout/$', CheckoutView.as_view(), name='checkout'),
-    url(r'^status/$', status, name='status'),
+    url(r'^status/', include('server_status.urls')),
     # Note: this catches all URLs so put it last
     url(r'.*', index_view, name='portal-index')
 )
