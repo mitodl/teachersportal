@@ -15,11 +15,6 @@ class ActivatePage extends React.Component {
     let token = query.token;
 
     dispatch(activate(token));
-    this.handleMessage.call(this);
-  }
-
-  componentDidUpdate() {
-    this.handleMessage.call(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -31,10 +26,10 @@ class ActivatePage extends React.Component {
     }
   }
 
-  handleMessage() {
-    const { activation, location: { query }, dispatch } = this.props;
-    let message;
+  render() {
+    const { activation, location: { query } } = this.props;
 
+    let message;
     if (activation.status === FETCH_SUCCESS) {
       message = "Activation succeeded!";
     } else if (activation.status === FETCH_PROCESSING) {
@@ -42,36 +37,26 @@ class ActivatePage extends React.Component {
     } else if (activation.status === FETCH_FAILURE) {
       message = "Activation failed.";
     }
-    if (message) {
-      dispatch(showSnackBar({ message: message }));
-    }
-  }
-
-  render() {
-    const { message, location: { query } } = this.props;
-
-    let redirectLink = "<a href=" + query.redirect + ">here</a>";
-    let explanation = "Click " + redirectLink + " to return to the page you were on, or wait a few seconds.";
 
     return <MessagePage
       message={message}
       error=""
-      explanation={explanation}
-    />;
+    >
+      Click <a href={query.redirect}>here</a> to return to the page you were on,
+      or wait a few seconds.
+    </MessagePage>;
   }
 }
 
 ActivatePage.propTypes = {
   location: React.PropTypes.object.isRequired,
   dispatch: React.PropTypes.func.isRequired,
-  activation: React.PropTypes.object.isRequired,
-  message: React.PropTypes.string
+  activation: React.PropTypes.object.isRequired
 };
 
 const mapStateToProps = (state) => {
   return {
-    activation: state.activation,
-    message: state.snackBar.message
+    activation: state.activation
   };
 };
 

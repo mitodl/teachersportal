@@ -1,7 +1,7 @@
 import React from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import SnackbarWrapper from '../components/SnackbarWrapper';
+import Snackbar from 'material-ui/lib/snackbar';
 import RaisedButton from 'material-ui/lib/raised-button';
 import { connect } from 'react-redux';
 
@@ -25,17 +25,21 @@ class App extends React.Component {
   handleMessage() {
     const {
       registration,
-      dispatch
+      dispatch,
+      snackBar,
     } = this.props;
 
     let message;
 
     if (registration.status === FETCH_FAILURE) {
       message = "An error occurred registering the user.";
-      dispatch(showSnackBar({ message: message }));
     } else if (registration.status === FETCH_SUCCESS) {
       message = "User registered successfully! Check your email for an activation link.";
-      dispatch(showSnackBar({ message: message }));
+    }
+
+    // If message is already displayed don't display it again to avoid recursion
+    if (message !== undefined && message !== snackBar.message) {
+      dispatch(showSnackBar({message: message}));
     }
   }
 
@@ -58,7 +62,7 @@ class App extends React.Component {
         loginModal={loginModal}
       />
         {content}
-      <SnackbarWrapper
+      <Snackbar
         open={snackBar.open}
         message={snackBar.message}
         autoHideDuration={3000}

@@ -6,7 +6,7 @@ import LinearProgress from 'material-ui/lib/linear-progress';
 
 class MessagePage extends Component {
   render() {
-    const { message, explanation, error } = this.props;
+    const { message, children, error } = this.props;
 
     let content;
 
@@ -18,7 +18,9 @@ class MessagePage extends Component {
           title={message}
           className="message-title"
         />
-        <CardText className="message-description"  dangerouslySetInnerHTML={{__html: explanation }} />
+        <CardText className="message-description">
+          {children}
+        </CardText>
       </div>;
     }
 
@@ -33,7 +35,6 @@ class MessagePage extends Component {
 
 MessagePage.propTypes = {
   message: React.PropTypes.string,
-  explanation: React.PropTypes.string,
   error: React.PropTypes.string
 };
 
