@@ -23,19 +23,6 @@ class CourseTabs extends React.Component {
             <Tab label="About" id="about" className="tab" onActive={this.handleActive}>
                 <AboutTab content={course.info.overview} />
             </Tab>
-            <Tab label="Content" id="content" className="tab" onActive={this.handleActive}>
-                <ChapterTab
-                  selectable={false}
-                  fixedHeader={true}
-                  fixedFooter={true}
-                  stripedRows={false}
-                  showRowHover={true}
-                  deselectOnClickaway={true}
-                  height={'auto'}
-                  course={course}
-                  courseList={courseList}
-                 />
-            </Tab>
             <Tab label="Buy" id="buy" className="tab" onActive={this.handleActive}>
                 <BuyTabContainer
                   selectable={true}
