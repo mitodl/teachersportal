@@ -102,59 +102,87 @@ class PermissionsTests(TestCase):
         course = CourseFactory.create()
         assert not AuthorizationHelpers.is_owner(course, user)
 
-    def test_edit_content_perm(self):
+    def test_edit_content(self):
         """
         Assert that True is returned if user has permission to edit content for a course.
         """
         user = User.objects.create_user(username="user")
         course = CourseFactory.create()
-        assert not AuthorizationHelpers.has_edit_own_content_perm(course, user)
+        assert not AuthorizationHelpers.can_edit_own_content(course, user)
 
         # Instructor group has edit_own_content permission
         user.groups.add(Group.objects.get(name="Instructor"))
         # Need to do this to refresh user permissions
         user = User.objects.get(username="user")
         # Instructor does not own course
-        assert not AuthorizationHelpers.has_edit_own_content_perm(course, user)
+        assert not AuthorizationHelpers.can_edit_own_content(course, user)
         # Now that instructor is an owner this check should pass
         course.owners.add(user)
         user = User.objects.get(username="user")
-        assert AuthorizationHelpers.has_edit_own_content_perm(course, user)
+        assert AuthorizationHelpers.can_edit_own_content(course, user)
 
-    def test_edit_liveness_perm(self):
+    def test_edit_liveness(self):
         """
         Assert that True is returned if user has permission to edit liveness for a course.
         """
         user = User.objects.create_user(username="user")
         course = CourseFactory.create()
-        assert not AuthorizationHelpers.has_edit_own_liveness_perm(course, user)
+        assert not AuthorizationHelpers.can_edit_own_liveness(course, user)
 
         # Instructor group has edit_own_content permission
         user.groups.add(Group.objects.get(name="Instructor"))
         # Need to do this to refresh user permissions
         user = User.objects.get(username="user")
         # Instructor does not own course
-        assert not AuthorizationHelpers.has_edit_own_liveness_perm(course, user)
+        assert not AuthorizationHelpers.can_edit_own_liveness(course, user)
         # Now that instructor is an owner this check should pass
         course.owners.add(user)
         user = User.objects.get(username="user")
-        assert AuthorizationHelpers.has_edit_own_liveness_perm(course, user)
+        assert AuthorizationHelpers.can_edit_own_liveness(course, user)
 
-    def test_edit_price_perm(self):
+    def test_edit_price(self):
         """
         Assert that True is returned if user has permission to edit price for a course's module.
         """
         user = User.objects.create_user(username="user")
         course = CourseFactory.create()
-        assert not AuthorizationHelpers.has_edit_own_price_perm(course, user)
+        assert not AuthorizationHelpers.can_edit_own_price(course, user)
 
         # Instructor group has edit_own_content permission
         user.groups.add(Group.objects.get(name="Instructor"))
         # Need to do this to refresh user permissions
         user = User.objects.get(username="user")
         # Instructor does not own course
-        assert not AuthorizationHelpers.has_edit_own_price_perm(course, user)
+        assert not AuthorizationHelpers.can_edit_own_price(course, user)
         # Now that instructor is an owner this check should pass
         course.owners.add(user)
         user = User.objects.get(username="user")
-        assert AuthorizationHelpers.has_edit_own_price_perm(course, user)
+        assert AuthorizationHelpers.can_edit_own_price(course, user)
+
+    def test_can_purchase_course(self):
+        """
+        Assert behavior of AuthorizationHelpers.can_purchase_course
+        """
+        user = User.objects.create_user(username="user")
+        course = CourseFactory.create(live=True)
+        ModuleFactory.create(course=course, price_without_tax=1)
+        assert AuthorizationHelpers.can_purchase_course(course, user)
+
+    def test_cant_purchase_owned_course(self):
+        """
+        User can't purchase a course they own
+        """
+        user = User.objects.create_user(username="user")
+        course = CourseFactory.create(live=True)
+        ModuleFactory.create(course=course, price_without_tax=1)
+        user.courses_owned.add(course)
+        assert not AuthorizationHelpers.can_purchase_course(course, user)
+
+    def test_cant_purchase(self):
+        """
+        User can't purchase a course that's not live
+        """
+        user = User.objects.create_user(username="user")
+        course = CourseFactory.create(live=False)
+        ModuleFactory.create(course=course, price_without_tax=1)
+        assert not AuthorizationHelpers.can_purchase_course(course, user)

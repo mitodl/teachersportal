@@ -32,13 +32,13 @@ def course_permissions_view(request, uuid):
         raise Http404
 
     return Response(data={
-        EDIT_OWN_PRICE[0]: AuthorizationHelpers.has_edit_own_price_perm(
+        EDIT_OWN_PRICE[0]: AuthorizationHelpers.can_edit_own_price(
             course, request.user
         ),
-        EDIT_OWN_CONTENT[0]: AuthorizationHelpers.has_edit_own_content_perm(
+        EDIT_OWN_CONTENT[0]: AuthorizationHelpers.can_edit_own_content(
             course, request.user
         ),
-        EDIT_OWN_LIVENESS[0]: AuthorizationHelpers.has_edit_own_liveness_perm(
+        EDIT_OWN_LIVENESS[0]: AuthorizationHelpers.can_edit_own_liveness(
             course, request.user
         ),
         "is_owner": AuthorizationHelpers.is_owner(course, request.user)

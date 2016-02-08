@@ -41,9 +41,9 @@ class PermissionsAPITests(TestCase):
             """Mock and assert these set of permissions"""
 
             @patch.object(Helpers, 'is_owner', return_value=is_owner)
-            @patch.object(Helpers, 'has_edit_own_content_perm', return_value=edit_content)
-            @patch.object(Helpers, 'has_edit_own_liveness_perm', return_value=edit_liveness)
-            @patch.object(Helpers, 'has_edit_own_price_perm', return_value=edit_price)
+            @patch.object(Helpers, 'can_edit_own_content', return_value=edit_content)
+            @patch.object(Helpers, 'can_edit_own_liveness', return_value=edit_liveness)
+            @patch.object(Helpers, 'can_edit_own_price', return_value=edit_price)
             def run_assert_permissions(*args):  # pylint: disable=unused-argument
                 """Something to attach our patch objects to so we don't indent each time"""
                 resp = self.client.get(

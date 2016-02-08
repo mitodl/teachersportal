@@ -9,11 +9,11 @@ import logging
 from rest_framework.exceptions import ValidationError
 
 from portal.models import (
-    Course,
     Module,
     Order,
     OrderLine,
 )
+from portal.permissions import AuthorizationHelpers
 
 log = logging.getLogger(__name__)
 
@@ -95,11 +95,12 @@ def calculate_orderline_total(uuid, seats):
 
 
 # pylint: disable=too-many-branches
-def validate_cart(cart):
+def validate_cart(cart, user):
     """
     Validate cart contents.
     Args:
         cart (list): A list of items in cart
+        user (django.contrib.auth.models.User): A user
     """
     modules_in_cart = set()
     courses_in_cart = set()
@@ -128,11 +129,12 @@ def validate_cart(cart):
         if course_uuid in courses_in_cart:
             log.debug("Duplicate course %s in cart", course_uuid)
             raise ValidationError("Duplicate course in cart")
-        try:
-            course = Course.objects.get(uuid=course_uuid)
-        except Course.DoesNotExist:
-            log.debug("Could not find course with uuid %s", course_uuid)
+        course = AuthorizationHelpers.get_course(course_uuid)
+        if course is None:
             raise ValidationError("One or more courses are unavailable")
+
+        if not AuthorizationHelpers.can_purchase_course(course, user):
+            raise ValidationError("User cannot purchase this course")
 
         courses_in_cart.add(course_uuid)
 
@@ -176,7 +178,7 @@ def create_order(cart, user):
     Returns:
         Order: A newly created order
     """
-    validate_cart(cart)
+    validate_cart(cart, user)
 
     subtotal = calculate_cart_subtotal(cart)
     order = Order.objects.create(
