@@ -123,10 +123,17 @@ export function activate(token) {
 }
 
 export function checkout(cart, token, total) {
+  // Convert to Python naming conventions
+  let cartWithUnderscores = cart.map(item => ({
+    uuids: item.uuids,
+    seats: item.seats,
+    course_uuid: item.courseUuid  // eslint-disable-line camelcase
+  }));
+
   return fetchJSONWithCSRF('/api/v1/checkout/', {
     method: 'POST',
     body: JSON.stringify({
-      cart: cart,
+      cart: cartWithUnderscores,
       token: token,
       total: total
     })

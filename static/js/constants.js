@@ -59,12 +59,12 @@ export const COURSE_LIST = [COURSE_RESPONSE1, COURSE_RESPONSE2];
 
 export const CART = [
   {
-    uuid: COURSE_RESPONSE1.modules[0].uuid,
+    uuids: [COURSE_RESPONSE1.modules[0].uuid],
     seats: 3,
     courseUuid: COURSE_RESPONSE1.uuid
   },
   {
-    uuid: COURSE_RESPONSE2.modules[0].uuid,
+    uuids: [COURSE_RESPONSE2.modules[0].uuid],
     seats: 4,
     courseUuid: COURSE_RESPONSE2.uuid
   }

@@ -39,11 +39,11 @@ class BuyTabContainer extends React.Component {
   updateTotal() {
     const { buyTab, course, courseList } = this.props;
 
-    let cart = buyTab.selectedChapters.map(uuid => ({
-      uuid: uuid,
+    let cart = [{
+      courseUuid: course.uuid,
       seats: buyTab.seats,
-      courseUuid: course.uuid
-    }));
+      uuids: buyTab.selectedChapters
+    }];
 
     let total = calculateTotal(cart, courseList);
 
@@ -81,7 +81,7 @@ class BuyTabContainer extends React.Component {
     } else {
       StripeHandler.open({
         name: 'MIT Teacher\'s Portal',
-        description: cart.cart.length + ' item(s)',
+        description: cart.cart.length + ' course(s)',
         amount: Math.floor(total * 100)
       });
     }

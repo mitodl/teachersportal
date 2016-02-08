@@ -168,43 +168,59 @@ describe('common api functions', function() {
   });
 
   it('checks out successfully', done => {
-    let expected = {
+    let input = {
       cart: [{
-        uuid: "uuid",
-        seats: 5
+        uuids: ["uuid"],
+        seats: 5,
+        courseUuid: "courseUuid"
       }],
       token: "token",
       total: 500
     };
+    let output = Object.assign({}, input, {
+      cart: input.cart.map(item => ({
+        uuids: item.uuids,
+        seats: item.seats,
+        course_uuid: item.courseUuid  // eslint-disable-line camelcase
+      }))
+    });
 
     fetchMock.mock('/api/v1/checkout/', (url, opts) => {
-      assert.deepEqual(JSON.parse(opts.body), expected);
+      assert.deepEqual(JSON.parse(opts.body), output);
       return {
         status: 200
       };
     });
-    checkout(expected.cart, expected.token, expected.total).then(() => {
+    checkout(input.cart, input.token, input.total).then(() => {
       done();
     });
   });
 
   it('fails to checkout', done => {
-    let expected = {
+    let input = {
       cart: [{
-        uuid: "uuid",
+        uuids: ["uuid"],
         seats: 5,
-        total: 500
+        courseUuid: "courseUuid"
       }],
-      token: "token"
+      token: "token",
+      total: 500
     };
+    let output = Object.assign({}, input, {
+      cart: input.cart.map(item => ({
+        uuids: item.uuids,
+        seats: item.seats,
+        course_uuid: item.courseUuid  // eslint-disable-line camelcase
+      }))
+    });
 
     fetchMock.mock('/api/v1/checkout/', (url, opts) => {
-      assert.deepEqual(JSON.parse(opts.body), expected);
+      assert.deepEqual(JSON.parse(opts.body), output);
       return {
         status: 400
       };
     });
-    checkout(expected.cart, expected.token, expected.total).catch(() => {
+    checkout(input.cart, input.token, input.total).catch(() => {
       done();
     });
   });
