@@ -15,16 +15,9 @@ class Header extends React.Component {
   render() {
     const {
       dispatch,
-      showSignIn,
-      hideSignIn,
       loginModal,
       authentication,
       registration,
-      onSignOut,
-      signIn,
-      register,
-      reportLoginError,
-      reportRegisterError,
     } = this.props;
 
     return <div id="header">
@@ -50,13 +43,17 @@ class Header extends React.Component {
   signIn(username, password) {
     const { dispatch } = this.props;
 
-    dispatch(login(username, password));
+    dispatch(login(username, password)).then(() => {
+      dispatch(hideLogin());
+    });
   }
 
   register(fullName, email, organization, password, redirect) {
     const { dispatch } = this.props;
 
-    dispatch(register(fullName, email, organization, password, redirect));
+    dispatch(register(fullName, email, organization, password, redirect)).then(() => {
+      dispatch(hideLogin());
+    });
   }
 
 }

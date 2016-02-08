@@ -28,7 +28,6 @@ export const CLEAR_REGISTRATION_ERROR = 'CLEAR_REGISTRATION_ERROR';
 
 export const ACTIVATE_SUCCESS = 'ACTIVATE_SUCCESS';
 export const ACTIVATE_FAILURE = 'ACTIVATE_FAILURE';
-export const ACTIVATE = 'ACTIVATE';
 
 export const UPDATE_CART_ITEMS = 'UPDATE_CART_ITEMS';
 export const CLEAR_CART = 'CLEAR_CART';
@@ -120,8 +119,7 @@ export function login(username, password) {
   return dispatch => {
     return api.login(username, password).
       then(() => {
-        dispatch(loginSuccess());
-        dispatch(hideLogin());
+        return dispatch(loginSuccess());
       }).
       catch((e) => {
         dispatch(loginFailure("Unable to log in"));
@@ -140,7 +138,6 @@ export function register(fullName, email, organization, password, redirect) {
     return api.register(fullName, email, organization, password, redirect).
       then(() => {
         dispatch(registerSuccess());
-        dispatch(hideLogin());
       }).
       catch(e => {
         dispatch(registerFailure("Unable to register"));

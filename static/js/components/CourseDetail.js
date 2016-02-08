@@ -10,7 +10,6 @@ import CardExpandable from 'material-ui/lib/card/card-expandable';
 import CardHeader from 'material-ui/lib/card/card-header';
 import CardMedia from 'material-ui/lib/card/card-media';
 import CardTitle from 'material-ui/lib/card/card-title';
-import LinearProgress from 'material-ui/lib/linear-progress';
 
 class CourseDetail extends Component {
   render() {
@@ -19,29 +18,22 @@ class CourseDetail extends Component {
       courseList
     } = this.props;
 
-    let content;
-
-    if (course === undefined) {
-      content = <LinearProgress mode="indeterminate" size="1" className="progress" />;
-    } else {
-
-      content = <div>
-        <CardTitle
-          title={course.title}
-          subtitle={course.info.author_name}
-          id="course-title"
-        />
-        <CourseImage src={course.info.image_url}/>
-        <CardText
-          id="course-description"
-          dangerouslySetInnerHTML={{__html: course.description || course.info.description }}
-        />
-        <CourseTabs
-          course={course}
-          courseList={courseList}
-        />
-      </div>;
-    }
+    let content = <div>
+      <CardTitle
+        title={course.title}
+        subtitle={course.info.author_name}
+        id="course-title"
+      />
+      <CourseImage src={course.info.image_url}/>
+      <CardText
+        id="course-description"
+        dangerouslySetInnerHTML={{__html: course.description || course.info.description }}
+      />
+      <CourseTabs
+        course={course}
+        courseList={courseList}
+      />
+    </div>;
 
     return <div id="course-body">
       <Card id="course-content">
@@ -53,7 +45,7 @@ class CourseDetail extends Component {
 }
 
 CourseDetail.propTypes = {
-  course: React.PropTypes.object,
+  course: React.PropTypes.object.isRequired,
   courseList: React.PropTypes.array.isRequired
 };
 
