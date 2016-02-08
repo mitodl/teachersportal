@@ -84,17 +84,14 @@ class CheckoutView(APIView):
                 log.error("Couldn't connect to ccxcon. Reason: %s", result.content)
         return errors
 
-    @staticmethod
-    def validate_data(data):
+    def validate_data(self):
         """
         Validates incoming request data.
-
-        Args:
-            request.data: Data from incoming request.
 
         Returns:
             (string, dict): stripe token and cart information.
         """
+        data = self.request.data
         try:
             token = str(data['token'])
             cart = data['cart']
@@ -108,7 +105,7 @@ class CheckoutView(APIView):
             raise ValidationError("Cart must be a list of items")
         if len(cart) == 0:
             raise ValidationError("Cannot checkout an empty cart")
-        validate_cart(cart)
+        validate_cart(cart, self.request.user)
 
         total = calculate_cart_subtotal(cart)
         if get_cents(total) != get_cents(estimated_total):
@@ -130,7 +127,7 @@ class CheckoutView(APIView):
         Returns:
             rest_framework.response.Response
         """
-        token, cart = self.validate_data(request.data)
+        token, cart = self.validate_data()
 
         with transaction.atomic():
             order = create_order(cart, request.user)

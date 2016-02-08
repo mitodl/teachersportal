@@ -110,7 +110,7 @@ class AuthorizationHelpers(object):
         return course.owners.filter(id=user.id).exists()
 
     @classmethod
-    def has_edit_own_price_perm(cls, course, user):
+    def can_edit_own_price(cls, course, user):
         """
         Does user have permission to edit their own course's price?
 
@@ -128,7 +128,7 @@ class AuthorizationHelpers(object):
         )
 
     @classmethod
-    def has_edit_own_content_perm(cls, course, user):
+    def can_edit_own_content(cls, course, user):
         """
         Does user have permission to edit their own course's descriptive content?
 
@@ -146,7 +146,7 @@ class AuthorizationHelpers(object):
         )
 
     @classmethod
-    def has_edit_own_liveness_perm(cls, course, user):
+    def can_edit_own_liveness(cls, course, user):
         """
         Does user have permission to edit their own course's live flag?
 
@@ -162,3 +162,17 @@ class AuthorizationHelpers(object):
             user.has_perm("portal.{}".format(EDIT_OWN_LIVENESS[0])) and
             cls.is_owner(course, user)
         )
+
+    @classmethod
+    def can_purchase_course(cls, course, user):
+        """
+        Does user have the ability to purchase a course?
+
+        Args:
+            course (Course): A course
+            user (django.contrib.auth.models.User): A User
+
+        Returns:
+            bool: True if user has permission to buy a course
+        """
+        return not cls.is_owner(course, user) and course.is_available_for_purchase

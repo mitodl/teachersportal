@@ -117,6 +117,7 @@ class CheckoutValidationTests(CourseTests):
         super(CheckoutValidationTests, self).setUp()
         self.course.live = True
         self.course.save()
+        self.user = User.objects.create_user("user")
 
     def test_cart_with_zero_price(self):
         """
@@ -183,7 +184,7 @@ class CheckoutValidationTests(CourseTests):
                 "seats": 10,
                 "course_uuid": self.course.uuid
             }
-        ])
+        ], self.user)
 
     def test_no_seats(self):
         """
@@ -196,7 +197,7 @@ class CheckoutValidationTests(CourseTests):
                     "seats": 0,
                     "course_uuid": self.course.uuid
                 }
-            ])
+            ], self.user)
         assert ex.exception.detail[0] == "Number of seats is zero"
 
     def test_unavailable_items(self):
@@ -213,8 +214,8 @@ class CheckoutValidationTests(CourseTests):
                     "seats": 10,
                     "course_uuid": self.course.uuid
                 }
-            ])
-        assert ex.exception.detail[0] == "One or more modules are unavailable"
+            ], self.user)
+        assert ex.exception.detail[0] == "One or more courses are unavailable"
 
         self.course.live = True
         self.course.save()
@@ -228,8 +229,8 @@ class CheckoutValidationTests(CourseTests):
                     "seats": 10,
                     "course_uuid": self.course.uuid
                 }
-            ])
-        assert ex.exception.detail[0] == "One or more modules are unavailable"
+            ], self.user)
+        assert ex.exception.detail[0] == "One or more courses are unavailable"
 
     def test_missing_module(self):
         """
@@ -242,7 +243,7 @@ class CheckoutValidationTests(CourseTests):
                     "seats": 10,
                     "course_uuid": self.course.uuid
                 }
-            ])
+            ], self.user)
         assert ex.exception.detail[0] == "One or more modules are unavailable"
 
     def test_missing_courses(self):
@@ -256,7 +257,7 @@ class CheckoutValidationTests(CourseTests):
                     "seats": 10,
                     "course_uuid": "missing"
                 }
-            ])
+            ], self.user)
         assert ex.exception.detail[0] == "One or more courses are unavailable"
 
     def test_missing_keys(self):
@@ -272,7 +273,7 @@ class CheckoutValidationTests(CourseTests):
             with self.assertRaises(ValidationError) as ex:
                 item_copy = dict(item)
                 del item_copy[key]
-                validate_cart([item_copy])
+                validate_cart([item_copy], self.user)
             assert ex.exception.detail[0] == "Missing key {}".format(key)
 
     def test_int_seats(self):
@@ -286,7 +287,7 @@ class CheckoutValidationTests(CourseTests):
                 "course_uuid": self.course.uuid
             }
             with self.assertRaises(ValidationError) as ex:
-                validate_cart([item])
+                validate_cart([item], self.user)
             assert ex.exception.detail[0] == "Seats must be an integer"
 
     def test_duplicate_modules(self):
@@ -300,7 +301,7 @@ class CheckoutValidationTests(CourseTests):
                     "seats": 10,
                     "course_uuid": self.course.uuid
                 }
-            ])
+            ], self.user)
         assert ex.exception.detail[0] == "Duplicate module in cart"
 
     def test_duplicate_courses(self):
@@ -322,23 +323,23 @@ class CheckoutValidationTests(CourseTests):
                     "seats": 15,
                     "course_uuid": self.course.uuid
                 }
-            ])
+            ], self.user)
         assert ex.exception.detail[0] == "Duplicate course in cart"
 
     def test_course_module_mismatch(self):
         """
         Assert that we don't allow duplicate items in cart
         """
-        # Also creates a new course
-        module2 = ModuleFactory.create()
+        course2 = CourseFactory.create(live=True)
+        ModuleFactory.create(price_without_tax=123, course=course2)
         with self.assertRaises(ValidationError) as ex:
             validate_cart([
                 {
                     "uuids": [self.module.uuid],
                     "seats": 10,
-                    "course_uuid": module2.course.uuid
+                    "course_uuid": course2.uuid
                 }
-            ])
+            ], self.user)
         assert ex.exception.detail[0] == "Course does not match up with module"
 
     def test_must_have_all_children_in_cart(self):  # pylint: disable=invalid-name
@@ -362,7 +363,7 @@ class CheckoutValidationTests(CourseTests):
                     'seats': 5,
                     'course_uuid': self.course.uuid
                 },
-            ])
+            ], self.user)
 
         assert ex.exception.detail[0] == 'You must purchase all modules for a course.'
 
@@ -377,9 +378,24 @@ class CheckoutValidationTests(CourseTests):
                     'seats': 5,
                     'course_uuid': self.course.uuid
                 },
-            ])
+            ], self.user)
 
         assert ex.exception.detail[0] == 'uuids must not be empty'
+
+    def test_buy_own_course(self):
+        """
+        Raises a ValidationError if a user has their own course in the cart
+        """
+        self.user.courses_owned.add(self.course)
+
+        with self.assertRaises(ValidationError) as ex:
+            validate_cart([{
+                "uuids": [self.module.uuid],
+                "seats": 5,
+                "course_uuid": self.course.uuid
+            }], self.user)
+        message = "User cannot purchase this course"
+        assert ex.exception.detail[0] == message
 
 
 class CheckoutOrderTests(CourseTests):
