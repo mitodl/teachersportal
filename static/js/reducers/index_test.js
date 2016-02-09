@@ -251,6 +251,7 @@ describe('reducers', () => {
         assert.deepEqual(state, {
           error: "",
           isAuthenticated: false,
+          name: ""
         });
         done();
       });
@@ -263,17 +264,19 @@ describe('reducers', () => {
       ).then(state => {
         assert.deepEqual(state, {
           isAuthenticated: false,
-          error: "Error logging in inside test"
+          error: "Error logging in inside test",
+          name: ""
         });
         done();
       });
     });
 
     it('should set isAuthenticated to true if logged in successfully', done => {
-      dispatchThen(loginSuccess(), [LOGIN_SUCCESS]).then(state => {
+      dispatchThen(loginSuccess({name: "Darth Vader"}), [LOGIN_SUCCESS]).then(state => {
         assert.deepEqual(state, {
           isAuthenticated: true,
-          error: ""
+          error: "",
+          name: "Darth Vader"
         });
         done();
       });
@@ -281,19 +284,21 @@ describe('reducers', () => {
 
     it('should login and logout successfully', done => {
       logoutStub.returns(Promise.resolve());
-      loginStub.returns(Promise.resolve());
+      loginStub.returns(Promise.resolve({name: "Darth Vader"}));
 
       // ERROR
       dispatchThen(login("user", "pass"), [LOGIN_SUCCESS]).then(loginState => {
         assert.deepEqual(loginState, {
           isAuthenticated: true,
-          error: ""
+          error: "",
+          name: "Darth Vader"
         });
 
         dispatchThen(logout(), [LOGOUT, CLEAR_COURSE]).then(logoutState => {
           assert.deepEqual(logoutState, {
             isAuthenticated: false,
-            error: ""
+            error: "",
+            name: ""
           });
 
           done();
@@ -308,7 +313,8 @@ describe('reducers', () => {
       dispatchThen(login("user", "pass"), [LOGIN_FAILURE]).then(loginState => {
         assert.deepEqual(loginState, {
           isAuthenticated: false,
-          error: "Unable to log in"
+          error: "Unable to log in",
+          name: ""
         });
 
         done();
@@ -318,24 +324,24 @@ describe('reducers', () => {
 
     it('should error if logout fails', done => {
       logoutStub.returns(Promise.reject());
-      loginStub.returns(Promise.resolve());
+      loginStub.returns(Promise.resolve({name: "Darth Vader"}));
+
+      let expectedState = {
+        isAuthenticated: true,
+        error: "",
+        name: "Darth Vader"
+      };
 
       dispatchThen(login("user", "pass"), [LOGIN_SUCCESS]).then(loginState => {
-        assert.deepEqual(loginState, {
-          isAuthenticated: true,
-          error: ""
-        });
+        assert.deepEqual(loginState, expectedState);
 
         return dispatchThen(logout(), []);
       }).then(logoutState => {
         // On logout error no state should change
-        assert.deepEqual(logoutState, {
-          isAuthenticated: true,
-          error: ""
-        });
-
+        assert.deepEqual(logoutState, expectedState);
         done();
       });
+
     });
   });
 

@@ -107,19 +107,23 @@ export const loginModal = handleActions({
 export const authentication = handleActions({
   LOGIN_FAILURE: (state, action) => ({
     error: action.payload.error,
-    isAuthenticated: false
+    isAuthenticated: false,
+    name: ""
   }),
   LOGIN_SUCCESS: (state, action) => ({
     error: "",
-    isAuthenticated: true
+    isAuthenticated: true,
+    name: action.payload.name
   }),
   LOGOUT: (state, action) => ({
     error: "",
-    isAuthenticated: false
+    isAuthenticated: false,
+    name: ""
   }),
   CLEAR_AUTHENTICATION_ERROR: payloadMerge((action) => ({error: ""}))
 }, {
   isAuthenticated: SETTINGS.isAuthenticated,
+  name: SETTINGS.name,
   error: ""
 });
 

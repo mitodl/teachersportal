@@ -42,7 +42,9 @@ class LoginView(APIView):
         if user is not None:
             if user.is_active:
                 login(request, user)
-                return Response(status=200)
+                return Response(status=200, data={
+                    'name': user.userinfo.full_name,
+                })
             else:
                 return Response(status=403)
         else:

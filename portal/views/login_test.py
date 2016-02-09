@@ -33,6 +33,8 @@ class LoginTests(AuthenticationTestCase):
             content_type="application/json"
         )
         assert resp.status_code == 200, resp.content.decode('utf-8')
+        json_data = json.loads(resp.content.decode('utf-8'))
+        assert json_data['name'] == 'user 1'
         assert self.is_authenticated(self.user)
         assert not self.is_authenticated(self.other_user)
 

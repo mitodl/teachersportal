@@ -109,7 +109,7 @@ describe('CourseDetailPage', () => {
 
   it('can check off items in the buy tab', done => {
     // Set up state as if we logged in already
-    store.dispatch(loginSuccess());
+    store.dispatch(loginSuccess({name: "Darth Vader"}));
     store.dispatch(receiveCourseListSuccess(COURSE_LIST));
     store.dispatch(receiveCourseSuccess(COURSE_RESPONSE1));
 
@@ -156,7 +156,7 @@ describe('CourseDetailPage', () => {
       course: COURSE_RESPONSE2
     }];
     // The current course is COURSE_RESPONSE2. COURSE_RESPONSE1 is already in cart
-    store.dispatch(loginSuccess());
+    store.dispatch(loginSuccess({name: "Darth Vader"}));
     store.dispatch(receiveCourseListSuccess(COURSE_LIST));
     store.dispatch(receiveCourseSuccess(COURSE_RESPONSE2));
     store.dispatch(updateSeatCount(course2SeatCount));
@@ -211,7 +211,7 @@ describe('CourseDetailPage', () => {
 
     // Alter state as if we logged in, selected all chapters and updated seat count,
     // and updated the cart
-    store.dispatch(loginSuccess());
+    store.dispatch(loginSuccess({name: "Darth Vader"}));
     store.dispatch(receiveCourseListSuccess(COURSE_LIST));
     store.dispatch(receiveCourseSuccess(COURSE_RESPONSE1));
     // Cart will contain two courses
@@ -270,7 +270,7 @@ describe('CourseDetailPage', () => {
 
     // Alter state as if we logged in, selected all chapters and updated seat count,
     // and updated the cart
-    store.dispatch(loginSuccess());
+    store.dispatch(loginSuccess({name: "Darth Vader"}));
     store.dispatch(receiveCourseListSuccess(COURSE_LIST));
     store.dispatch(receiveCourseSuccess(COURSE_RESPONSE1));
     // Cart will contain two courses
@@ -336,7 +336,7 @@ describe('CourseDetailPage', () => {
 
     // Alter state as if we logged in, selected all chapters and updated seat count,
     // and updated the cart
-    store.dispatch(loginSuccess());
+    store.dispatch(loginSuccess({name: "Darth Vader"}));
     store.dispatch(receiveCourseListSuccess([zeroPriceCourse]));
     store.dispatch(receiveCourseSuccess(zeroPriceCourse));
     store.dispatch(updateSeatCount(newSeatCount));
@@ -379,7 +379,7 @@ describe('CourseDetailPage', () => {
 
     // Alter state as if we logged in, selected all chapters and updated seat count,
     // and updated the cart
-    store.dispatch(loginSuccess());
+    store.dispatch(loginSuccess({name: "Darth Vader"}));
     store.dispatch(receiveCourseListSuccess([zeroPriceCourse]));
     store.dispatch(receiveCourseSuccess(zeroPriceCourse));
     store.dispatch(updateSeatCount(newSeatCount));
