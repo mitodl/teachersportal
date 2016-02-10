@@ -21,3 +21,14 @@ class CourseSerializer(Serializer):
     uuid = CharField()
     info = DictField()
     modules = ListField()
+
+
+class CourseSerializerReduced(Serializer):
+    """
+    Serializer for Course with reduced information
+    """
+
+    title = CharField()
+    description = CharField()
+    info = DictField()
+    uuid = CharField()

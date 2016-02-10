@@ -12,11 +12,13 @@ from django.http.response import Http404
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.status import HTTP_200_OK
 
 from portal.permissions import AuthorizationHelpers
-from portal.serializers import CourseSerializer
+from portal.serializers import (
+    CourseSerializer,
+    CourseSerializerReduced,
+)
 from portal.util import (
     course_as_dict,
 )
@@ -166,7 +168,16 @@ class CourseDetailView(RetrieveAPIView):
     Detail view for a course.
     """
     serializer_class = CourseSerializer
-    permission_classes = (IsAuthenticated,)
+    serializer_class_anonymous = CourseSerializerReduced
+    permission_classes = ()
+
+    def get_serializer_class(self):
+        """
+        Overridden method to deal with different serializers in case of anonymous user
+        """
+        if self.request.user.is_anonymous():
+            return self.serializer_class_anonymous
+        return self.serializer_class
 
     def get_object(self):
         """

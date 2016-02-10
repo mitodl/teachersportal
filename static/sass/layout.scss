@@ -131,7 +131,7 @@ h3.course-listing-header {
 
   ul.course-listing {
     @include outer-container;
-    
+
     li.course-card-item {
       @include span-columns(3);
       @include omega(4n);
@@ -195,6 +195,15 @@ h3.course-listing-header {
     vertical-align: top;
     font-size: 18px !important;
     line-height: 2em;
+  }
+
+  #please-login {
+    @include shift(4);
+    margin-top: 50px;
+    span:nth-child(1) {
+      font-size: 20px !important;
+      font-weight: 800 !important;
+    }
   }
 
 
