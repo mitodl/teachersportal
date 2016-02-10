@@ -1,7 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import Card from 'material-ui/lib/card/card';
-import RaisedButton from 'material-ui/lib/raised-button';
 import CourseList from '../components/CourseList';
 import {
   fetchCourseList,
@@ -14,15 +13,7 @@ class Homepage extends React.Component {
     const { dispatch, course } = this.props;
     return <Card id='homepage-body' style={{'box-shadow': 'none', 'border-radius': 0}}>
       <div className="homepage-header">
-        <h2>Introducing MIT's Courseware Marketplace</h2>
-        <p>Gluten-free VHS asymmetrical sriracha heirloom
-        kitsch. Kitsch brunch cray, raw denim kogi food truck
-        lumbersexual next level messenger bag chillwave. Fingerstache
-        beard flexitarian retro helvetica, seitan ethical forage trust
-        fund cronut freegan pork belly. Scenester sartorial actually,
-        chillwave celiac etsy tumblr. Craft beer biodiesel jean
-        shorts.</p>
-        <RaisedButton className="learn-more" secondary={true}>Learn More</RaisedButton>
+        <h2>Introducing MIT's Teaching Resources</h2>
       </div>
 
       <div className="homepage-course-listing">
