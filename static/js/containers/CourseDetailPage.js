@@ -32,20 +32,18 @@ class CourseDetailPage extends React.Component {
       params: { uuid }
     } = this.props;
 
-    if (authentication.isAuthenticated) {
-      // When user is authenticated and we haven't fetched courses and modules
-      // yet, fetch them now. This might execute the fetch action twice if
-      // this component is refreshed before action has a chance to dispatch,
-      // but that shouldn't cause any problems
+    // When user is authenticated and we haven't fetched courses and modules
+    // yet, fetch them now. This might execute the fetch action twice if
+    // this component is refreshed before action has a chance to dispatch,
+    // but that shouldn't cause any problems
 
-      if (course.courseStatus === undefined) {
-        dispatch(fetchCourse(uuid));
-      }
-      if (course.courseListStatus === undefined) {
-        dispatch(fetchCourseList()).then(() => {
-          return dispatch(clearInvalidCartItems());
-        });
-      }
+    if (course.courseStatus === undefined) {
+      dispatch(fetchCourse(uuid));
+    }
+    if (course.courseListStatus === undefined) {
+      dispatch(fetchCourseList()).then(() => {
+        return dispatch(clearInvalidCartItems());
+      });
     }
   }
 
@@ -63,6 +61,7 @@ class CourseDetailPage extends React.Component {
       </div>;
     } else {
       detail = <CourseDetail
+        authenticated={this.props.authentication.isAuthenticated}
         course={course.course}
         courseList={course.courseList}
       />;
@@ -84,8 +83,6 @@ class CourseDetailPage extends React.Component {
       error = "An error occurred fetching information about this course.";
     } else if (course.courseListStatus === FETCH_FAILURE) {
       error = "An error occurred fetching information about other courses.";
-    } else if (!authentication.isAuthenticated) {
-      error = "Please log in to view the course information.";
     }
     if (error) {
       dispatch(showSnackBar({ message: error }));

@@ -10,15 +10,17 @@ import CardExpandable from 'material-ui/lib/card/card-expandable';
 import CardHeader from 'material-ui/lib/card/card-header';
 import CardMedia from 'material-ui/lib/card/card-media';
 import CardTitle from 'material-ui/lib/card/card-title';
+import PleaseLogin from './PleaseLogin';
 
 class CourseDetail extends Component {
   render() {
     const {
+      authenticated,
       course,
       courseList
     } = this.props;
 
-    let content = <div>
+    let baseContent = <div>
       <CardTitle
         title={course.title}
         subtitle={course.info.author_name}
@@ -29,11 +31,23 @@ class CourseDetail extends Component {
         id="course-description"
         dangerouslySetInnerHTML={{__html: course.description || course.info.description }}
       />
-      <CourseTabs
-        course={course}
-        courseList={courseList}
-      />
     </div>;
+
+    let content;
+    if (authenticated) {
+      content = <div>
+        {baseContent}
+        <CourseTabs
+          course={course}
+          courseList={courseList}
+        />
+      </div>;
+    } else {
+      content = <div>
+          {baseContent}
+          <PleaseLogin />
+        </div>;
+    }
 
     return <div id="course-body">
       <Card id="course-content">
