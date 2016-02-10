@@ -26,7 +26,7 @@ class App extends React.Component {
     const {
       registration,
       dispatch,
-      snackBar,
+      snackBar
     } = this.props;
 
     let message;
@@ -49,6 +49,7 @@ class App extends React.Component {
       registration,
       loginModal,
       snackBar,
+      history,
       dispatch
     } = this.props;
 
@@ -60,6 +61,7 @@ class App extends React.Component {
         authentication={authentication}
         registration={registration}
         loginModal={loginModal}
+        history={history}
       />
         {content}
       <Snackbar
