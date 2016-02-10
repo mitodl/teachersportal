@@ -5,7 +5,7 @@ Tests about permissions
 from __future__ import unicode_literals
 
 from django.test import TestCase
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User, Group, AnonymousUser
 
 from portal.factories import CourseFactory, ModuleFactory
 from portal.permissions import (
@@ -93,6 +93,14 @@ class PermissionsTests(TestCase):
         assert not AuthorizationHelpers.is_owner(course, user)
         course.owners.add(user)
         assert AuthorizationHelpers.is_owner(course, user)
+
+    def test_is_owner_anonymous(self):
+        """
+        Assert that is_owner returns false if user is anonymous.
+        """
+        user = AnonymousUser()
+        course = CourseFactory.create()
+        assert not AuthorizationHelpers.is_owner(course, user)
 
     def test_edit_content_perm(self):
         """
