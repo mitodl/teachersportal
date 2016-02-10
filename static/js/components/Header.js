@@ -17,13 +17,16 @@ class Header extends React.Component {
       dispatch,
       loginModal,
       authentication,
+      history,
       registration
     } = this.props;
 
     return <div id="header">
       <Navigation
         onShowSignIn={() => dispatch(showLogin())}
-        onSignOut={() => dispatch(logout())}
+        onSignOut={() => dispatch(logout()).then(
+          () => { history.pushState(null, '/'); }
+        )}
         authentication={authentication} />
 
       <LoginModal
@@ -63,5 +66,6 @@ Header.propTypes = {
   loginModal: React.PropTypes.object.isRequired,
   authentication: React.PropTypes.object.isRequired,
   registration: React.PropTypes.object.isRequired,
+  history: React.PropTypes.object.isRequired,
   dispatch: React.PropTypes.func.isRequired
 };
