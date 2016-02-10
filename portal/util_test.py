@@ -57,7 +57,8 @@ class CourseUtilTests(CourseTests):
             "info": {
                 "type": "course"
             },
-            "modules": [expected_module]
+            "modules": [expected_module],
+            "live": self.course.live
         }
 
     def test_live_availability(self):

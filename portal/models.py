@@ -24,6 +24,7 @@ from portal.permissions import (
     EDIT_OWN_CONTENT,
     EDIT_OWN_LIVENESS,
     EDIT_OWN_PRICE,
+    SEE_OWN_NOT_LIVE,
 )
 
 
@@ -71,6 +72,7 @@ class Course(models.Model):
         permissions = (
             EDIT_OWN_CONTENT,
             EDIT_OWN_LIVENESS,
+            SEE_OWN_NOT_LIVE,
         )
 
 

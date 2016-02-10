@@ -6,10 +6,11 @@ from __future__ import unicode_literals
 
 import json
 from mock import patch
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.core.urlresolvers import reverse
 import requests_mock
 
+from portal.factories import CourseFactory, ModuleFactory
 from portal.models import Course, Module
 from portal.views.course_api import (
     filter_ccxcon_course_info,
@@ -36,7 +37,7 @@ class CourseAPITests(CourseTests):
         self.course.save()
 
         credentials = {"username": "auser", "password": "apass"}
-        User.objects.create_user(**credentials)
+        self.teacher = User.objects.create_user(**credentials)
         self.client.login(**credentials)
 
     def validate_course_api(self, courses_from_api):  # pylint: disable=no-self-use
@@ -158,6 +159,7 @@ class CourseAPITests(CourseTests):
                     "price_without_tax": float(self.module.price_without_tax)
                 }
             ],
+            "live": True,
         }
         assert fetch_mock.called
 
@@ -308,3 +310,99 @@ class CourseAPITests(CourseTests):
             "url": "http://example.com"
         })
         assert set(filtered.keys()) == {'title', 'subchapters'}
+
+    def assert_course_visibility(self, visibility_pairs):
+        """
+        Assert course-list and course-detail visibility for courses
+        """
+
+        resp = self.client.get(reverse('course-list'))
+        assert resp.status_code == 200, resp.content.decode('utf-8')
+        courses = json.loads(resp.content.decode('utf-8'))
+
+        # No not_live_course here
+        assert courses == [
+            course_as_dict(Course.objects.get(uuid=uuid))
+            for uuid, visible in visibility_pairs
+            if visible
+        ]
+
+        for uuid, visible in visibility_pairs:
+            resp = self.client.get(reverse('course-detail', kwargs={'uuid': uuid}))
+            if visible:
+                assert resp.status_code == 200, resp.content.decode('utf-8')
+            else:
+                assert resp.status_code == 404, resp.content.decode('utf-8')
+
+    @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
+    @requests_mock.mock()
+    def test_course_visibility(self, mock, fetch_mock):  # pylint: disable=unused-argument
+        """
+        Assert that an instructor can also see courses which are not live
+        but which they own, in both course list and detail view.
+        """
+        # Create an instructor
+        instructor = User.objects.create_user(username="instructor", password="instructor")
+        instructor.groups.add(Group.objects.get(name="Instructor"))
+        self.client.login(username="instructor", password="instructor")
+
+        not_live_course = CourseFactory.create(live=False)
+        ModuleFactory.create(course=not_live_course, price_without_tax=1)
+        not_live_owned_course = CourseFactory.create(live=False)
+        ModuleFactory.create(course=not_live_owned_course, price_without_tax=3)
+        instructor.courses_owned.add(not_live_owned_course)
+
+        visibility_pairs = [
+            (self.course.uuid, True),
+            (not_live_course.uuid, False),
+            (not_live_owned_course.uuid, True)
+        ]
+        for course_uuid, _ in visibility_pairs:
+            fetch_mock.get(
+                "{base}v1/coursexs/{course_uuid}/".format(
+                    base=FAKE_CCXCON_API,
+                    course_uuid=course_uuid,
+                ), json={}
+            )
+            fetch_mock.get(
+                "{base}v1/coursexs/{course_uuid}/modules/".format(
+                    base=FAKE_CCXCON_API,
+                    course_uuid=course_uuid
+                ), json=[]
+            )
+        self.assert_course_visibility(visibility_pairs)
+
+    @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
+    @requests_mock.mock()
+    def test_see_own_courses_perm(self, mock, fetch_mock):  # pylint: disable=unused-argument
+        """
+        Assert that ownership isn't enough to see not live courses, you need
+        the permission too.
+        """
+
+        # Create an instructor
+        not_live_course = CourseFactory.create(live=False)
+        ModuleFactory.create(course=not_live_course, price_without_tax=1)
+        not_live_owned_course = CourseFactory.create(live=False)
+        ModuleFactory.create(course=not_live_owned_course, price_without_tax=3)
+        self.teacher.courses_owned.add(not_live_owned_course)
+
+        visibility_pairs = [
+            (self.course.uuid, True),
+            (not_live_course.uuid, False),
+            (not_live_owned_course.uuid, False)
+        ]
+        for course_uuid, _ in visibility_pairs:
+            fetch_mock.get(
+                "{base}v1/coursexs/{course_uuid}/".format(
+                    base=FAKE_CCXCON_API,
+                    course_uuid=course_uuid,
+                ), json={}
+            )
+            fetch_mock.get(
+                "{base}v1/coursexs/{course_uuid}/modules/".format(
+                    base=FAKE_CCXCON_API,
+                    course_uuid=course_uuid
+                ), json=[]
+            )
+        self.assert_course_visibility(visibility_pairs)

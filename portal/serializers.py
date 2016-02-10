@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 from rest_framework.serializers import (
     Serializer,
+    BooleanField,
     CharField,
     DictField,
     ListField,
@@ -20,6 +21,7 @@ class CourseSerializer(Serializer):
     description = CharField()
     uuid = CharField()
     info = DictField()
+    live = BooleanField()
     modules = ListField()
 
 
