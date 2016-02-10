@@ -47,7 +47,7 @@ class Course(models.Model):
     """
     uuid = TextField()
     title = TextField()
-    description = TextField(blank=True, null=True)
+    description = TextField(blank=True)
     live = BooleanField()
     created_at = DateTimeField(auto_now_add=True, blank=True)
     modified_at = DateTimeField(auto_now=True, blank=True)
