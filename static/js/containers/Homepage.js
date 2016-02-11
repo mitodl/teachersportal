@@ -30,7 +30,7 @@ const mapStateToProps = (state) => ({
 });
 
 Homepage.propTypes = {
-  dispatch: React.PropTypes.func.isRequried,
+  dispatch: React.PropTypes.func.isRequired,
   course: React.PropTypes.object.isRequired
 };
 
