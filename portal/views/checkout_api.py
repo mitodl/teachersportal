@@ -45,9 +45,19 @@ class CheckoutView(APIView):
           errors (set): A set of errors resulting from notification
         """
         errors = set()
+        courses_and_seats = {}
+
+        # OrderLine stores a reference to a module and the number of seats
+        # for each module. This number of seats should always be the same for each module
+        # in a course.
         for line in OrderLine.objects.filter(order=order):
-            title = line.module.course.title
             course_uuid = line.module.course.uuid
+            if course_uuid not in courses_and_seats:
+                courses_and_seats[line.module.course.uuid] = (line.module.course, line.seats)
+
+        for course, seats in courses_and_seats.values():
+            title = course.title
+            course_uuid = course.uuid
             ccxcon = ccxcon_request()
             api_base = settings.CCXCON_API
             try:
@@ -56,7 +66,7 @@ class CheckoutView(APIView):
                     json={
                         'master_course_id': course_uuid,
                         'user_email': user.email,
-                        'total_seats': line.seats,
+                        'total_seats': seats,
                         'display_name': '{} for {}'.format(title, user.userinfo.full_name),
                         'course_modules': [
                             orderline.module.uuid for orderline in order.orderline_set.all()
