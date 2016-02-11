@@ -98,10 +98,16 @@ describe('CourseDetailPage', () => {
     );
   });
 
-  it('requires user to login if not authenticated', done => {
+  it('cannot see tabs if not logged in', done => {
+    store.dispatch(receiveCourseListSuccess(COURSE_LIST));
+    store.dispatch(receiveCourseSuccess(COURSE_RESPONSE1));
+
     renderCourseDetail().then(component => {
       let node = ReactDOM.findDOMNode(component);
-      assert.ok(node.innerHTML.includes("Please log in to view"));
+      assert.ok(!node.innerHTML.includes("ABOUT"));
+      assert.ok(!node.innerHTML.includes("CONTENT"));
+      assert.ok(!node.innerHTML.includes("BUY"));
+      assert.ok(node.innerHTML.includes("Please login for more info"));
 
       done();
     });

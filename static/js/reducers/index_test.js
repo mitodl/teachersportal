@@ -287,7 +287,7 @@ describe('reducers', () => {
       loginStub.returns(Promise.resolve({name: "Darth Vader"}));
 
       // ERROR
-      dispatchThen(login("user", "pass"), [LOGIN_SUCCESS]).then(loginState => {
+      dispatchThen(login("user", "pass"), [LOGIN_SUCCESS, CLEAR_COURSE]).then(loginState => {
         assert.deepEqual(loginState, {
           isAuthenticated: true,
           error: "",
@@ -332,7 +332,7 @@ describe('reducers', () => {
         name: "Darth Vader"
       };
 
-      dispatchThen(login("user", "pass"), [LOGIN_SUCCESS]).then(loginState => {
+      dispatchThen(login("user", "pass"), [LOGIN_SUCCESS, CLEAR_COURSE]).then(loginState => {
         assert.deepEqual(loginState, expectedState);
 
         return dispatchThen(logout(), []);

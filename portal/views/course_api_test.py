@@ -178,19 +178,67 @@ class CourseAPITests(CourseTests):
         )
         assert resp.status_code == 404, resp.content.decode('utf-8')
 
-    def test_not_logged_in(self):
+    @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
+    @requests_mock.mock()
+    def test_course_different_logged_in(self, _, fetch_mock):
         """
-        Test that course detail are only available to logged in users.
+        Test that a limited version of the course detail is available for anonymous users
         """
+        course_uuid = self.course.uuid
+        module_uuid = self.module.uuid
+
+        ccxcon_course_title = "ccxcon course title"
+        ccxcon_module_title = "ccxcon module title"
+        ccxcon_description = "ccxcon description"
+        author = "author"
+        overview = "overview"
+        subchapters = ["subchapter1", "subchapter2"]
+        image_url = "http://youtube.com/"
+        fetch_mock.get(
+            "{base}v1/coursexs/{course_uuid}/".format(
+                base=FAKE_CCXCON_API,
+                course_uuid=course_uuid,
+            ), json={
+                "uuid": course_uuid,
+                "title": ccxcon_course_title,
+                "author_name": author,
+                "overview": overview,
+                "description": ccxcon_description,
+                "image_url": image_url,
+                "edx_instance": "http://mitx.edx.org",
+                "url": "https://example.com",
+                "modules": "https://example.com",
+                "instructors": [],
+                "course_id": "course_id"
+            }
+        )
+        fetch_mock.get(
+            "{base}v1/coursexs/{course_uuid}/modules/".format(
+                base=FAKE_CCXCON_API,
+                course_uuid=course_uuid
+            ), json=[
+                {
+                    "uuid": module_uuid,
+                    "title": ccxcon_module_title,
+                    "subchapters": subchapters,
+                    "course": "https://example.com/",
+                    "url": "https://example.com/"
+                }
+            ]
+        )
+
+        resp = self.client.get(
+            reverse("course-detail", kwargs={"uuid": self.course.uuid})
+        )
+        assert resp.status_code == 200, resp.content.decode('utf-8')
+        assert 'modules' in resp.data
+
         self.client.logout()
         resp = self.client.get(
-            reverse("course-detail", kwargs={"uuid": self.module.uuid})
+            reverse("course-detail", kwargs={"uuid": self.course.uuid})
         )
-        assert resp.status_code == 403, resp.content.decode('utf-8')
-
-        # Course list is available to users not logged in
-        resp = self.client.get(reverse("course-list"))
         assert resp.status_code == 200, resp.content.decode('utf-8')
+        assert 'modules' not in resp.data
 
     @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
     @requests_mock.mock()

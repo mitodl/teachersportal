@@ -119,6 +119,9 @@ export function login(username, password) {
   return dispatch => {
     return api.login(username, password).
       then((data) => {
+        dispatch({
+          type: CLEAR_COURSE
+        });
         return dispatch(loginSuccess(data));
       }).
       catch((e) => {
