@@ -238,8 +238,8 @@ describe('CourseDetailPage', () => {
       for (let pair of coursePairs) {
         let { course, seatCount } = pair;
         assert.ok(shoppingCartText.includes(course.title));
-        assert.ok(!shoppingCartText.includes(course.modules[0].title));
-        assert.ok(shoppingCartText.includes("Seats: " + seatCount));
+        assert.ok(shoppingCartText.includes(course.modules[0].title));
+        assert.ok(shoppingCartText.includes(seatCount + "Total Seats"));
         assert.ok(!shoppingCartText.includes('No chapters selected'));
       }
 
