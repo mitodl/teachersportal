@@ -12,6 +12,7 @@ import requests_mock
 from stripe import Charge
 
 from portal.factories import (
+    CourseFactory,
     ModuleFactory,
     OrderFactory,
     OrderLineFactory,
@@ -143,10 +144,13 @@ class CheckoutAPITests(CourseTests):
         """
         total_seats = 5
 
+        # Add an extra module to assert we only POST to ccx endpoint once per course.
+        module2 = ModuleFactory.create(course=self.course, price_without_tax=123)
+
         def _mocked_request_callback(request, context):  # pylint: disable=unused-argument
             """Assert that the data being sent is valid JSON"""
             data = request.json()
-            assert data['course_modules'] == [self.module.uuid]
+            assert data['course_modules'] == [self.module.uuid, module2.uuid]
             assert data['user_email'] == self.user.email
             assert data['display_name'] == '{} for {}'.format(
                 self.course.title, self.user.userinfo.full_name
@@ -159,7 +163,7 @@ class CheckoutAPITests(CourseTests):
         ), text=_mocked_request_callback)
 
         cart_item = {
-            "uuids": [self.module.uuid],
+            "uuids": [self.module.uuid, module2.uuid],
             "seats": total_seats,
             "course_uuid": self.course.uuid
         }
@@ -179,8 +183,8 @@ class CheckoutAPITests(CourseTests):
             )
 
         assert resp.status_code == 200, resp.content.decode('utf-8')
-        assert create_mock.called
-        assert mocked_request.called
+        assert create_mock.call_count == 1
+        assert mocked_request.call_count == 1
 
     @patch('portal.views.checkout_api.ccxcon_request')
     def test_stripe_charge(self, mock_ccxcon):
@@ -337,18 +341,23 @@ class CheckoutAPITests(CourseTests):
         """
         If there are errors on checkout, they make it to the response.
         """
-        module2 = ModuleFactory.create(
-            course=self.course,
-        )
+        course2 = CourseFactory.create(live=True)
+        module2 = ModuleFactory.create(course=course2, price_without_tax=345)
         requester.return_value.post.side_effect = [
             AttributeError("Example Error"),
             AttributeError("Another Error"),
         ]
-        cart = [{
-            "uuids": [self.module.uuid, module2.uuid],
-            "seats": 5,
-            "course_uuid": self.course.uuid
-        }]
+        cart = [
+            {
+                "uuids": [self.module.uuid],
+                "seats": 5,
+                "course_uuid": self.course.uuid
+            }, {
+                "uuids": [module2.uuid],
+                "seats": 9,
+                "course_uuid": module2.course.uuid
+            }
+        ]
 
         with patch.object(Charge, 'create'):
             resp = self.client.post(
