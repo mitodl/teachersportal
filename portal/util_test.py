@@ -5,7 +5,7 @@ Tests for product serializer functions.
 from __future__ import unicode_literals
 from decimal import Decimal
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from rest_framework.exceptions import ValidationError
 
 from portal.models import Order, OrderLine
@@ -109,6 +109,7 @@ class CourseUtilTests(CourseTests):
         assert get_cents(dec) == 511415
 
 
+# pylint: disable=too-many-public-methods
 class CheckoutValidationTests(CourseTests):
     """
     Tests for checkout validation
@@ -397,6 +398,34 @@ class CheckoutValidationTests(CourseTests):
             }], self.user)
         message = "User cannot purchase this course"
         assert ex.exception.detail[0] == message
+
+    def test_not_a_list(self):
+        """
+        Raises a ValidationError if cart is not a list.
+        """
+        with self.assertRaises(ValidationError) as ex:
+            validate_cart([{
+                "uuids": None,
+                "seats": 5,
+                "course_uuid": self.course.uuid
+            }], self.user)
+        assert ex.exception.detail[0] == "uuids must be a list"
+
+    def test_not_live_course(self):
+        """
+        Raises a ValidationError if a course is not live, even if we have
+        access to it because we are its owner
+        """
+        self.user.groups.add(Group.objects.get(name="Instructor"))
+        self.course.live = False
+        self.course.save()
+        with self.assertRaises(ValidationError) as ex:
+            validate_cart([{
+                "uuids": [self.module.uuid],
+                "seats": 5,
+                "course_uuid": self.course.uuid
+            }], self.user)
+        assert ex.exception.detail[0] == "One or more courses are unavailable"
 
 
 class CheckoutOrderTests(CourseTests):

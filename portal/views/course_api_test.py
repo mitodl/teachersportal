@@ -244,17 +244,42 @@ class CourseAPITests(CourseTests):
 
     @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
     @requests_mock.mock()
-    def test_ccxcon_connection_broken(self, mock, fetch_mock):  # pylint: disable=unused-argument
+    def test_error_reading_courses(self, mock, fetch_mock):  # pylint: disable=unused-argument
         """
-        Test that if the CCXCon connection is broken an exception is raised
-        (producing a 500 error).
+        Test that an error reading courses from CCXCon will cause an error locally.
+        """
+        fetch_mock.get(
+            "{base}v1/coursexs/{course_uuid}/".format(
+                base=FAKE_CCXCON_API,
+                course_uuid=self.course.uuid,
+            ),
+            status_code=500,
+            json={}
+        )
+
+        with self.assertRaises(Exception) as ex:
+            self.client.get(
+                reverse("course-detail", kwargs={"uuid": self.course.uuid})
+            )
+        assert "CCXCon returned a non 200 status code 500" in ex.exception.args[0]
+        assert fetch_mock.called
+
+        # Course list API does not read from CCXCon so it should be unaffected
+        resp = self.client.get(reverse('course-list'))
+        assert resp.status_code == 200
+
+    @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
+    @requests_mock.mock()
+    def test_error_reading_modules(self, mock, fetch_mock):  # pylint: disable=unused-argument
+        """
+        Test that an error reading modules from CCXCon will cause an error locally.
         """
         fetch_mock.get(
             "{base}v1/coursexs/{course_uuid}/modules/".format(
                 base=FAKE_CCXCON_API,
                 course_uuid=self.course.uuid,
             ),
-            status_code=200,
+            status_code=500,
             json={}
         )
         fetch_mock.get(
@@ -262,7 +287,7 @@ class CourseAPITests(CourseTests):
                 base=FAKE_CCXCON_API,
                 course_uuid=self.course.uuid,
             ),
-            status_code=500,
+            status_code=200,
             json={}
         )
 

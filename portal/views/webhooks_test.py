@@ -695,6 +695,15 @@ class WebhookTests(TestCase):
                 'payload': {}
             }, expected_status=400, expected_errors=['Missing key external_pk'])
 
+    def test_invalid_json_for_delete(self):
+        """Invalid json for delete"""
+        for hook_type in (COURSE_PRODUCT_TYPE, MODULE_PRODUCT_TYPE):
+            self.post_webhook({
+                'action': 'delete',
+                'type': hook_type,
+                'payload': None
+            }, expected_errors=["Invalid value for payload"], expected_status=400)
+
     def test_missing_payload_fields_for_course_update(self):
         """Missing fields for course update"""
         payload = {
