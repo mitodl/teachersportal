@@ -366,6 +366,10 @@ h3.course-listing-header {
   }
 }
 
+#homepage-body {
+  box-shadow: none;
+  border-radius: 0;
+}
 
 .homepage-header {
   @include span-columns(8);
