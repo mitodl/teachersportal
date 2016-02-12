@@ -11,7 +11,7 @@ import { Link } from 'react-router';
 class Homepage extends React.Component {
   render() {
     const { dispatch, course } = this.props;
-    return <Card id='homepage-body' style={{'box-shadow': 'none', 'border-radius': 0}}>
+    return <Card id='homepage-body'>
       <div className="homepage-header">
         <h2>Introducing MIT's Teaching Resources</h2>
       </div>
