@@ -12,6 +12,7 @@ from portal.permissions import (
     EDIT_OWN_CONTENT,
     EDIT_OWN_LIVENESS,
     EDIT_OWN_PRICE,
+    SEE_OWN_NOT_LIVE,
     AuthorizationHelpers
 )
 
@@ -43,7 +44,8 @@ class PermissionsTests(TestCase):
         assert sorted([
             EDIT_OWN_CONTENT[0],
             EDIT_OWN_LIVENESS[0],
-            EDIT_OWN_PRICE[0]
+            EDIT_OWN_PRICE[0],
+            SEE_OWN_NOT_LIVE[0],
         ]) == sorted(codenames)
 
     def test_get_courses(self):
@@ -59,7 +61,31 @@ class PermissionsTests(TestCase):
             price_without_tax=1,
             course=course2
         )
-        assert AuthorizationHelpers.get_courses() == [course2]
+        assert AuthorizationHelpers.get_courses(AnonymousUser()) == [course2]
+
+    def test_get_courses_not_live(self):
+        """
+        Assert that get_courses returns a list of courses which includes
+        courses that aren't live.
+        """
+        # course1 is not live but it will be owned by the instructor
+        course1 = CourseFactory.create(live=False)
+        ModuleFactory.create(
+            price_without_tax=1,
+            course=course1
+        )
+        course2 = CourseFactory.create(live=True)
+        ModuleFactory.create(
+            price_without_tax=1,
+            course=course2
+        )
+
+        user = User.objects.create_user(username="user")
+        user.groups.add(Group.objects.get(name="Instructor"))
+        user.courses_owned.add(course1)
+
+        assert AuthorizationHelpers.get_courses(AnonymousUser()) == [course2]
+        assert AuthorizationHelpers.get_courses(user) == [course1, course2]
 
     def test_get_course_success(self):
         """Assert get_course returns a Course"""
@@ -68,13 +94,13 @@ class PermissionsTests(TestCase):
             price_without_tax=1,
             course=course
         )
-        assert AuthorizationHelpers.get_course(course.uuid) == course
+        assert AuthorizationHelpers.get_course(course.uuid, AnonymousUser()) == course
 
     def test_get_course_missing_uuid(self):
         """
         If the uuid doesn't match any course, return None.
         """
-        assert AuthorizationHelpers.get_course("missing") is None
+        assert AuthorizationHelpers.get_course("missing", AnonymousUser()) is None
 
     def test_get_course_not_available(self):
         """
@@ -82,7 +108,33 @@ class PermissionsTests(TestCase):
         """
         # This course has no modules so it won't be available for purchase
         course = CourseFactory.create(live=True)
-        assert AuthorizationHelpers.get_course(course.uuid) is None
+        assert AuthorizationHelpers.get_course(course.uuid, AnonymousUser()) is None
+
+    def test_get_course_owned_not_live(self):
+        """
+        If the course is not live but it's owned by the user and the user is an instructor,
+        it should be visible.
+        """
+        course = CourseFactory.create(live=False)
+        ModuleFactory.create(course=course)
+
+        user = User.objects.create_user(username="user")
+        user.groups.add(Group.objects.get(name="Instructor"))
+        user.courses_owned.add(course)
+
+        assert AuthorizationHelpers.get_course(course.uuid, user) == course
+
+    def test_get_course_not_owned_not_live(self):  # pylint: disable=invalid-name
+        """
+        If the course is not live but it's owned by the user and the user is an instructor,
+        it should be visible.
+        """
+        course = CourseFactory.create(live=False)
+        ModuleFactory.create(course=course)
+
+        user = User.objects.create_user(username="user")
+
+        assert AuthorizationHelpers.get_course(course.uuid, user) is None
 
     def test_is_owner(self):
         """
@@ -186,3 +238,22 @@ class PermissionsTests(TestCase):
         course = CourseFactory.create(live=False)
         ModuleFactory.create(course=course, price_without_tax=1)
         assert not AuthorizationHelpers.can_purchase_course(course, user)
+
+    def test_show_not_live_perm(self):
+        """
+        Assert that True is returned if user has permission to see not live courses that they own.
+        """
+        user = User.objects.create_user(username="user")
+        course = CourseFactory.create()
+        assert not AuthorizationHelpers.can_see_own_not_live(course, user)
+
+        # Instructor group has edit_own_content permission
+        user.groups.add(Group.objects.get(name="Instructor"))
+        # Need to do this to refresh user permissions
+        user = User.objects.get(username="user")
+        # Instructor does not own course
+        assert not AuthorizationHelpers.can_see_own_not_live(course, user)
+        # Now that instructor is an owner this check should pass
+        course.owners.add(user)
+        user = User.objects.get(username="user")
+        assert AuthorizationHelpers.can_see_own_not_live(course, user)

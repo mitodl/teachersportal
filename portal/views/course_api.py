@@ -159,7 +159,7 @@ class CourseListView(ListAPIView):
 
         return [
             course_as_dict(course)
-            for course in AuthorizationHelpers.get_courses()
+            for course in AuthorizationHelpers.get_courses(self.request.user)
         ]
 
 
@@ -184,7 +184,7 @@ class CourseDetailView(RetrieveAPIView):
         Looks up information for a course from CCXCon and Course model.
         """
         uuid = self.kwargs['uuid']
-        course = AuthorizationHelpers.get_course(uuid)
+        course = AuthorizationHelpers.get_course(uuid, self.request.user)
         if course is None:
             raise Http404
 

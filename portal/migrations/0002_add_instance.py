@@ -12,6 +12,11 @@ def add_default_backinginstance(apps, schema_editor):
     BackingInstance.objects.create(instance_url=EXAMPLE_URL)
 
 
+def reverse_add_default_backinginstance(apps, schema_editor):
+    BackingInstance = apps.get_model('portal', 'BackingInstance')
+    BackingInstance.objects.filter(instance_url=EXAMPLE_URL).all().delete()
+
+
 def populate_default_backinginstance(apps, schema_editor):
     BackingInstance = apps.get_model("portal", "BackingInstance")
     Course = apps.get_model("portal", "Course")
@@ -20,6 +25,11 @@ def populate_default_backinginstance(apps, schema_editor):
     for course in Course.objects.all():
         course.instance = instance
         course.save()
+
+
+def reverse_populate_default_backinginstance(apps, schema_editor):
+    BackingInstance = apps.get_model("portal", "BackingInstance")
+    BackingInstance.objects.get(instance_url=EXAMPLE_URL).course_set.all().delete()
 
 
 class Migration(migrations.Migration):
@@ -36,13 +46,13 @@ class Migration(migrations.Migration):
                 ('instance_url', models.TextField()),
             ],
         ),
-        migrations.RunPython(add_default_backinginstance),
+        migrations.RunPython(add_default_backinginstance, reverse_add_default_backinginstance),
         migrations.AddField(
             model_name='course',
             name='instance',
             field=models.ForeignKey(to='portal.BackingInstance', null=True),
         ),
-        migrations.RunPython(populate_default_backinginstance),
+        migrations.RunPython(populate_default_backinginstance, reverse_populate_default_backinginstance),
         migrations.AlterField(
             model_name='course',
             name='instance',
