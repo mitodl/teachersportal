@@ -4,6 +4,7 @@ Tests for Course API
 
 from __future__ import unicode_literals
 
+from decimal import Decimal
 import json
 from mock import patch
 from django.contrib.auth.models import User, Group
@@ -23,16 +24,16 @@ from portal.util import (
 )
 
 
-class CourseAPITests(CourseTests):
+class CourseAPIGETTests(CourseTests):
     """
-    Tests for course API
+    Tests for course API, GET method
     """
 
     def setUp(self):
         """
         Set up the courses
         """
-        super(CourseAPITests, self).setUp()
+        super(CourseAPIGETTests, self).setUp()
         self.course.live = True
         self.course.save()
 
@@ -406,3 +407,457 @@ class CourseAPITests(CourseTests):
                 ), json=[]
             )
         self.assert_course_visibility(visibility_pairs)
+
+
+# pylint: disable=too-many-public-methods
+class CourseAPIPATCHTests(CourseTests):
+    """
+    Tests for courses detail API, PATCH method
+    """
+    def setUp(self):
+        super(CourseAPIPATCHTests, self).setUp()
+        self.course.live = True
+        self.course.save()
+
+        # Login an instructor who owns a course
+        credentials = {"username": "auser", "password": "apass"}
+        self.instructor = User.objects.create_user(**credentials)
+        self.instructor.groups.add(Group.objects.get(name="Instructor"))
+        self.client.login(**credentials)
+        self.instructor.courses_owned.add(self.course)
+
+    def test_put_not_allowed(self):
+        """PUT is not supported, mostly to cut down the work we need to do here"""
+        resp = self.client.put(reverse('course-detail', kwargs={"uuid": self.course.uuid}))
+        assert resp.status_code == 405
+
+    def test_invalid_json(self):
+        """If user sends invalid JSON in PATCH, return a 400"""
+        resp = self.client.patch(
+            reverse('course-detail', kwargs={"uuid": self.course.uuid}),
+            content_type="application/json",
+            data="{"
+        )
+        assert resp.status_code == 400, resp.content.decode('utf-8')
+        assert "JSON parse error" in resp.content.decode('utf-8')
+
+    def assert_patch_validation(self, course_uuid, course_dict, error):
+        """Helper method to assert course validation errors"""
+        course = Course.objects.get(uuid=course_uuid)
+        module = course.module_set.first()
+        old_course_title = course.title
+        old_course_description = course.description
+        old_module_title = module.title
+        old_module_price = module.price_without_tax
+
+        resp = self.client.patch(
+            reverse('course-detail', kwargs={"uuid": course_uuid}),
+            content_type="application/json",
+            data=json.dumps(course_dict)
+        )
+        assert resp.status_code == 400, resp.content.decode('utf-8')
+        assert error in resp.content.decode('utf-8')
+
+        # Assert transactionality
+        course.refresh_from_db()
+        module.refresh_from_db()
+        assert course.title == old_course_title
+        assert course.description == old_course_description
+        assert module.title == old_module_title
+        assert module.price_without_tax == old_module_price
+
+    def test_missing_course(self):
+        """Error if course UUID points to a missing course"""
+        resp = self.client.patch(
+            reverse('course-detail', kwargs={"uuid": "missing"}),
+            content_type="application/json",
+            data=json.dumps({})
+        )
+        assert resp.status_code == 404, resp.content.decode('utf-8')
+
+    def test_bad_module_list(self):
+        """Error if modules is not a list"""
+        course_dict = {
+            'modules': {}
+        }
+        self.assert_patch_validation(
+            self.course.uuid,
+            course_dict,
+            "modules must be a list of modules"
+        )
+
+    def test_bad_module(self):
+        """Error if a module is not an object"""
+        course_dict = {
+            'modules': [None]
+        }
+        self.assert_patch_validation(self.course.uuid, course_dict, "Each module must be an object")
+
+    def test_no_module_uuid(self):
+        """Error if a module does not include a uuid"""
+        course_dict = {
+            'modules': [{}]
+        }
+        self.assert_patch_validation(self.course.uuid, course_dict, "Missing key uuid")
+
+    def test_missing_module(self):
+        """Error if a module does not exist"""
+        course_dict = {
+            'uuid': self.course.uuid,
+            'modules': [{
+                'uuid': 'missing'
+            }]
+        }
+        self.assert_patch_validation(self.course.uuid, course_dict, "Unable to find module")
+
+    def test_module_course_mismatch(self):
+        """Error if the module uuid doesn't match the course"""
+        module2 = ModuleFactory.create()
+        course_dict = {
+            'uuid': self.course.uuid,
+            'modules': [{
+                'uuid': module2.uuid
+            }]
+        }
+        self.assert_patch_validation(
+            self.course.uuid,
+            course_dict,
+            "Unable to find module {}".format(module2.uuid)
+        )
+
+    def test_duplicate_module(self):
+        """Error if the module uuid shows up twice"""
+        course_dict = {
+            'uuid': self.course.uuid,
+            'modules': [
+                {
+                    'uuid': self.module.uuid,
+                    "title": "title1"
+                },
+                {
+                    'uuid': self.module.uuid,
+                    "title": "title2"
+                }
+            ],
+        }
+        self.assert_patch_validation(self.course.uuid, course_dict, "Duplicate module")
+
+    def patch_dict_for_price(self, price):
+        """Make a dict we can use to patch a price"""
+        return {
+            'modules': [{
+                'uuid': self.module.uuid,
+                'price_without_tax': price
+            }]
+        }
+
+    def test_price_one_module(self):
+        """
+        Make sure we allow patching only the modules we care about.
+        """
+        # Get dict when we have one module, then create a second one
+        module2 = ModuleFactory.create(course=self.course)
+        second_old_price = module2.price_without_tax
+        new_price = '4'
+        course_dict = self.patch_dict_for_price(new_price)
+        assert self.module.price_without_tax != new_price
+
+        resp = self.client.patch(
+            reverse('course-detail', kwargs={"uuid": self.course.uuid}),
+            content_type="application/json",
+            data=json.dumps(course_dict)
+        )
+        assert resp.status_code == 200, resp.content.decode('utf-8')
+
+        self.module.refresh_from_db()
+        assert self.module.price_without_tax == Decimal(new_price)
+        assert module2.price_without_tax == second_old_price
+
+    def test_null_price(self):
+        """
+        Null prices are allowed, as this is the default state of a price. These
+        modules won't be available for sale.
+        """
+        course_dict = self.patch_dict_for_price(None)
+        resp = self.client.patch(
+            reverse('course-detail', kwargs={"uuid": self.course.uuid}),
+            content_type="application/json",
+            data=json.dumps(course_dict)
+        )
+        assert resp.status_code == 200, resp.content.decode('utf-8')
+        self.module.refresh_from_db()
+        assert self.module.price_without_tax is None
+
+    def test_bad_price(self):
+        """Error if price is not a string"""
+        course_dict = self.patch_dict_for_price(3)
+        self.assert_patch_validation(
+            self.course.uuid,
+            course_dict,
+            'price_without_tax must be a string'
+        )
+
+    def test_invalid_number_price(self):
+        """Error if price can't be parsed into a Decimal"""
+        course_dict = self.patch_dict_for_price("seven")
+        self.assert_patch_validation(
+            self.course.uuid,
+            course_dict,
+            'price_without_tax is not a valid number'
+        )
+
+    def test_negative_price(self):
+        """Error if the price is negative"""
+        course_dict = self.patch_dict_for_price('-1')
+        self.assert_patch_validation(
+            self.course.uuid,
+            course_dict,
+            'price_without_tax is not a valid number'
+        )
+
+    def test_price_to_invalid_number(self):
+        """Error if the price is not a finite number"""
+        for invalid_number in ('inf', '-inf', 'nan', '-nan'):
+            course_dict = self.patch_dict_for_price(invalid_number)
+            self.assert_patch_validation(
+                self.course.uuid,
+                course_dict,
+                'price_without_tax is not a valid number'
+            )
+
+    def test_empty_price(self):
+        """Zero prices are allowed"""
+        course_dict = self.patch_dict_for_price('')
+        self.assert_patch_validation(
+            self.course.uuid,
+            course_dict,
+            "price_without_tax is not a valid number"
+        )
+
+    def test_zero_price(self):
+        """Zero prices are allowed"""
+        course_dict = self.patch_dict_for_price('0')
+        resp = self.client.patch(
+            reverse('course-detail', kwargs={"uuid": self.course.uuid}),
+            content_type="application/json",
+            data=json.dumps(course_dict)
+        )
+        assert resp.status_code == 200, resp.content.decode('utf-8')
+        self.module.refresh_from_db()
+        assert self.module.price_without_tax == 0
+
+    def test_price_requires_owner(self):
+        """If a user doesn't own a course, they can't set prices for its modules"""
+        self.instructor.courses_owned.remove(self.course)
+        course_dict = self.patch_dict_for_price('125')
+        self.assert_patch_validation(
+            self.course.uuid,
+            course_dict,
+            "User doesn\'t have permission to edit module price"
+        )
+
+    def test_price_requires_perm(self):
+        """
+        If a user doesn't have permissions for a course, they can't set prices for its modules
+        """
+        self.instructor.groups.remove(Group.objects.get(name="Instructor"))
+        course_dict = self.patch_dict_for_price('125')
+        self.assert_patch_validation(
+            self.course.uuid,
+            course_dict,
+            "User doesn\'t have permission to edit module price"
+        )
+
+    def patch_dict_for_course_title(self, title):  # pylint: disable=no-self-use
+        """Make a dict we can use to patch a course title"""
+        return {
+            'title': title
+        }
+
+    def test_course_title(self):
+        """Set a course title and assert that the change was made"""
+        course_dict = self.patch_dict_for_course_title("new title")
+        assert course_dict['title'] != self.course.title
+
+        resp = self.client.patch(
+            reverse('course-detail', kwargs={"uuid": self.course.uuid}),
+            content_type="application/json",
+            data=json.dumps(course_dict)
+        )
+        assert resp.status_code == 200, resp.content.decode('utf-8')
+        self.course.refresh_from_db()
+        assert course_dict['title'] == self.course.title
+
+    def test_bad_course_title(self):
+        """Error if the course title is not a string"""
+        course_dict = self.patch_dict_for_course_title(3)
+        self.assert_patch_validation(
+            self.course.uuid,
+            course_dict,
+            "title must be a non-empty string"
+        )
+
+    def test_set_empty_course_title(self):
+        """Error if the course title is empty"""
+        course_dict = self.patch_dict_for_course_title('')
+        self.assert_patch_validation(
+            self.course.uuid,
+            course_dict,
+            "title must be a non-empty string"
+        )
+
+    def patch_dict_for_course_description(self, description):  # pylint: disable=no-self-use, invalid-name
+        """Make a dict we can use to patch a course description"""
+        return {
+            'description': description
+        }
+
+    def test_course_description(self):
+        """Set a course description and assert that the change was made"""
+        course_dict = self.patch_dict_for_course_description("new description")
+        assert course_dict['description'] != self.course.description
+
+        resp = self.client.patch(
+            reverse('course-detail', kwargs={"uuid": self.course.uuid}),
+            content_type="application/json",
+            data=json.dumps(course_dict)
+        )
+        assert resp.status_code == 200, resp.content.decode('utf-8')
+        self.course.refresh_from_db()
+        assert course_dict['description'] == self.course.description
+
+    def test_bad_course_description(self):
+        """Set a course description that's not a string"""
+        course_dict = self.patch_dict_for_course_description(None)
+        self.assert_patch_validation(
+            self.course.uuid,
+            course_dict,
+            "description must be a string"
+        )
+
+    def patch_dict_for_module_title(self, title):
+        """Make a dict we can use to patch a module title"""
+        return {
+            'modules': [{
+                'uuid': self.module.uuid,
+                'title': title
+            }]
+        }
+
+    def test_module_title(self):
+        """Set a module title and assert that the change was made"""
+        course_dict = self.patch_dict_for_module_title('new module title')
+        assert course_dict['modules'][0]['title'] != self.course.title
+
+        resp = self.client.patch(
+            reverse('course-detail', kwargs={"uuid": self.course.uuid}),
+            content_type="application/json",
+            data=json.dumps(course_dict)
+        )
+        assert resp.status_code == 200, resp.content.decode('utf-8')
+        self.module.refresh_from_db()
+        assert course_dict['modules'][0]['title'] == self.module.title
+
+    def test_bad_module_title(self):
+        """Error if the module title is not a string"""
+        course_dict = self.patch_dict_for_module_title({})
+        self.assert_patch_validation(
+            self.course.uuid,
+            course_dict,
+            "title must be a non-empty string"
+        )
+
+    def test_empty_module_title(self):
+        """Error if the module title is empty"""
+        course_dict = self.patch_dict_for_module_title('')
+        self.assert_patch_validation(
+            self.course.uuid,
+            course_dict,
+            "title must be a non-empty string"
+        )
+
+    def test_content_requires_owner(self):
+        """Instructor must own course to edit content"""
+        self.instructor.courses_owned.remove(self.course)
+
+        for course_dict in (
+                self.patch_dict_for_course_description('description'),
+                self.patch_dict_for_course_title('course title'),
+                self.patch_dict_for_module_title('module title')
+        ):
+            self.assert_patch_validation(
+                self.course.uuid,
+                course_dict,
+                "User doesn\'t have permission to edit course descriptions or titles"
+            )
+
+    def test_content_requires_perm(self):
+        """User must have instructor permissions to edit content"""
+        # Remove user from instructor group, which also removes permissions
+        self.instructor.groups.remove(Group.objects.get(name="Instructor"))
+
+        for course_dict in (
+                self.patch_dict_for_course_description('description'),
+                self.patch_dict_for_course_title('course title'),
+                self.patch_dict_for_module_title('module title')
+        ):
+            self.assert_patch_validation(
+                self.course.uuid,
+                course_dict,
+                "User doesn\'t have permission to edit course descriptions or titles"
+            )
+
+    def patch_dict_for_liveness(self, live):  # pylint: disable=no-self-use
+        """Make a dict we can use to patch a course liveness"""
+        return {
+            'live': live
+        }
+
+    def test_liveness(self):
+        """
+        Set the liveness of a course
+        """
+        course_dict = self.patch_dict_for_liveness(False)
+        assert course_dict['live'] != self.course.live
+
+        resp = self.client.patch(
+            reverse('course-detail', kwargs={"uuid": self.course.uuid}),
+            content_type="application/json",
+            data=json.dumps(course_dict)
+        )
+        assert resp.status_code == 200, resp.content.decode('utf-8')
+        self.course.refresh_from_db()
+        assert course_dict['live'] == self.course.live
+
+    def test_bad_liveness(self):
+        """
+        Error if live is not a boolean
+        """
+        course_dict = self.patch_dict_for_liveness(None)
+        self.assert_patch_validation(self.course.uuid, course_dict, "live must be a bool")
+
+    def test_liveness_requires_owner(self):
+        """
+        Error if we set live without owning course
+        """
+        self.instructor.courses_owned.remove(self.course)
+
+        course_dict = self.patch_dict_for_liveness(True)
+        self.assert_patch_validation(
+            self.course.uuid,
+            course_dict,
+            "User doesn\'t have permission to edit course liveness"
+        )
+
+    def test_liveness_requires_perm(self):
+        """
+        Error if we set live without having permission to
+        """
+        self.instructor.groups.remove(Group.objects.get(name="Instructor"))
+
+        course_dict = self.patch_dict_for_liveness(True)
+        self.assert_patch_validation(
+            self.course.uuid,
+            course_dict,
+            "User doesn\'t have permission to edit course liveness"
+        )

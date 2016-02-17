@@ -83,10 +83,5 @@ class CourseTests(TestCase):
         """
         Create a course and module which aren't live.
         """
-        self.course = CourseFactory.create(
-            description=None,
-            live=False,
-        )
-        self.module = ModuleFactory.create(
-            course=self.course,
-        )
+        self.course = CourseFactory.create(live=False)
+        self.module = ModuleFactory.create(course=self.course)
