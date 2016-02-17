@@ -9,6 +9,7 @@ import {
   login,
   register,
   activate,
+  clearActivation,
   checkout,
   checkoutSuccess,
   checkoutFailure,
@@ -45,6 +46,7 @@ import {
   REGISTER_FAILURE,
   ACTIVATE_SUCCESS,
   ACTIVATE_FAILURE,
+  CLEAR_ACTIVATION,
   UPDATE_CART_ITEMS,
   UPDATE_CART_VISIBILITY,
   UPDATE_SEAT_COUNT,
@@ -157,9 +159,10 @@ describe('reducers', () => {
     });
 
     it('should set login state to show when triggered', done => {
-      dispatchThen(showLogin(), [SHOW_LOGIN]).then(state => {
+      dispatchThen(showLogin("message"), [SHOW_LOGIN]).then(state => {
         assert.deepEqual(state, {
-          visible: true
+          visible: true,
+          message: "message"
         });
         done();
       });
@@ -406,6 +409,18 @@ describe('reducers', () => {
       dispatchThen(activate("token"), [ACTIVATE_FAILURE]).then(activationState => {
         assert.deepEqual(activationState, {
           status: FETCH_FAILURE
+        });
+
+        done();
+      });
+    });
+
+    it('clears activation status', done => {
+      store.dispatch({type: ACTIVATE_SUCCESS});
+
+      dispatchThen(clearActivation(), [CLEAR_ACTIVATION]).then(activationState => {
+        assert.deepEqual(activationState, {
+          status: null
         });
 
         done();

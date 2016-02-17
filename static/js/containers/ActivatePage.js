@@ -18,11 +18,11 @@ class ActivatePage extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    const { location: { query } } = this.props;
+    const { history, location: { query } } = this.props;
 
     if (nextProps.activation.status === FETCH_SUCCESS &&
       this.props.activation.status !== nextProps.activation.status) {
-      window.location = query.redirect;
+      history.pushState(null, query.redirect);
     }
   }
 
@@ -51,6 +51,7 @@ class ActivatePage extends React.Component {
 ActivatePage.propTypes = {
   location: React.PropTypes.object.isRequired,
   dispatch: React.PropTypes.func.isRequired,
+  history: React.PropTypes.object.isRequired,
   activation: React.PropTypes.object.isRequired
 };
 

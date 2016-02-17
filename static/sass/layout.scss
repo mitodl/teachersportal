@@ -361,7 +361,12 @@ h3.course-listing-header {
 .login-container {
   @include outer-container;
   @include pad($block-padding);
-  > div {
+  .login {
+    @include span-columns(6);
+    display: inline-block;
+  }
+
+  .register {
     @include span-columns(6);
     display: inline-block;
   }
@@ -403,4 +408,12 @@ h3.course-listing-header {
     margin-right: 30px;
     margin-top: 20px;
   }
+}
+
+.alert-message {
+  background-color: #d9edf7;
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid #bce8f1;
+  border-radius: 4px;
 }

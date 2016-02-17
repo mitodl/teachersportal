@@ -13,7 +13,13 @@ class LoginModal extends React.Component {
       isOpen,
       loginError,
       registerError,
+      message
     } = this.props;
+
+    let messageBox;
+    if (message !== undefined) {
+      messageBox = <div className="alert-message">{message}</div>;
+    }
 
     // Note that we don't store the password in the redux state to avoid
     // accidentally logging it via redux logger
@@ -21,7 +27,8 @@ class LoginModal extends React.Component {
       open={isOpen}
       onRequestClose={onHideLoginModal}>
       <div className="login-container">
-        <div ref="signin">
+        {messageBox}
+        <div ref="signin" className="login">
           <CardTitle
             title={"Sign In"}
           />
@@ -51,7 +58,7 @@ class LoginModal extends React.Component {
               onClick={onHideLoginModal}/>
           </div>
         </div>
-        <div ref="register">
+        <div ref="register" className="register">
           <CardTitle
             title={"Register"}
           />
@@ -130,7 +137,7 @@ class LoginModal extends React.Component {
     let organization = node.querySelector(".organization input").value;
     let password = node.querySelector(".password input").value;
     let confirmPassword = node.querySelector(".confirm-password input").value;
-    let redirect = window.location.toString();
+    let redirect = window.location.pathname + window.location.search + window.location.hash;
 
     if (email === "") {
       reportRegisterError("Email must not be blank");

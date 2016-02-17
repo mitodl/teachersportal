@@ -24,6 +24,7 @@ import {
   ACTIVATE_SUCCESS,
   ACTIVATE_FAILURE,
   ACTIVATE,
+  CLEAR_ACTIVATION,
   CLEAR_CART,
   CLEAR_INVALID_CART_ITEMS,
   UPDATE_CART_ITEMS,
@@ -99,10 +100,11 @@ export const course = handleActions({
   CLEAR_COURSE: (state, action) => INITIAL_COURSE_STATE
 }, INITIAL_COURSE_STATE);
 
+const INITIAL_LOGIN = {visible: false};
 export const loginModal = handleActions({
-  SHOW_LOGIN: () => ({ visible: true }),
+  SHOW_LOGIN: (state, action) => ({ visible: true, message: action.payload.message }),
   HIDE_LOGIN: () => ({ visible: false })
-}, {visible: false});
+}, INITIAL_LOGIN);
 
 export const authentication = handleActions({
   LOGIN_FAILURE: (state, action) => ({
@@ -139,10 +141,12 @@ export const registration = handleActions({
   CLEAR_REGISTRATION_ERROR: payloadMerge((action) => ({error: ""}))
 }, { error: "", status: null });
 
+const INITIAL_ACTIVATION_STATUS = { status: null };
 export const activation = handleActions({
   ACTIVATE_SUCCESS: () => ({ status: FETCH_SUCCESS }),
-  ACTIVATE_FAILURE: () => ({ status: FETCH_FAILURE })
-}, { status: null });
+  ACTIVATE_FAILURE: () => ({ status: FETCH_FAILURE }),
+  CLEAR_ACTIVATION: () => INITIAL_ACTIVATION_STATUS
+}, INITIAL_ACTIVATION_STATUS);
 
 export const cart = handleActions({
   RECEIVE_COURSE_LIST_SUCCESS: payloadMerge((action) => ({
