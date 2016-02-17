@@ -107,6 +107,7 @@ a {
 #course-body {
   @include pad($block-padding);
   @include fill-parent;
+  @include span-columns(12); // required so this falls below #header
   background-color: $lightgrey;
   border: 1px solid #ddd;
 }
