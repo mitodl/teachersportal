@@ -24,12 +24,9 @@ def index_view(request):
     try:
         email = request.user.email
         name = request.user.userinfo.full_name
-    except AttributeError:
+    except (AttributeError, ObjectDoesNotExist):
         # AnonymousUser doesn't have an email address
-        email = ""
-        name = ""
-    except ObjectDoesNotExist:
-        # Incorrectly built user, as it lacks a userinfo property.
+        # or incorrectly built user, as it lacks a userinfo property.
         email = ""
         name = ""
 

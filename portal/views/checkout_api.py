@@ -98,8 +98,8 @@ class CheckoutView(APIView):
             estimated_total = Decimal(float(data['total']))
         except KeyError as ex:
             raise ValidationError("Missing key {}".format(ex.args[0]))
-        except TypeError:
-            raise ValidationError("Invalid JSON")
+        except (TypeError, ValueError):
+            raise ValidationError("Invalid float")
 
         if not isinstance(cart, list):
             raise ValidationError("Cart must be a list of items")

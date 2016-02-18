@@ -84,6 +84,77 @@ class CheckoutAPITests(CourseTests):
             assert resp.status_code == 400, resp.content.decode('utf-8')
             assert "Missing key {}".format(key) in resp.content.decode('utf-8')
 
+    def test_cart_must_be_list(self):
+        """
+        Assert that an invalid cart causes a 400.
+        """
+        for invalid_cart in (None, {}, 3, "x"):
+            payload = {
+                "cart": invalid_cart,
+                "token": "",
+                "total": 0
+            }
+            resp = self.client.post(
+                reverse('checkout'),
+                content_type='application/json',
+                data=json.dumps(payload)
+            )
+            assert resp.status_code == 400, resp.content.decode('utf-8')
+            assert "Cart must be a list of items" in resp.content.decode('utf-8')
+
+    def test_total_is_not_a_float(self):
+        """
+        Assert that total must be a number (may be a string representing a number though)
+        """
+        for invalid_number in (None, {}, "x"):
+            payload = {
+                "cart": [],
+                "token": "",
+                "total": invalid_number
+            }
+            resp = self.client.post(
+                reverse('checkout'),
+                content_type='application/json',
+                data=json.dumps(payload)
+            )
+            assert resp.status_code == 400, resp.content.decode('utf-8')
+            assert "Invalid float" in resp.content.decode('utf-8')
+
+    def test_total_is_a_number_string(self):  # pylint: disable=unused-argument
+        """
+        Assert that the total can be a string with a number representation
+        """
+        total_seats = 5
+
+        # Add an extra module to assert we only POST to ccx endpoint once per course.
+        module2 = ModuleFactory.create(course=self.course, price_without_tax=123)
+
+        cart_item = {
+            "uuids": [self.module.uuid, module2.uuid],
+            "seats": total_seats,
+            "course_uuid": self.course.uuid
+        }
+        cart = [cart_item]
+        total = calculate_cart_subtotal(cart)
+        # Note: autospec intentionally not used, we need an unbound method here
+        with patch.object(Charge, 'create') as create_mock:
+            with patch(
+                'portal.views.checkout_api.CheckoutView.notify_external_services'
+            ) as notify_mock:
+                resp = self.client.post(
+                    reverse('checkout'),
+                    content_type='application/json',
+                    data=json.dumps({
+                        "cart": cart,
+                        "token": "token",
+                        "total": str(float(total))
+                    })
+                )
+
+        assert resp.status_code == 200, resp.content.decode('utf-8')
+        assert create_mock.call_count == 1
+        assert notify_mock.call_count == 1
+
     def test_missing_item_keys(self):
         """
         Assert that missing keys within the cart cause a 400.
@@ -373,6 +444,48 @@ class CheckoutAPITests(CourseTests):
         assert resp.status_code == 500, resp.content.decode('utf-8')
         assert "Example Error" in resp.content.decode('utf-8')
         assert "Another Error" in resp.content.decode('utf-8')
+
+    @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
+    @requests_mock.mock()
+    def test_non_200_propagates_to_response(self, mock, mocked_request):  # pylint: disable=unused-argument
+        """
+        If ccx POST returns a non-200, the response will have this information.
+        """
+        total_seats = 5
+
+        # Add an extra module to assert we only POST to ccx endpoint once per course.
+        module2 = ModuleFactory.create(course=self.course, price_without_tax=123)
+
+        error_message = "This is an error"
+        mocked_request.post(
+            "{base}v1/ccx/".format(base=FAKE_CCXCON_API),
+            text=error_message,
+            status_code=500
+        )
+
+        cart_item = {
+            "uuids": [self.module.uuid, module2.uuid],
+            "seats": total_seats,
+            "course_uuid": self.course.uuid
+        }
+        cart = [cart_item]
+        total = calculate_cart_subtotal(cart)
+        # Note: autospec intentionally not used, we need an unbound method here
+        with patch.object(Charge, 'create') as create_mock:
+
+            resp = self.client.post(
+                reverse('checkout'),
+                content_type='application/json',
+                data=json.dumps({
+                    "cart": cart,
+                    "token": "token",
+                    "total": float(total)
+                })
+            )
+
+        assert resp.status_code == 500, resp.content.decode('utf-8')
+        assert error_message in resp.content.decode('utf-8')
+        assert create_mock.call_count == 1
 
     def test_not_logged_in(self):
         """

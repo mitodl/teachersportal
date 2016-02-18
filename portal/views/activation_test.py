@@ -89,6 +89,19 @@ class ActivationTests(AuthenticationTestCase):
         assert resp.status_code == 400, resp.content.decode('utf-8')
         assert "Missing key token" in resp.content.decode('utf-8')
 
+    def test_token_not_found(self):
+        """
+        Test that a 403 is returned if the token doesn't match up
+        """
+        resp = self.client.post(
+            reverse('activate'),
+            json.dumps({
+                "token": "token"
+            }),
+            content_type="application/json"
+        )
+        assert resp.status_code == 403, resp.content.decode('utf-8')
+
     def test_empty_token(self):
         """
         Test that a 400 is returned for empty tokens. Empty tokens shouldn't

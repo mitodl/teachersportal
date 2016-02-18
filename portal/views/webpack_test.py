@@ -8,6 +8,8 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 
+from portal.models import UserInfo
+
 
 class TestViews(TestCase):
     """
@@ -44,4 +46,17 @@ class TestViews(TestCase):
         self.assertContains(
             response,
             '''name": ""'''
+        )
+
+    def test_name_read_properly(self):
+        """
+        The name should show up in the javascript embedded in the HTML.
+        """
+        user = User.objects.create_user(username='test', password='asdf')
+        UserInfo.objects.create(user=user, full_name="userinfoname")
+        self.client.login(username=user.username, password='asdf')
+        response = self.client.get(reverse('portal-index'))
+        self.assertContains(
+            response,
+            '''name": "userinfoname"'''
         )

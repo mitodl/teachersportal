@@ -62,7 +62,7 @@ def course(action, payload):
         except KeyError as ex:
             raise ValidationError("Missing key {key}".format(key=ex.args[0]))
         except TypeError as ex:
-            raise ValidationError("Invalid key {key}".format(key=ex.args[0]))
+            raise ValidationError("Invalid value for payload")
         Course.objects.filter(uuid=uuid).delete()
     else:
         raise ValidationError("Unknown action {action}".format(action=action))
@@ -119,7 +119,7 @@ def module(action, payload):
         except KeyError as ex:
             raise ValidationError("Missing key {key}".format(key=ex.args[0]))
         except TypeError as ex:
-            raise ValidationError("Invalid key {key}".format(key=ex.args[0]))
+            raise ValidationError("Invalid value for payload")
         with transaction.atomic():
             Module.objects.filter(uuid=uuid).delete()
     else:
