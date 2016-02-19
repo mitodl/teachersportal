@@ -8,6 +8,8 @@ import { connect } from 'react-redux';
 import {
   showSnackBar,
   hideSnackBar,
+  clearActivation,
+  showLogin,
   FETCH_FAILURE,
   FETCH_SUCCESS,
 } from '../actions/index_page';
@@ -16,10 +18,12 @@ class App extends React.Component {
 
   componentDidMount() {
     this.handleMessage.call(this);
+    this.showLoginAfterActivation.call(this);
   }
 
   componentDidUpdate() {
     this.handleMessage.call(this);
+    this.showLoginAfterActivation.call(this);
   }
 
   handleMessage() {
@@ -40,6 +44,14 @@ class App extends React.Component {
     // If message is already displayed don't display it again to avoid recursion
     if (message !== undefined && message !== snackBar.message) {
       dispatch(showSnackBar({message: message}));
+    }
+  }
+
+  showLoginAfterActivation() {
+    const { dispatch, activation } = this.props;
+    if (activation.status === FETCH_SUCCESS) {
+      dispatch(clearActivation());
+      dispatch(showLogin("Thanks for activating! You may now sign in."));
     }
   }
 
@@ -87,6 +99,7 @@ App.propTypes = {
 
 const mapStateToProps = (state) => {
   return {
+    activation: state.activation,
     authentication: state.authentication,
     registration: state.registration,
     loginModal: state.loginModal,
