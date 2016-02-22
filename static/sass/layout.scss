@@ -322,24 +322,31 @@ h3.course-listing-header {
           text-align: right;
         }
       }
-      .seatCount {
+      .seat-count {
         @include span-columns(2);
+
         font-size: 2em;
         text-align: center;
         font-weight: 700;
+        .seat-count-text {
+          font-size: 1em;
+          text-align: center;
+          font-weight: 700;
+          width: 100px;
+        }
 
-        .seatCountLabel {
+        .seat-count-label {
           font-size: 0.5em;
           text-align: center;
         }
       }
-      .selectionTotal {
+      .selection-total {
         @include span-columns(2);
         color: green;
         font-size: 2em;
         font-weight: 700;
         text-align: center;
-        .selectionTotalLabel {
+        .selection-total-label {
           font-size: 0.5em;
           text-align: center;
         }
@@ -354,7 +361,7 @@ h3.course-listing-header {
       font-size: 1.5em;
       text-align: left;
     }
-    .moduleSelector {
+    .module-selector {
       @include clearfix;
     }
   }

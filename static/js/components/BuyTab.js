@@ -14,6 +14,8 @@ import MenuItem from 'material-ui/lib/menus/menu-item';
 import { getModule, getCourse, calculateTotal } from '../util/util';
 import { removeCartItem } from '../actions/index_page';
 
+const MAX_SEATS = 200;
+
 class BuyTab extends React.Component {
   componentWillReceiveProps(nextProps) {
     // Workaround for half baked LeftNav material-ui component
@@ -37,6 +39,7 @@ class BuyTab extends React.Component {
       buyTab,
       buyTabTotal,
       updateSelectedChapters,
+      updateSeatCount,
       } = this.props;
 
     let cartContents = <MenuItem>No chapters selected</MenuItem>;
@@ -100,7 +103,6 @@ class BuyTab extends React.Component {
       });
     }
 
-    const maxSeats = 200;
     let cartTotal = calculateTotal(cart.cart, courseList);
 
     return <div className="course-purchase-selector">
@@ -110,22 +112,35 @@ class BuyTab extends React.Component {
           <Slider
             className="number-of-seats"
             name="number-of-seats"
-            max={maxSeats}
+            max={MAX_SEATS}
             value={buyTab.seats}
-            step={10}
+            step={1}
             style={{ 'marginBottom': '5px' }}
-            onChange={this.onUpdateSeatCount.bind(this)}
+            onChange={(e, value) => this.onUpdateSeatCount.call(this, value)}
           />
           <div className="slider-scale">
             <span className="left">0</span>
-            <span className="left-quarter">{maxSeats * 0.25}</span>
-            <span className="middle">{maxSeats * 0.5}</span>
-            <span className="right-quarter">{maxSeats * 0.75}</span>
-            <span className="right">{maxSeats}</span>
+            <span className="left-quarter">{MAX_SEATS * 0.25}</span>
+            <span className="middle">{MAX_SEATS * 0.5}</span>
+            <span className="right-quarter">{MAX_SEATS * 0.75}</span>
+            <span className="right">{MAX_SEATS}</span>
           </div>
         </div>
-        <div className="seatCount">{buyTab.seats}<br /><span className="seatCountLabel">Seats</span></div>
-        <div className="selectionTotal">${buyTabTotal}<br /><span className="selectionTotalLabel">Total</span></div>
+        <div className="seat-count">
+          <input
+            type="text"
+            value={buyTab.seats}
+            onChange={e => this.onUpdateSeatCount.call(this, e.target.value)}
+            className="seat-count-text"
+          />
+          <br />
+          <span className="seat-count-label">Seats</span>
+        </div>
+        <div className="selection-total">
+          ${buyTabTotal}
+          <br />
+          <span className="selection-total-label">Total</span>
+        </div>
         <RaisedButton
           label="Update Cart"
           className="add-to-cart"
@@ -135,7 +150,7 @@ class BuyTab extends React.Component {
       </div>
       <h3 className="chapter-label">Chapters</h3>
       <ChapterTab
-        className="moduleSelector"
+        className="module-selector"
         selectable={selectable}
         multiSelectable={selectable}
         enableSelectAll={selectable}
@@ -187,9 +202,20 @@ class BuyTab extends React.Component {
     updateCartVisibility(true);
   }
 
-  onUpdateSeatCount(e, value) {
+  onUpdateSeatCount(value) {
     const { updateSeatCount } = this.props;
-    updateSeatCount(value);
+
+    let number = parseInt(value);
+    if (!isFinite(number)) {
+      number = 0;
+    }
+    if (number < 0) {
+      number = 0;
+    }
+    if (number > MAX_SEATS) {
+      number = MAX_SEATS;
+    }
+    updateSeatCount(number);
   }
 
   onCartClose() {
