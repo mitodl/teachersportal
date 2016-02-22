@@ -104,6 +104,10 @@ a {
   }
 }
 
+#app-body {
+  @include span-columns(12);
+}
+
 #course-body {
   @include pad($block-padding);
   @include fill-parent;

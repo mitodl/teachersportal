@@ -75,7 +75,9 @@ class App extends React.Component {
         loginModal={loginModal}
         history={history}
       />
+      <div id="app-body">
         {content}
+      </div>
       <Snackbar
         open={snackBar.open}
         message={snackBar.message}
