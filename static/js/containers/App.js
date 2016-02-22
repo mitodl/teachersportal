@@ -81,10 +81,12 @@ class App extends React.Component {
       <Snackbar
         open={snackBar.open}
         message={snackBar.message}
-        autoHideDuration={3000}
+        action="dismiss"
+        autoHideDuration={0}
         onActionTouchTap={() => dispatch(hideSnackBar())}
         onRequestClose={() => dispatch(hideSnackBar())}
         bodyStyle={{ 'backgroundColor': 'rgba(100, 100, 100, 0.9)' }}
+        className="snackbar"
       />
       <Footer/>
     </div>;
