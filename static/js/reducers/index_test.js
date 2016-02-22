@@ -21,6 +21,7 @@ import {
   updateSelectedChapters,
   clearInvalidCartItems,
   receiveCourseListSuccess,
+  removeCartItem,
 
   REQUEST_COURSE,
   RECEIVE_COURSE_SUCCESS,
@@ -52,6 +53,7 @@ import {
   UPDATE_SEAT_COUNT,
   UPDATE_SELECTED_CHAPTERS,
   RESET_BUYTAB,
+  REMOVE_CART_ITEM,
 
   FETCH_FAILURE,
   FETCH_SUCCESS,
@@ -598,6 +600,29 @@ describe('reducers', () => {
           cart: [],
           courseList: []
         });
+
+        done();
+      });
+    });
+
+    it('removes an item from the cart', done => {
+      let uuid = COURSE_RESPONSE1.modules[0].uuid;
+      let courseUuid = COURSE_RESPONSE1.uuid;
+      store.dispatch(updateCartItems([uuid], 5, courseUuid));
+      let expectedCart = [{
+        uuids: [uuid],
+        seats: 5,
+        courseUuid: courseUuid
+      }];
+
+      // If course uuid doesn't match, no item is removed
+      dispatchThen(removeCartItem("missing"), [REMOVE_CART_ITEM]).then(cartState => {
+        assert.deepEqual(cartState.cart, expectedCart);
+
+        // If course uuid matches, item is removed
+        return dispatchThen(removeCartItem(courseUuid), [REMOVE_CART_ITEM]);
+      }).then(cartState => {
+        assert.deepEqual(cartState.cart, []);
 
         done();
       });

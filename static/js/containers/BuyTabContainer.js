@@ -14,7 +14,7 @@ import { calculateTotal } from '../util/util';
 
 class BuyTabContainer extends React.Component {
   render() {
-    const { course, courseList, cart, buyTab } = this.props;
+    const { course, courseList, cart, buyTab, dispatch } = this.props;
 
     let total = this.updateTotal();
 
@@ -25,6 +25,7 @@ class BuyTabContainer extends React.Component {
       cart={cart}
       buyTab={buyTab}
       buyTabTotal={total}
+      dispatch={dispatch}
 
       updateCartItems={this.onUpdateCartItems.bind(this)}
       updateSelectedChapters={this.onUpdateSelectedChapters.bind(this)}
@@ -99,7 +100,8 @@ BuyTabContainer.propTypes = {
   stripedRows: React.PropTypes.bool,
   showRowHover: React.PropTypes.bool,
   deselectOnClickaway: React.PropTypes.bool,
-  height: React.PropTypes.string
+  height: React.PropTypes.string,
+  dispatch: React.PropTypes.func.isRequired
 };
 
 const mapStateToProps = (state) => {

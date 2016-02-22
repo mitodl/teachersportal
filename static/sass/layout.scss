@@ -209,12 +209,60 @@ h3.course-listing-header {
 
 
   .shopping-cart {
+    background-color: #f5f5f5 !important;
+    .shopping-cart-list {
+      padding: 0px !important;
+      .cart-item {
+        border: 1px solid #e5e5e5 !important;
+
+        .cart-item-content {
+          @include outer-container;
+          .cart-item-description {
+            @include span-columns(10);
+          }
+          .cart-item-options {
+            @include span-columns(2);
+          }
+        }
+
+        .cart-item-module {
+          font-size: smaller;
+          text-indent: 5px;
+        }
+        .cart-item-info {
+          @include pad($block-padding);
+          margin-top: 20px;
+          margin-bottom: 20px;
+          text-align: center;
+
+          .cart-item-info-label {
+            font-size: smaller;
+            color: #a6a6a6;
+          }
+
+          .cart-item-seats {
+            @include span-columns(6);
+
+            .cart-item-seats-count {
+              font-size: xx-large;
+            }
+          }
+
+          .cart-item-cost {
+            @include span-columns(6);
+
+            .cart-item-cost-total {
+              font-size: xx-large;
+              color: green;
+            }
+          }
+        }
+      }
+    }
 
     .cart-actions {
       @include pad($block-padding);
       @include span-columns(6);
-      .checkout-button {
-      }
     }
 
     .cart-status {

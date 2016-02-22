@@ -36,6 +36,7 @@ export const CHECKOUT_SUCCESS = 'CHECKOUT_SUCCESS';
 export const CHECKOUT_FAILURE = 'CHECKOUT_FAILURE';
 export const CLEAR_INVALID_CART_ITEMS = 'CLEAR_INVALID_CART_ITEMS';
 export const RESET_BUYTAB = 'RESET_BUYTAB';
+export const REMOVE_CART_ITEM = 'REMOVE_CART_ITEM';
 
 export const UPDATE_SELECTED_CHAPTERS = 'UPDATE_SELECTED_CHAPTERS';
 export const UPDATE_SEAT_COUNT = 'UPDATE_SEAT_COUNT';
@@ -200,3 +201,7 @@ export const updateSelectedChapters = createAction(
 
 export const updateSeatCount = createAction(
   UPDATE_SEAT_COUNT, (seats) => { return { seats }; });
+
+export const removeCartItem = createAction(
+  REMOVE_CART_ITEM, courseUuid => ({courseUuid})
+);

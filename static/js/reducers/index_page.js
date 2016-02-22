@@ -170,6 +170,12 @@ export const cart = handleActions({
   CLEAR_INVALID_CART_ITEMS: (state, action) =>
     Object.assign({}, state, {
       cart: filterCart(state.cart, state.courseList)
+    }),
+  REMOVE_CART_ITEM: (state, action) =>
+    Object.assign({}, state, {
+      cart: state.cart.filter(item =>
+        item.courseUuid !== action.payload.courseUuid
+      )
     })
 }, {
   courseList: [],

@@ -2,13 +2,17 @@ import React from 'react';
 import RaisedButton from 'material-ui/lib/raised-button';
 import Slider from 'material-ui/lib/slider';
 import LeftNav from 'material-ui/lib/left-nav';
-import MenuItem from 'material-ui/lib/menus/menu-item';
+import List from 'material-ui/lib/lists/list';
+import ListItem from 'material-ui/lib/lists/list-item';
+import Checkbox from 'material-ui/lib/checkbox';
 import AppBar from 'material-ui/lib/app-bar';
 import IconButton from 'material-ui/lib/icon-button';
 import NavigationClose from 'material-ui/lib/svg-icons/navigation/close';
 import ChapterTab from './ChapterTab';
 import StripeButton from './StripeButton';
+import MenuItem from 'material-ui/lib/menus/menu-item';
 import { getModule, getCourse, calculateTotal } from '../util/util';
+import { removeCartItem } from '../actions/index_page';
 
 class BuyTab extends React.Component {
   componentWillReceiveProps(nextProps) {
@@ -38,17 +42,61 @@ class BuyTab extends React.Component {
     let cartContents = <MenuItem>No chapters selected</MenuItem>;
 
     if (cart.cart.length > 0) {
-      cartContents = cart.cart.map((item, i) => {
+      // courseList will be empty before we have fetched the courses from the server
+      // If a course is not yet available, skip the items in the display
+      let filteredCart = cart.cart.filter(
+        item => getCourse(item.courseUuid, courseList) !== undefined
+      );
+      cartContents = filteredCart.map(item => {
         let course = getCourse(item.courseUuid, courseList);
-        let title = "";
-        if (course !== undefined) {
-          title = course.title;
-        }
 
-        return <MenuItem
-          key={item.courseUuid}>{i}: {title}:
-          Seats: {item.seats}
-        </MenuItem>;
+        // filter out missing modules
+        let modules = item.uuids.filter(
+          uuid => getModule(uuid, courseList) !== undefined
+        ).map(uuid => getModule(uuid, courseList));
+
+        // reorder modules in the order they appeared when we got their information
+        // from the server
+        modules = modules.sort((a, b) => {
+          // Inefficient, but we aren't dealing with many modules here
+          let orderA = course.modules.findIndex(module => module.uuid === a.uuid);
+          let orderB = course.modules.findIndex(module => module.uuid === b.uuid);
+          return orderA - orderB;
+        });
+
+
+        let moduleDescriptions = modules.map(
+          module => <div key={module.uuid} className="cart-item-module">
+            {getModule(module.uuid, courseList).title}
+          </div>
+        );
+        let itemTotal = calculateTotal([item], courseList);
+
+        return <ListItem
+          key={course.uuid} className="cart-item">
+          <div className="cart-item-content">
+            <span className="cart-item-description">
+              <div>{course.title}</div>
+              {moduleDescriptions}
+            </span>
+            <div className="cart-item-options">
+              <button onClick={() => this.removeCartItem.call(this, item.courseUuid)}>Delete</button>
+            </div>
+          </div>
+          <div className="cart-item-info">
+            <div className="cart-item-seats">
+              <span className="cart-item-seats-count">{item.seats}</span>
+              <br />
+              <span className="cart-item-info-label">Total Seats</span>
+            </div>
+            <div className="cart-item-cost">
+              <span className="cart-item-cost-total">${itemTotal}</span>
+              <br />
+              <span className="cart-item-info-label">Course Cost</span>
+            </div>
+          </div>
+          </ListItem>
+          ;
       });
     }
 
@@ -115,7 +163,9 @@ class BuyTab extends React.Component {
             </IconButton>
           }
         />
+        <List className="shopping-cart-list">
         {cartContents}
+        </List>
         <div className="cart-actions">
           <StripeButton cart={cart} course={course} checkout={this.onCheckout.bind(this)}/>
         </div>
@@ -153,6 +203,12 @@ class BuyTab extends React.Component {
     updateCartVisibility(false);
     checkout();
   }
+
+  removeCartItem(courseUuid) {
+    const { dispatch } = this.props;
+
+    dispatch(removeCartItem(courseUuid));
+  }
 }
 
 export default BuyTab;
@@ -160,6 +216,7 @@ export default BuyTab;
 BuyTab.propTypes = {
   course: React.PropTypes.object.isRequired,
   courseList: React.PropTypes.array.isRequired,
+  dispatch: React.PropTypes.func.isRequired,
   selectable: React.PropTypes.bool.isRequired,
   cart: React.PropTypes.object.isRequired,
   buyTab: React.PropTypes.object.isRequired,
