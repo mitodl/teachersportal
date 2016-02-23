@@ -78,11 +78,12 @@ describe('CourseDetailPage', () => {
   });
 
   // Helper function to render CourseDetailPage
-  const renderCourseDetail = () => new Promise(resolve => {
-    const uuid = COURSE_RESPONSE1.uuid;
+  const renderCourseDetail = (postMountFetchResult = COURSE_RESPONSE1) => new Promise(resolve => {
+    const uuid = postMountFetchResult.uuid;
 
     const afterMount = component => {
       resolve(component);
+      store.dispatch(receiveCourseSuccess(postMountFetchResult));
     };
 
     TestUtils.renderIntoDocument(
@@ -104,16 +105,19 @@ describe('CourseDetailPage', () => {
 
     renderCourseDetail().then(component => {
       let node = ReactDOM.findDOMNode(component);
-      assert.ok(!node.innerHTML.includes("ABOUT"));
-      assert.ok(!node.innerHTML.includes("CONTENT"));
-      assert.ok(!node.innerHTML.includes("BUY"));
-      assert.ok(node.innerHTML.includes("Please login for more info"));
+      assert.ok(!node.innerHTML.includes("ABOUT"), 'about missing');
+      assert.ok(!node.innerHTML.includes("CONTENT"), 'content missing');
+      assert.ok(!node.innerHTML.includes("BUY"), 'buy missing');
+      assert.ok(node.innerHTML.includes("Please login for more info"), 'missing login prompt');
 
       done();
     });
   });
 
   it('can check off items in the buy tab', done => {
+    let courseStub = sandbox.stub(api, 'getCourse');
+    courseStub.returns(Promise.resolve(COURSE_RESPONSE1));
+
     // Set up state as if we logged in already
     store.dispatch(loginSuccess({name: "Darth Vader"}));
     store.dispatch(receiveCourseListSuccess(COURSE_LIST));
@@ -151,6 +155,8 @@ describe('CourseDetailPage', () => {
   });
 
   it('can add items to the cart', done => {
+    let courseStub = sandbox.stub(api, 'getCourse');
+    courseStub.returns(Promise.resolve(COURSE_RESPONSE2));
     // Alter state as if we logged in, selected all chapters and updated seat count
     const course1SeatCount = 77;
     const course2SeatCount = 88;
@@ -174,7 +180,7 @@ describe('CourseDetailPage', () => {
 
 
     let node;
-    renderCourseDetail().then(component => {
+    renderCourseDetail(COURSE_RESPONSE2).then(component => {
       node = ReactDOM.findDOMNode(component);
       // Listen for UPDATE_CART_ITEMS and UPDATE_CART_VISIBILITY
       return listenForActions([UPDATE_CART_ITEMS, UPDATE_CART_VISIBILITY], () => {
@@ -205,6 +211,9 @@ describe('CourseDetailPage', () => {
   });
 
   it('shows items in the cart panel', done => {
+    let courseStub = sandbox.stub(api, 'getCourse');
+    courseStub.returns(Promise.resolve(COURSE_RESPONSE1));
+
     const course1SeatCount = 77;
     const course2SeatCount = 88;
     const coursePairs = [{
@@ -262,6 +271,9 @@ describe('CourseDetailPage', () => {
   });
 
   it('can checkout the cart', done => {
+    let courseStub = sandbox.stub(api, 'getCourse');
+    courseStub.returns(Promise.resolve(COURSE_RESPONSE1));
+
     const fakeToken = "FAKE_TOKEN";
 
     const course1SeatCount = 77;
@@ -329,6 +341,9 @@ describe('CourseDetailPage', () => {
   });
 
   it('can checkout the cart with an empty price', done => {
+    let courseStub = sandbox.stub(api, 'getCourse');
+    courseStub.returns(Promise.resolve(COURSE_RESPONSE1));
+
     const zeroPriceCourse = Object.assign(COURSE_RESPONSE1,
       {
         modules: COURSE_RESPONSE1.modules.map(child =>
@@ -372,6 +387,9 @@ describe('CourseDetailPage', () => {
   });
 
   it('fails to checkout', done => {
+    let courseStub = sandbox.stub(api, 'getCourse');
+    courseStub.returns(Promise.resolve(COURSE_RESPONSE1));
+
     const zeroPriceCourse = Object.assign(COURSE_RESPONSE1,
       {
         modules: COURSE_RESPONSE1.modules.map(child =>

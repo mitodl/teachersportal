@@ -74,7 +74,10 @@ const INITIAL_COURSE_STATE = {
 };
 
 export const course = handleActions({
-  REQUEST_COURSE: payloadMerge((action) => ({courseStatus: FETCH_PROCESSING})),
+  REQUEST_COURSE: payloadMerge((action) => ({
+    courseStatus: FETCH_PROCESSING,
+    course: undefined
+  })),
   RECEIVE_COURSE_SUCCESS: payloadMerge((action) => ({
     courseStatus: FETCH_SUCCESS,
     course: action.payload.course
