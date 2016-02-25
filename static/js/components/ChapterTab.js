@@ -5,6 +5,7 @@ import TableHeader from 'material-ui/lib/table/table-header';
 import TableHeaderColumn from 'material-ui/lib/table/table-header-column';
 import TableRow from 'material-ui/lib/table/table-row';
 import TableRowColumn from 'material-ui/lib/table/table-row-column';
+import { formatDollars } from '../util/util';
 
 class ChapterTab extends React.Component {
 
@@ -35,7 +36,7 @@ class ChapterTab extends React.Component {
         if (selectable === true) {
           return <TableRow key={module.uuid} selected={selected}>
             <TableRowColumn>{module.title}</TableRowColumn>
-            <TableRowColumn>${module.price_without_tax} / seat</TableRowColumn>
+            <TableRowColumn>{formatDollars(module.price_without_tax)} / seat</TableRowColumn>
           </TableRow>;
         } else {
           return <TableRow key={module.uuid} selected={selected}>

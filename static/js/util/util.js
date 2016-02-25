@@ -117,3 +117,10 @@ export function sendGoogleEcommerceTransaction(id, revenue) {
   });
   ga.plugin.execute('ecommerce', 'send');
 }
+
+export function formatDollars(amount) {
+  let cents = Math.round(amount * 100);
+  let dollars = cents / 100;
+
+  return `$${dollars.toFixed(2)}`;
+}
