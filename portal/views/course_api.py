@@ -6,7 +6,11 @@ from __future__ import unicode_literals
 from decimal import Decimal, DecimalException
 import logging
 import json
-from six.moves.urllib.parse import urlparse, urlunparse  # pylint: disable=import-error
+from six.moves.urllib.parse import (  # pylint: disable=import-error
+    urlparse,
+    urlunparse,
+    urljoin,
+)
 from six import string_types
 
 from django.conf import settings
@@ -104,11 +108,10 @@ def fetch_ccxcon_info(uuid):
             Item two is the information for each module for that course
     """
     oauth_ccxcon = ccxcon_request()
-    ccxcon_api = settings.CCXCON_API
 
-    course_url = "{api_base}v1/coursexs/{course_uuid}/".format(
-        api_base=ccxcon_api,
-        course_uuid=uuid
+    course_url = urljoin(
+        settings.CCXCON_API,
+        'v1/coursexs/{course_uuid}/'.format(course_uuid=uuid)
     )
     response = oauth_ccxcon.get(course_url)
     if response.status_code != HTTP_200_OK:
@@ -126,9 +129,9 @@ def fetch_ccxcon_info(uuid):
     # Whitelist of allowed keys to pass through
 
     # Add module information to list
-    modules_url = "{api_base}v1/coursexs/{course_uuid}/modules/".format(
-        api_base=ccxcon_api,
-        course_uuid=uuid
+    modules_url = urljoin(
+        settings.CCXCON_API,
+        'v1/coursexs/{course_uuid}/modules/'.format(course_uuid=uuid)
     )
     response = oauth_ccxcon.get(modules_url)
     if response.status_code != HTTP_200_OK:
