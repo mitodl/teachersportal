@@ -1,7 +1,13 @@
 /* global SETTINGS:false */
 import '../global_init';
 import assert from 'assert';
-import { calculateTotal, filterCart, getModule, getCourse } from './util';
+import {
+  calculateTotal,
+  filterCart,
+  getModule,
+  getCourse,
+  formatDollars,
+} from './util';
 import { CART, COURSE_RESPONSE1, COURSE_LIST } from './../constants';
 
 describe('utility functions', () => {
@@ -120,6 +126,14 @@ describe('utility functions', () => {
         uuids: ["invalid"]
       });
       assert.deepEqual(filterCart([item], COURSE_LIST), []);
+    });
+
+    it('formats floats as dollars', () => {
+      assert.equal("$2.00", formatDollars(2));
+      assert.equal("$0.00", formatDollars(0));
+      // It rounds to the nearest cent
+      assert.equal("$123.57", formatDollars(123.565));
+      assert.equal("$-45.01", formatDollars(-45.01));
     });
   });
 });

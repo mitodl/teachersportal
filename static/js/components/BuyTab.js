@@ -11,7 +11,12 @@ import NavigationClose from 'material-ui/lib/svg-icons/navigation/close';
 import ChapterTab from './ChapterTab';
 import StripeButton from './StripeButton';
 import MenuItem from 'material-ui/lib/menus/menu-item';
-import { getModule, getCourse, calculateTotal } from '../util/util';
+import {
+  getModule,
+  getCourse,
+  calculateTotal,
+  formatDollars,
+} from '../util/util';
 import { removeCartItem } from '../actions/index_page';
 
 const MAX_SEATS = 200;
@@ -93,7 +98,7 @@ class BuyTab extends React.Component {
               <span className="cart-item-info-label">Total Seats</span>
             </div>
             <div className="cart-item-cost">
-              <span className="cart-item-cost-total">${itemTotal}</span>
+              <span className="cart-item-cost-total">{formatDollars(itemTotal)}</span>
               <br />
               <span className="cart-item-info-label">Course Cost</span>
             </div>
@@ -137,7 +142,7 @@ class BuyTab extends React.Component {
           <span className="seat-count-label">Seats</span>
         </div>
         <div className="selection-total">
-          ${buyTabTotal}
+          {formatDollars(buyTabTotal)}
           <br />
           <span className="selection-total-label">Total</span>
         </div>
@@ -185,7 +190,11 @@ class BuyTab extends React.Component {
           <StripeButton cart={cart} course={course} checkout={this.onCheckout.bind(this)}/>
         </div>
         <div className="cart-status">
-          <span className="cart-total">${cartTotal}<br /><span className="cart-total-label">total cost</span></span>
+          <span className="cart-total">
+            {formatDollars(cartTotal)}
+            <br />
+            <span className="cart-total-label">total cost</span>
+          </span>
         </div>
       </LeftNav>
     </div>;
