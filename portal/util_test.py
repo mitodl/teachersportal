@@ -344,31 +344,6 @@ class CheckoutValidationTests(CourseTests):
             ], self.user)
         assert ex.exception.detail[0] == "Course does not match up with module"
 
-    def test_must_have_all_children_in_cart(self):  # pylint: disable=invalid-name
-        """
-        If user tries to buy a subset of a course, raise a validation error.
-
-        Note: It's expected that this will be removed when we support buying
-        modules.
-        """
-        # Create second module so we need to pass both modules to the API to purchase
-        ModuleFactory.create(
-            course=self.course,
-            title='test',
-            price_without_tax=100
-        )
-
-        with self.assertRaises(ValidationError) as ex:
-            validate_cart([
-                {
-                    'uuids': [self.module.uuid],
-                    'seats': 5,
-                    'course_uuid': self.course.uuid
-                },
-            ], self.user)
-
-        assert ex.exception.detail[0] == 'You must purchase all modules for a course.'
-
     def test_dont_allow_empty_uuids(self):
         """
         Raise a ValidationError if uuids list is empty
