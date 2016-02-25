@@ -5,6 +5,7 @@ import TableHeader from 'material-ui/lib/table/table-header';
 import TableHeaderColumn from 'material-ui/lib/table/table-header-column';
 import TableRow from 'material-ui/lib/table/table-row';
 import TableRowColumn from 'material-ui/lib/table/table-row-column';
+import Checkbox from 'material-ui/lib/checkbox';
 import { formatDollars } from '../util/util';
 
 class ChapterTab extends React.Component {
@@ -62,11 +63,18 @@ class ChapterTab extends React.Component {
       allRowsSelected={allRowsSelected}
     >
       <TableHeader
-        adjustForCheckbox={selectable}
-        displaySelectAll={selectable}
-        enableSelectAll={selectable}>
+        adjustForCheckbox={false}
+        displaySelectAll={false}
+        enableSelectAll={false}>
         <TableRow>
-          <TableHeaderColumn colSpan="3"></TableHeaderColumn>
+          <TableHeaderColumn>
+            <Checkbox
+              className="select-all"
+              checked={allRowsSelected}
+              onCheck={this._onSelectAll.bind(this)}
+            />
+          </TableHeaderColumn>
+          <TableHeaderColumn colSpan="2" />
         </TableRow>
       </TableHeader>
       <TableBody
@@ -80,6 +88,15 @@ class ChapterTab extends React.Component {
     ;
   }
 
+  _onSelectAll() {
+    const { allRowsSelected } = this.props.buyTab;
+    if (allRowsSelected) {
+      this._onRowSelection('none');
+    } else {
+      this._onRowSelection('all');
+    }
+  }
+
   _onRowSelection(selectedRows) {
     const { course, updateSelectedChapters } = this.props;
     // dispatch action to update global state with the currently selected modules, number of seats
@@ -88,6 +105,9 @@ class ChapterTab extends React.Component {
     if (selectedRows === 'all') {
       allRowsSelected = true;
       uuids = Array.from(course.modules, child => child.uuid);
+    } else if (selectedRows === 'none') {
+      allRowsSelected = false;
+      uuids = [];
     } else {
       // Workaround for material-ui quirk
       selectedRows = selectedRows.filter(i => i !== undefined);
