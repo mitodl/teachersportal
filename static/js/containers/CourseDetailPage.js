@@ -8,14 +8,14 @@ import {
   clearInvalidCartItems,
   showSnackBar,
   FETCH_FAILURE,
-  FETCH_SUCCESS,
+  FETCH_SUCCESS
 } from '../actions/index_page';
 import { connect } from 'react-redux';
 
 class CourseDetailPage extends React.Component {
 
   componentDidMount() {
-    this.fetchCourse.call(this);
+    this.fetchCourse.call(this, true);
     this.handleError.call(this);
   }
 
@@ -24,7 +24,9 @@ class CourseDetailPage extends React.Component {
     this.handleError.call(this);
   }
 
-  fetchCourse() {
+  // forceFetchCourse will trigger a fetch of the course, regardless
+  // of if it's already been fetched.
+  fetchCourse(forceFetchCourse = false) {
     const {
       course,
       authentication,
@@ -37,7 +39,7 @@ class CourseDetailPage extends React.Component {
     // this component is refreshed before action has a chance to dispatch,
     // but that shouldn't cause any problems
 
-    if (course.courseStatus === undefined) {
+    if (forceFetchCourse || course.courseStatus === undefined) {
       dispatch(fetchCourse(uuid));
     }
     if (course.courseListStatus === undefined) {
@@ -53,7 +55,9 @@ class CourseDetailPage extends React.Component {
     } = this.props;
 
     let detail;
-    if (course.course === undefined) {
+    // We should show the loading page if the course isn't loaded or
+    // if there is an error.
+    if (course.courseStatus !== FETCH_SUCCESS) {
       detail = <div id="course-body">
         <Card id="course-content">
           <LinearProgress mode="indeterminate" size="1" className="progress" />
@@ -75,7 +79,7 @@ class CourseDetailPage extends React.Component {
 
 
   handleError() {
-    const { course, dispatch, authentication } = this.props;
+    const { course, dispatch } = this.props;
 
     let error;
 
