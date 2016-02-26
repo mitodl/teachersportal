@@ -10,54 +10,57 @@ import CardExpandable from 'material-ui/lib/card/card-expandable';
 import CardHeader from 'material-ui/lib/card/card-header';
 import CardMedia from 'material-ui/lib/card/card-media';
 import CardTitle from 'material-ui/lib/card/card-title';
+import PleaseLogin from './PleaseLogin';
 
 class CourseDetail extends Component {
-    render() {
-      const { product, error, cart, addToCart, onCheckout } = this.props;
+  render() {
+    const {
+      authenticated,
+      course,
+      courseList
+    } = this.props;
 
-      let content;
+    let baseContent = <div>
+      <CardTitle
+        title={course.title}
+        subtitle={course.info.author_name}
+        id="course-title"
+      />
+      <CourseImage src={course.info.image_url}/>
+      <CardText
+        id="course-description"
+        dangerouslySetInnerHTML={{__html: course.description || course.info.description }}
+      />
+    </div>;
 
-      if (error !== undefined) {
-        content = <CardText>{error}</CardText>;
-      } else if (product === undefined) {
-        content = <div>
+    let content;
+    if (authenticated) {
+      content = <div>
+        {baseContent}
+        <CourseTabs
+          course={course}
+          courseList={courseList}
+        />
+      </div>;
+    } else {
+      content = <div>
+          {baseContent}
+          <PleaseLogin />
         </div>;
-      } else {
-
-        content = <div>
-          <CardTitle
-            title={product.title}
-            subtitle={product.info.author_name}
-            id="course-title"
-          />
-          <CourseImage src={product.info.image_url} />
-          <CardText id="course-description">
-              {product.description}
-          </CardText>
-          <CourseTabs
-            product={product}
-            cart={cart}
-            addToCart={addToCart}
-            onCheckout={onCheckout}
-          />
-        </div>;
-      }
-
-      return <div id="course-body">
-          <Card id="course-content">
-            {content}
-          </Card>
-      </div>
-      ;
     }
+
+    return <div id="course-body">
+      <Card id="course-content">
+        {content}
+      </Card>
+    </div>
+      ;
   }
+}
 
 CourseDetail.propTypes = {
-  product: React.PropTypes.object,
-  error: React.PropTypes.string,
-  cart: React.PropTypes.array.isRequired,
-  addToCart: React.PropTypes.func.isRequired,
-  onCheckout: React.PropTypes.func.isRequired
+  course: React.PropTypes.object.isRequired,
+  courseList: React.PropTypes.array.isRequired
 };
 
 export default CourseDetail;

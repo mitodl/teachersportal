@@ -5,15 +5,13 @@ Base classes for test cases
 from __future__ import unicode_literals
 
 from django.contrib.auth.models import User
-from django.test import TestCase
-from oscar.apps.catalogue.models import Product, ProductClass
+from django.test import TestCase, override_settings
 
+from portal.factories import CourseFactory, ModuleFactory
 from portal.models import UserInfo
-from portal.util import (
-    make_upc,
-    COURSE_PRODUCT_TYPE,
-    MODULE_PRODUCT_TYPE,
-)
+
+
+FAKE_CCXCON_API = 'https://fakehost/api/'
 
 
 class AuthenticationTestCase(TestCase):
@@ -76,33 +74,19 @@ class AuthenticationTestCase(TestCase):
         )
 
 
-class ProductTests(TestCase):
+@override_settings(CCXCON_API=FAKE_CCXCON_API)
+class CourseTests(TestCase):
     """
-    Base class for tests dealing with products
+    Base class for tests dealing with courses and modules
     """
     def setUp(self):
         """
-        Create parent and child Products with no StockRecords to start with.
+        Create a course and module which aren't live.
         """
-        product_class = ProductClass.objects.get(name="Course")
-        parent_upc = make_upc(COURSE_PRODUCT_TYPE, "parent-uuid")
-        parent_title = "parent's title"
-        self.parent = Product.objects.create(
-            upc=parent_upc,
-            description="Parent description",
-            product_class=product_class,
-            structure=Product.PARENT,
-            parent=None,
-            title=parent_title
+        self.course = CourseFactory.create(
+            description=None,
+            live=False,
         )
-
-        child_upc = make_upc(MODULE_PRODUCT_TYPE, "child-uuid")
-        child_title = "child's title"
-        self.child = Product.objects.create(
-            upc=child_upc,
-            description="Child description",
-            product_class=None,
-            structure=Product.CHILD,
-            parent=self.parent,
-            title=child_title
+        self.module = ModuleFactory.create(
+            course=self.course,
         )

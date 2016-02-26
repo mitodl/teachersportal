@@ -3,224 +3,66 @@ Helper functions which may be generally useful.
 """
 
 from __future__ import unicode_literals
+from decimal import Decimal, ROUND_HALF_EVEN
+import logging
 
 from rest_framework.exceptions import ValidationError
-from oscar.apps.catalogue.models import Product
-from oscar.apps.partner.strategy import Selector
 
-from portal.models import Order, OrderLine
+from portal.models import (
+    Module,
+    Order,
+    OrderLine,
+)
+from portal.permissions import AuthorizationHelpers
 
-MODULE_PRODUCT_TYPE = "Module"
-COURSE_PRODUCT_TYPE = "Course"
+log = logging.getLogger(__name__)
 
 
-def make_upc(product_type, external_pk):
+def course_as_dict(course, course_info=None, modules_info=None):
     """
-    Helper function to create unique UPC and SKU values for the database.
-
+    Serialize course to dict, ready for JSON serialization
     Args:
-        product_type (basestring):
-            The name of the product type.
-        external_pk (basestring):
-            An identifer string, unique within the ProductClass.
-    Returns:
-        basestring: A unique string id.
-    """
-    return "{type}_{pk}".format(type=product_type, pk=external_pk)
-
-
-def make_external_pk(product_type, upc):
-    """
-    We concatenate the product class with the UUID to store it in Product.upc
-    which requires each entry to be unique (the incoming UUIDs are only guaranteed
-    to be unique within product class). This chops off the product class and returns
-    the UUID to be exposed via REST API.
-
-    Args:
-        product_type (basestring):
-            The name of the product type.
-        upc (basestring):
-            The UPC used inside the database.
-    Returns:
-        basestring: The external_pk value used in creating this UUID
-    """
-    prefix = "{product_type}_".format(product_type=product_type)
-    if upc.startswith(prefix):
-        return upc[len(prefix):]
-
-    # Should never happen since only the webhooks should update this listing
-    raise Exception("Unexpected prefix found")
-
-
-def get_external_pk(product):
-    """
-    Helper function to get external_pk for a product which may be None.
-
-    Args:
-        product (oscar.apps.catalogue.models.Product):
-            A Product (may be None)
-    Returns:
-        basestring: The appropriate external pk for the Product, or None if
-        product is None.
-    """
-    if product is None:
-        return None
-    if product.structure == Product.PARENT or product.structure == Product.STANDALONE:
-        product_type = COURSE_PRODUCT_TYPE
-    elif product.structure == Product.CHILD:
-        product_type = MODULE_PRODUCT_TYPE
-    else:
-        raise Exception("Unexpected structure")
-    return make_external_pk(product_type, product.upc)
-
-
-def get_product_type(product):
-    """
-    Parse product type from UPC.
-
-    Args:
-        product (oscar.apps.catalogue.models.Product):
-            A Product
-    Returns:
-        basestring: The product type
-    """
-    upc = product.upc
-    for product_type in (COURSE_PRODUCT_TYPE, MODULE_PRODUCT_TYPE):
-        if upc.startswith("{product_type}_".format(product_type=product_type)):
-            return product_type
-    raise Exception("Invalid product type")
-
-
-# pylint: disable=too-many-branches
-def validate_product(product):
-    """
-    Raise an exception if the product is invalid in some way, based on the rules
-    we are enforcing in this app. (This may raise Exceptions for things that
-    are valid by django-oscar.)
-    """
-    # This is not the same as the product type which is part of the UPC.
-    if product.structure == Product.CHILD:
-        if product.product_class is not None:
-            raise Exception("Children cannot have product_class set")
-        if product.parent is None:
-            raise Exception("CHILD products must have a parent")
-        if product.children.count() != 0:
-            raise Exception("CHILD products must not have children")
-        if get_product_type(product) != MODULE_PRODUCT_TYPE:
-            raise Exception("Modules may only be CHILD Products")
-    elif product.structure == Product.PARENT or product.structure == Product.STANDALONE:
-        if product.product_class.name != "Course":
-            raise Exception("Only Course ProductClass may be set")
-        if product.parent is not None:
-            raise Exception("PARENT products must not have a parent")
-        if get_product_type(product) != COURSE_PRODUCT_TYPE:
-            raise Exception("Courses may only be PARENT Products")
-        if product.structure == Product.PARENT and product.children.count() == 0:
-            raise Exception("PARENT products must have children")
-        if product.structure == Product.STANDALONE and product.children.count() > 0:
-            raise Exception("STANDALONE products must not have children")
-
-    stockrecords = product.stockrecords.all()
-    if stockrecords.count() > 0:
-        if product.structure != Product.CHILD:
-            raise Exception("Only CHILD products can have StockRecords")
-        if stockrecords.count() > 1:
-            raise Exception("More than one StockRecords for a Product")
-
-        stockrecord = stockrecords.first()
-        if stockrecord.partner_sku != product.upc:
-            raise Exception("StockRecord SKU does not match Product UPC")
-
-        if stockrecord.price_currency != "$":
-            raise Exception("StockRecord price_currency must be $")
-
-
-def get_price_without_tax(product):
-    """
-    Helper function to get price from Product's StockRecord.
-
-    Args:
-        product (oscar.apps.catalogue.models.Product):
-            A Product (may be None)
-    Returns:
-        decimal.Decimal: If product exists and has a price, return the price
-        else return None.
-    """
-    validate_product(product)
-
-    stockrecord = product.stockrecords.first()
-    if stockrecord is None:
-        # No price information, not available to buy
-        return None
-
-    # Get default strategy
-    strategy = Selector().strategy()
-    info = strategy.fetch_for_product(product, stockrecord)
-    return info.price.excl_tax
-
-
-def is_available_to_buy(product):
-    """
-    Is a Product available to purchase? For our purposes this means if it has
-    a price set.
-
-    Args:
-        product (oscar.apps.catalogue.models.Product):
-            A Product
-    Returns:
-        bool: True if product is available to buy
-    """
-    validate_product(product)
-
-    if product.structure == Product.PARENT:
-        # Product will be available if any children are available
-        return any(
-            child for child in product.children.all()
-            if is_available_to_buy(child)
-        )
-    elif product.structure == Product.STANDALONE:
-        return False
-    elif product.structure == Product.CHILD:
-        stockrecord = product.stockrecords.first()
-        if stockrecord is None:
-            # No price information, not available to buy
-            return False
-
-        # Get default strategy
-        strategy = Selector().strategy()
-        info = strategy.fetch_for_product(product, stockrecord)
-        return info.availability.is_available_to_buy
-    else:
-        raise Exception("Unexpected structure")
-
-
-def product_as_json(product, ccxcon_info):
-    """
-    Serialize product to JSON
-    Args:
-        product (Product): A Product
-        ccxcon_info (dict): Information fetched from CCXCon
+        course (Course): A Course
+        course_info (dict): Information fetched from CCXCon about the course
+        modules_info (dict): Information about each module, in fetched order
 
     Returns:
-        dict: The product as a dictionary
+        dict: The course as a dictionary
     """
-    parent_upc = None
-    if product.parent is not None:
-        parent_upc = product.parent.upc
+    if modules_info is None:
+        modules_info = {}
+
+    modules = [
+        module_as_dict(module, modules_info.get(module.uuid))
+        for module in course.module_set.order_by('created_at')
+        ]
     return {
-        "upc": product.upc,
-        "title": product.title,
-        "description": product.description,
-        "external_pk": get_external_pk(product),
-        "product_type": get_product_type(product),
-        "price_without_tax": get_price_without_tax(product),
-        "parent_upc": parent_upc,
-        "info": ccxcon_info.get(product.upc),
-        "children": [
-            product_as_json(child, ccxcon_info)
-            for child in product.children.order_by('date_created')
-            if is_available_to_buy(child)
-        ],
+        "title": course.title,
+        "description": course.description,
+        "uuid": course.uuid,
+        "info": course_info,
+        "modules": modules,
+    }
+
+
+def module_as_dict(module, ccxcon_module_info=None):
+    """
+    Serialize module to dict, ready for JSON serialization
+    Args:
+        module (Module): A Module
+        ccxcon_module_info (dict): Information fetched from CCXCon
+
+    Returns:
+        dict: The module as a dictionary
+    """
+    price_without_tax = None
+    if module.price_without_tax is not None:
+        price_without_tax = float(module.price_without_tax)
+    return {
+        "title": module.title,
+        "uuid": module.uuid,
+        "price_without_tax": price_without_tax,
+        "info": ccxcon_module_info,
     }
 
 
@@ -230,53 +72,101 @@ def calculate_cart_subtotal(cart):
     Args:
         cart (list): A list of items in cart
     Returns:
-        float: Total price of cart
+        Decimal: Total price of cart
     """
-    return sum(calculate_cart_item_total(item) for item in cart)
+    total = Decimal()
+    for item in cart:
+        for uuid in item['uuids']:
+            total += calculate_orderline_total(uuid, item['seats'])
+    return total
 
 
-def calculate_cart_item_total(item):
+def calculate_orderline_total(uuid, seats):
     """
-    Calculate total for a particular line.
+    Calculate total for a particular item.
     Args:
-        item (dict): An item in the cart
+        uuid (str): A UUID
+        seats (int): A number of seats
     Returns:
-        float: Product price times number of seats
+        Decimal: Product price times number of seats
     """
-    product = Product.objects.get(upc=item['upc'])
-    num_seats = int(item['seats'])
-    return get_price_without_tax(product) * num_seats
+    module = Module.objects.get(uuid=uuid)
+    return module.price_without_tax * seats
 
 
-def validate_cart(cart):
+# pylint: disable=too-many-branches
+def validate_cart(cart, user):
     """
     Validate cart contents.
     Args:
         cart (list): A list of items in cart
+        user (django.contrib.auth.models.User): A user
     """
-    items_in_cart = set()
+    modules_in_cart = set()
+    courses_in_cart = set()
 
     for item in cart:
         try:
-            product = Product.objects.get(upc=item['upc'])
-            seats = int(item['seats'])
-        except Product.DoesNotExist:
-            raise ValidationError("One or more products are unavailable")
+            uuids = item['uuids']
+            seats = item['seats']
+            course_uuid = item['course_uuid']
         except KeyError as ex:
             raise ValidationError("Missing key {}".format(ex.args[0]))
 
-        if get_product_type(product) == COURSE_PRODUCT_TYPE:
-            raise ValidationError("Cannot purchase a Course")
-        if not is_available_to_buy(product):
-            raise ValidationError("One or more products are unavailable")
+        if not isinstance(seats, int):
+            # Hopefully we're never entering long territory here
+            raise ValidationError("Seats must be an integer")
 
         if seats == 0:
             raise ValidationError("Number of seats is zero")
 
-        if item['upc'] in items_in_cart:
-            raise ValidationError("Duplicate item in cart")
+        if not isinstance(uuids, list):
+            raise ValidationError("uuids must be a list")
 
-        items_in_cart.add(item['upc'])
+        if len(uuids) == 0:
+            raise ValidationError("uuids must not be empty")
+
+        if course_uuid in courses_in_cart:
+            log.debug("Duplicate course %s in cart", course_uuid)
+            raise ValidationError("Duplicate course in cart")
+        course = AuthorizationHelpers.get_course(course_uuid)
+        if course is None:
+            raise ValidationError("One or more courses are unavailable")
+
+        if not AuthorizationHelpers.can_purchase_course(course, user):
+            raise ValidationError("User cannot purchase this course")
+
+        courses_in_cart.add(course_uuid)
+
+        for uuid in uuids:
+            try:
+                module = Module.objects.get(uuid=uuid)
+            except Module.DoesNotExist:
+                log.debug('Could not find module with uuid %s', uuid)
+                raise ValidationError("One or more modules are unavailable")
+
+            if module.course != course:
+                log.debug(
+                    'Course with uuid %s does not match up with module with uuid %s',
+                    course_uuid,
+                    uuid
+                )
+                raise ValidationError("Course does not match up with module")
+
+            if not module.is_available_for_purchase:
+                raise ValidationError("One or more modules are unavailable")
+
+            if uuid in modules_in_cart:
+                log.debug("Duplicate module uuid %s", uuid)
+                raise ValidationError("Duplicate module in cart")
+
+            modules_in_cart.add(uuid)
+
+    for module_uuid in modules_in_cart:
+        module = Module.objects.get(uuid=module_uuid)
+        uuids = module.course.module_set.values_list('uuid', flat=True)
+        if not modules_in_cart.issuperset(uuids):
+            raise ValidationError("You must purchase all modules for a course.")
 
 
 def create_order(cart, user):
@@ -288,7 +178,7 @@ def create_order(cart, user):
     Returns:
         Order: A newly created order
     """
-    validate_cart(cart)
+    validate_cart(cart, user)
 
     subtotal = calculate_cart_subtotal(cart)
     order = Order.objects.create(
@@ -297,12 +187,28 @@ def create_order(cart, user):
         total_paid=subtotal,
     )
     for item in cart:
-        product = Product.objects.get(upc=item['upc'])
-        OrderLine.objects.create(
-            order=order,
-            seats=int(item['seats']),
-            product=product,
-            price_without_tax=get_price_without_tax(product),
-            line_total=calculate_cart_item_total(item)
-        )
+        seats = item['seats']
+        uuids = item['uuids']
+        for uuid in uuids:
+            module = Module.objects.get(uuid=uuid)
+            OrderLine.objects.create(
+                order=order,
+                seats=seats,
+                module=module,
+                price_without_tax=module.price_without_tax,
+                line_total=calculate_orderline_total(uuid, seats)
+            )
     return order
+
+
+def get_cents(dec):
+    """
+    Helper function to get an integer cents value from a Decimal.
+    Args:
+        dec (Decimal): A decimal
+    Returns:
+        int: Number of cents, rounded down
+    """
+    return int(
+        dec.quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN) * 100
+    )

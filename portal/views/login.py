@@ -4,7 +4,7 @@ Views for login/logout.
 from __future__ import unicode_literals
 
 from django.contrib.auth import authenticate, login, logout
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
@@ -42,7 +42,9 @@ class LoginView(APIView):
         if user is not None:
             if user.is_active:
                 login(request, user)
-                return Response(status=200)
+                return Response(status=200, data={
+                    'name': user.userinfo.full_name,
+                })
             else:
                 return Response(status=403)
         else:
@@ -50,6 +52,7 @@ class LoginView(APIView):
 
 
 @api_view(["POST"])
+@permission_classes([])
 def logout_view(request):
     """
     View to logout user.

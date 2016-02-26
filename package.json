@@ -10,9 +10,9 @@
     "eslint-plugin-babel": "^2.1.1",
     "eslint-plugin-react": "^3.7.1",
     "fetch-mock": "^2.3.0",
-    "jsdom": "^7.0.2",
+    "jsdom": "^7.2.2",
+    "jsdom-global": "^1.5.0",
     "mocha": "^2.3.3",
-    "mocha-jsdom": "^1.0.0",
     "react-addons-test-utils": "^0.14.2",
     "sinon": "^1.17.2"
   },
@@ -30,17 +30,20 @@
     "isomorphic-fetch": "~2.2.0",
     "jsx-loader": "^0.13.2",
     "lodash": "^3.10.1",
-    "material-ui": "^0.13.2",
+    "material-ui": "^0.14.2",
     "node-neat": "^1.7.2",
     "node-sass": "^3.4.2",
     "react": "^0.14.2",
     "react-addons": "^0.9.1-deprecated",
     "react-dom": "^0.14.2",
+    "react-ga": "^1.2.0",
     "react-redux": "^4.0.0",
     "react-router": "~1.0.0",
     "react-tap-event-plugin": "^0.2.1",
     "redux": "^3.0.4",
+    "redux-actions": "^0.9.0",
     "redux-devtools": "^2.1.5",
+    "redux-localstorage": "^0.4.0",
     "redux-logger": "~2.0.4",
     "redux-thunk": "~1.0.0",
     "sass-loader": "^3.1.1",
@@ -51,6 +54,6 @@
     "webpack-stats-plugin": "^0.1.1"
   },
   "scripts": {
-    "postinstall": "node node_modules/webpack/bin/webpack.js"
+    "postinstall": "node node_modules/webpack/bin/webpack.js --config webpack.config.prod.js"
   }
 }

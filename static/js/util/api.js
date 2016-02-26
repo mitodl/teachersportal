@@ -10,7 +10,7 @@ function getCookie(name) {
     let cookies = document.cookie.split(';');
 
     for (var i = 0; i < cookies.length; i++) {
-      let cookie = cookies[i];
+      let cookie = cookies[i].trim();
 
       // Does this cookie string begin with the name we want?
       if (cookie.substring(0, name.length + 1) === name + '=') {
@@ -76,8 +76,12 @@ function fetchJSONWithCSRF(input, init) {
   });
 }
 
-export function getProduct(upc) {
-  return fetchJSONWithCSRF(`/api/v1/products/${upc}/`);
+export function getCourse(uuid) {
+  return fetchJSONWithCSRF(`/api/v1/courses/${uuid}/`);
+}
+
+export function getCourseList() {
+  return fetchJSONWithCSRF('/api/v1/courses/');
 }
 
 export function login(username, password) {
@@ -118,12 +122,20 @@ export function activate(token) {
   });
 }
 
-export function checkout(cart, token) {
+export function checkout(cart, token, total) {
+  // Convert to Python naming conventions
+  let cartWithUnderscores = cart.map(item => ({
+    uuids: item.uuids,
+    seats: item.seats,
+    course_uuid: item.courseUuid  // eslint-disable-line camelcase
+  }));
+
   return fetchJSONWithCSRF('/api/v1/checkout/', {
     method: 'POST',
     body: JSON.stringify({
-      cart: cart,
-      token: token
+      cart: cartWithUnderscores,
+      token: token,
+      total: total
     })
   });
 }

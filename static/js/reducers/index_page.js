@@ -1,11 +1,16 @@
 /* global SETTINGS:false */
 import {
-  RECEIVE_PRODUCT_SUCCESS,
-  RECEIVE_PRODUCT_FAILURE,
-  REQUEST_PRODUCT,
-  CLEAR_PRODUCT,
+  RECEIVE_COURSE_SUCCESS,
+  RECEIVE_COURSE_FAILURE,
+  REQUEST_COURSE,
+  RECEIVE_COURSE_LIST_SUCCESS,
+  RECEIVE_COURSE_LIST_FAILURE,
+  REQUEST_COURSE_LIST,
+  CLEAR_COURSE,
   SHOW_LOGIN,
   HIDE_LOGIN,
+  SHOW_SNACKBAR,
+  HIDE_SNACKBAR,
   FETCH_FAILURE,
   FETCH_PROCESSING,
   FETCH_SUCCESS,
@@ -20,165 +25,170 @@ import {
   ACTIVATE_FAILURE,
   ACTIVATE,
   CLEAR_CART,
-  ADD_OR_UPDATE_CART_ITEM,
-  REMOVE_CART_ITEM,
+  CLEAR_INVALID_CART_ITEMS,
+  UPDATE_CART_ITEMS,
+  UPDATE_SELECTED_CHAPTERS,
+  UPDATE_SEAT_COUNT,
+  UPDATE_CART_VISIBILITY,
+  RESET_BUYTAB,
 } from '../actions/index_page';
+import { filterCart } from '../util/util';
+import { handleActions } from 'redux-actions';
 
-export function product(state = {}, action) {
-  switch (action.type) {
-
-  case REQUEST_PRODUCT:
-    return Object.assign({}, state, {
-      status: FETCH_PROCESSING
-    });
-  case RECEIVE_PRODUCT_SUCCESS:
-    return Object.assign({}, state, {
-      status: FETCH_SUCCESS,
-      product: action.product
-    });
-  case RECEIVE_PRODUCT_FAILURE:
-    return Object.assign({}, state, {
-      status: FETCH_FAILURE
-    });
-
-  case CLEAR_PRODUCT:
-    return {};
-
-  default:
-    return state;
-  }
+// Helper function to avoid a commonly repeated pattern where we merge
+// state with something computed solely from the actions. Accepts a
+// function that will get the action, and should return the value to
+// be merged with the existing state.
+function payloadMerge(fn) {
+  return (state, action) => {
+    return Object.assign({}, state, fn(action));
+  };
 }
 
-const INITIAL_LOGIN_MODAL_STATE = {
-  visible: false
+const INITIAL_SNACKBAR_STATE = {
+  message: "",
+  open: false
 };
 
-export function loginModal(state = INITIAL_LOGIN_MODAL_STATE, action) {
-  switch (action.type) {
-  case SHOW_LOGIN:
-    return Object.assign({}, state, {
-      visible: true
-    });
-  case HIDE_LOGIN:
-    return Object.assign({}, state, {
-      visible: false
-    });
-  default:
-    return state;
-  }
-}
+export const snackBar = handleActions({
+  SHOW_SNACKBAR: payloadMerge((action) => ({
+    message: action.payload.message,
+    open: true
+  })),
+  HIDE_SNACKBAR: payloadMerge((action) => ({
+    open: false
+  })),
+  CHECKOUT_SUCCESS: payloadMerge(action => ({
+    message: "Course successfully purchased!",
+    open: true
+  })),
+  CHECKOUT_FAILURE: payloadMerge(action => ({
+    message: "There was an error purchasing the course.",
+    open: true
+  }))
+}, INITIAL_SNACKBAR_STATE);
 
-const INITIAL_AUTHENTICATION_STATE = {
+const INITIAL_COURSE_STATE = {
+  courseList: []
+};
+
+export const course = handleActions({
+  REQUEST_COURSE: payloadMerge((action) => ({courseStatus: FETCH_PROCESSING})),
+  RECEIVE_COURSE_SUCCESS: payloadMerge((action) => ({
+    courseStatus: FETCH_SUCCESS,
+    course: action.payload.course
+  })),
+
+  RECEIVE_COURSE_FAILURE: payloadMerge((action) => ({
+    courseStatus: FETCH_FAILURE
+  })),
+
+  REQUEST_COURSE_LIST: payloadMerge((action) => ({
+    courseListStatus: FETCH_PROCESSING
+  })),
+
+  RECEIVE_COURSE_LIST_SUCCESS: payloadMerge((action) => ({
+    courseListStatus: FETCH_SUCCESS,
+    courseList: action.payload.courseList
+  })),
+
+  RECEIVE_COURSE_LIST_FAILURE: payloadMerge((action) => ({
+    courseListStatus: FETCH_FAILURE
+  })),
+
+  CLEAR_COURSE: (state, action) => INITIAL_COURSE_STATE
+}, INITIAL_COURSE_STATE);
+
+export const loginModal = handleActions({
+  SHOW_LOGIN: () => ({ visible: true }),
+  HIDE_LOGIN: () => ({ visible: false })
+}, {visible: false});
+
+export const authentication = handleActions({
+  LOGIN_FAILURE: (state, action) => ({
+    error: action.payload.error,
+    isAuthenticated: false,
+    name: ""
+  }),
+  LOGIN_SUCCESS: (state, action) => ({
+    error: "",
+    isAuthenticated: true,
+    name: action.payload.name
+  }),
+  LOGOUT: (state, action) => ({
+    error: "",
+    isAuthenticated: false,
+    name: ""
+  }),
+  CLEAR_AUTHENTICATION_ERROR: payloadMerge((action) => ({error: ""}))
+}, {
   isAuthenticated: SETTINGS.isAuthenticated,
+  name: SETTINGS.name,
   error: ""
-};
+});
 
-export function authentication(state = INITIAL_AUTHENTICATION_STATE, action) {
-  switch (action.type) {
-  case LOGIN_FAILURE:
-    return Object.assign({}, state, {
-      isAuthenticated: false,
-      error: action.error
-    });
-  case LOGIN_SUCCESS:
-    return Object.assign({}, state, {
-      error: "",
-      isAuthenticated: true
-    });
-  case LOGOUT:
-    return Object.assign({}, state, {
-      error: "",
-      isAuthenticated: false
-    });
-  case CLEAR_AUTHENTICATION_ERROR:
-    return Object.assign({}, state, {
-      error: ""
-    });
-  default:
-    return state;
-  }
-}
+export const registration = handleActions({
+  REGISTER_SUCCESS: (state, action) => ({
+    error: "",
+    status: FETCH_SUCCESS
+  }),
+  REGISTER_FAILURE: (state, action) => ({
+    error: action.payload.error,
+    status: FETCH_FAILURE
+  }),
+  CLEAR_REGISTRATION_ERROR: payloadMerge((action) => ({error: ""}))
+}, { error: "", status: null });
 
-const INITIAL_REGISTRATION_STATE = {
-  error: ""
-};
+export const activation = handleActions({
+  ACTIVATE_SUCCESS: () => ({ status: FETCH_SUCCESS }),
+  ACTIVATE_FAILURE: () => ({ status: FETCH_FAILURE })
+}, { status: null });
 
-export function registration(state = INITIAL_REGISTRATION_STATE, action) {
-  switch (action.type) {
-  case REGISTER_SUCCESS:
-    return Object.assign({}, state, {
-      error: "",
-      status: FETCH_SUCCESS
-    });
-  case REGISTER_FAILURE:
-    return Object.assign({}, state, {
-      error: action.error,
-      status: FETCH_FAILURE
-    });
-  case CLEAR_REGISTRATION_ERROR:
-    return Object.assign({}, state, {
-      error: ""
-    });
-  default:
-    return state;
-  }
-}
+export const cart = handleActions({
+  RECEIVE_COURSE_LIST_SUCCESS: payloadMerge((action) => ({
+    courseList: action.payload.courseList
+  })),
 
-const INITIAL_ACTIVATION_STATE = {};
-
-export function activation(state = INITIAL_ACTIVATION_STATE, action) {
-  switch (action.type) {
-  case ACTIVATE_SUCCESS:
-    return Object.assign({}, state, {
-      status: FETCH_SUCCESS
-    });
-  case ACTIVATE_FAILURE:
-    return Object.assign({}, state, {
-      status: FETCH_FAILURE
-    });
-  default:
-    return state;
-  }
-}
-
-const INITIAL_CART_STATE = {
-  cart: []
-};
-export function cart(state = INITIAL_CART_STATE, action) {
-  switch (action.type) {
-  case ADD_OR_UPDATE_CART_ITEM:
-    const newItem = {
-      upc: action.upc,
-      seats: action.seats
-    };
-    let cart = state.cart;
-
-    // Replace old item with new item, or add it to the end if it doesn't already exist
-    let existingItem = cart.find(item => item.upc === newItem.upc);
-    if (existingItem !== undefined) {
-      cart = cart.map(item => {
-        if (item.upc === newItem.upc) {
-          return newItem;
-        } else {
-          return item;
-        }
-      });
-    } else {
-      cart = cart.concat(newItem);
+  UPDATE_CART_ITEMS: (state, action) => {
+    const { uuids, seats, courseUuid } = action.payload;
+    let newCart = state.cart.filter(item => item.courseUuid !== courseUuid);
+    if (uuids.length > 0) {
+      newCart = newCart.concat({uuids, seats, courseUuid});
     }
+
     return Object.assign({}, state, {
-      cart: cart
+      cart: newCart
     });
-  case REMOVE_CART_ITEM:
-    return Object.assign({}, state, {
-      // Remove item with given upc from cart
-      cart: state.cart.filter(item => item.upc !== action.upc)
-    });
-  case CLEAR_CART:
-    return Object.assign({}, state, {
-      cart: []
-    });
-  default:
-    return state;
-  }
-}
+  },
+
+  CLEAR_CART: payloadMerge((action) => ({cart: []})),
+
+  CLEAR_INVALID_CART_ITEMS: (state, action) =>
+    Object.assign({}, state, {
+      cart: filterCart(state.cart, state.courseList)
+    })
+}, {
+  courseList: [],
+  cart: []
+});
+
+const INITIAL_BUYTAB_STATE = {
+  seats: 20,
+  allRowsSelected: false,
+  selectedChapters: [],
+  cartVisibility: false
+};
+
+export const buyTab = handleActions({
+  UPDATE_SELECTED_CHAPTERS: payloadMerge((action) => ({
+    selectedChapters: action.payload.uuids,
+    allRowsSelected: action.payload.allRowsSelected
+  })),
+  UPDATE_SEAT_COUNT: payloadMerge((action) => ({
+    seats: action.payload.seats
+  })),
+  UPDATE_CART_VISIBILITY: payloadMerge((action) => ({
+    cartVisibility: action.payload.visibility
+  })),
+  RESET_BUYTAB: () => INITIAL_BUYTAB_STATE
+}, INITIAL_BUYTAB_STATE);

@@ -1,11 +1,12 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Card, CardText } from 'material-ui/lib/card';
+import MessagePage from '../components/MessagePage';
 import {
   FETCH_SUCCESS,
   FETCH_PROCESSING,
   FETCH_FAILURE,
   activate,
+  showSnackBar
 } from '../actions/index_page';
 
 class ActivatePage extends React.Component {
@@ -21,33 +22,29 @@ class ActivatePage extends React.Component {
 
     if (nextProps.activation.status === FETCH_SUCCESS &&
       this.props.activation.status !== nextProps.activation.status) {
-      setTimeout(() => {
-        // After 3 seconds redirect to page the user was on before.
-        window.location = query.redirect;
-      }, 3000);
+      window.location = query.redirect;
     }
   }
 
   render() {
     const { activation, location: { query } } = this.props;
-    let message;
 
+    let message;
     if (activation.status === FETCH_SUCCESS) {
-      message = <span>
-        Activation succeeded! Click <a href={query.redirect}>here</a> to
-        return to the page you were on, or wait a few seconds.
-      </span>;
+      message = "Activation succeeded!";
     } else if (activation.status === FETCH_PROCESSING) {
       message = "Activation processing...";
     } else if (activation.status === FETCH_FAILURE) {
       message = "Activation failed.";
     }
 
-    return <Card>
-        <CardText>
-          {message}
-        </CardText>
-      </Card>;
+    return <MessagePage
+      message={message}
+      error=""
+    >
+      Click <a href={query.redirect}>here</a> to return to the page you were on,
+      or wait a few seconds.
+    </MessagePage>;
   }
 }
 

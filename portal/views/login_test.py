@@ -5,8 +5,10 @@ Tests for login and logout views
 from __future__ import unicode_literals
 import json
 
+from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 
+from portal.models import UserInfo
 from portal.views.base import AuthenticationTestCase
 
 
@@ -33,8 +35,31 @@ class LoginTests(AuthenticationTestCase):
             content_type="application/json"
         )
         assert resp.status_code == 200, resp.content.decode('utf-8')
+        json_data = json.loads(resp.content.decode('utf-8'))
+        assert json_data['name'] == 'user 1'
         assert self.is_authenticated(self.user)
         assert not self.is_authenticated(self.other_user)
+
+    def test_login_twice(self):
+        """
+        User logs in in while already logged in
+        """
+        self.client.login(username=self.USERNAME, password=self.PASSWORD)
+        username2 = "two"
+        password2 = "two"
+        user2 = User.objects.create_user(username=username2, password=password2)
+        UserInfo.objects.create(user=user2)
+
+        resp = self.client.post(
+            reverse('login'),
+            json.dumps({
+                "username": username2,
+                "password": username2,
+            }),
+            content_type="application/json"
+        )
+        assert resp.status_code == 200, resp.content.decode('utf-8')
+        assert self.is_authenticated(user2)
 
     def test_login_with_bad_password(self):
         """

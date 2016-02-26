@@ -2,38 +2,29 @@ import React from 'react';
 import Card from 'material-ui/lib/card/card';
 import Tabs from 'material-ui/lib/tabs/tabs';
 import Tab from 'material-ui/lib/tabs/tab';
-import ChapterTab from '../components/ChapterTab';
-import AboutTab from '../components/AboutTab';
-import ReviewsTab from '../components/ReviewsTab';
-import BuyTab from '../components/BuyTab';
+import ChapterTab from './ChapterTab';
+import AboutTab from './AboutTab';
+import ReviewsTab from './ReviewsTab';
+import BuyTabContainer from '../containers/BuyTabContainer';
+import ga from 'react-ga';
 
 // Required for material ui tabs
 import injectTapEventPlugin from "react-tap-event-plugin";
 injectTapEventPlugin();
 
 class CourseTabs extends React.Component {
+
   render() {
-    const { product, cart, addToCart, onCheckout } = this.props;
+
+    const { course, courseList } = this.props;
 
     return <Card id="course-tabs-card">
         <Tabs id="course-tabs">
-            <Tab label="About" id="about" className="tab">
-                <AboutTab content={product.info.overview} />
+            <Tab label="About" id="about" className="tab" onActive={this.handleActive}>
+                <AboutTab content={course.info.overview} />
             </Tab>
-            <Tab label="Content" id="content" className="tab">
-                <ChapterTab
-                  selectable={false}
-                  fixedHeader={true}
-                  fixedFooter={true}
-                  stripedRows={false}
-                  showRowHover={true}
-                  deselectOnClickaway={true}
-                  height={'auto'}
-                  product={product}
-                 />
-            </Tab>
-            <Tab label="Buy" id="buy" className="tab">
-                <BuyTab
+            <Tab label="Buy" id="buy" className="tab" onActive={this.handleActive}>
+                <BuyTabContainer
                   selectable={true}
                   fixedHeader={true}
                   fixedFooter={true}
@@ -41,22 +32,26 @@ class CourseTabs extends React.Component {
                   showRowHover={true}
                   deselectOnClickaway={true}
                   height={'auto'}
-                  product={product}
-                  cart={cart}
-                  addToCart={addToCart}
-                  onCheckout={onCheckout}
+                  course={course}
+                  courseList={courseList}
                 />
             </Tab>
         </Tabs>
       </Card>;
+  }
+
+  handleActive(tab) {
+    ga.event({
+      category: "Tab",
+      action: "Activate",
+      label: tab.props.label
+    });
   }
 }
 
 export default CourseTabs;
 
 CourseTabs.propTypes = {
-  product: React.PropTypes.object.isRequired,
-  cart: React.PropTypes.array.isRequired,
-  addToCart: React.PropTypes.func.isRequired,
-  onCheckout: React.PropTypes.func.isRequired
+  course: React.PropTypes.object.isRequired,
+  courseList: React.PropTypes.array.isRequired
 };

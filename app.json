@@ -67,6 +67,34 @@
             "description": "Base URL for the CCXCon API.",
             "required": true
         },
+        "CCXCON_OAUTH_CLIENT_ID": {
+            "description": "The OAuth client ID issued by the CCXCon instance.",
+            "required": true
+        },
+        "CCXCON_OAUTH_CLIENT_SECRET": {
+            "description": "The OAuth client secret issues by the CCXCon instance.",
+            "required": true
+        },
+        "CCXCON_WEBHOOKS_SECRET": {
+            "description": "The secret used to verify requests made by the CCXCon instance.",
+            "required": true
+        },
+        "REACT_GA_DEBUG": {
+            "description": "Whether or not to log Google Analytics events to the js console.",
+            "required": true
+        },
+        "GA_TRACKING_ID": {
+            "description": "The unique Google Analytics identifier for this teachersportal.",
+            "required": true
+        },
+        "STRIPE_PUBLISHABLE_KEY": {
+            "description": "The public key issued by Stripe for its API.",
+            "required": true
+        },
+        "STRIPE_SECRET_KEY": {
+            "description": "The private key issues by Stripe for its API.",
+            "required": true
+        },
         "NEW_RELIC_APP_NAME": {
             "description": "Application identifier in New Relic.",
             "default": "Teacher's Portal"
@@ -79,6 +107,10 @@
             "description": "Application-level SSL redirect setting.",
             "required": false,
             "value": "True"
+        },
+        "STATUS_TOKEN": {
+            "description": "Token to access the status API.",
+            "required": true
         }
     }
 }

@@ -2,13 +2,13 @@ db:
   image: postgres
   ports:
     - "5432"
+
 web:
   build: .
   command: >
     /bin/bash -c '
     sleep 3 &&
     python manage.py migrate &&
-    python manage.py oscar_populate_countries >& /dev/null || true &&
     ./with_host.sh python manage.py runserver 0.0.0.0:8075'
   volumes:
     - .:/src
@@ -17,17 +17,16 @@ web:
     PORT: 8075
     DATABASE_URL: postgres://postgres@db:5432/postgres
     PORTAL_DB_DISABLE_SSL: 'True'
-    PORTAL_OSCAR_VISIBLE: 'True'
     PORTAL_USE_WEBPACK_DEV_SERVER: 'True'
     PORTAL_EMAIL_BACKEND: 'django.core.mail.backends.console.EmailBackend'
     PORTAL_SECURE_SSL_REDIRECT: 'False'
+    STATUS_TOKEN: 'test-token'
   env_file: .env
   ports:
     - "8075:8075"
-  external_links:
-    - "ccxcon_web_1:localhost.daplie.com"
   links:
     - db
+
 watch:
   image: teachersportal_web
   command: >
@@ -36,7 +35,7 @@ watch:
     npm install --no-bin-links &&
     npm rebuild node-sass &&
     echo Finished npm install &&
-    node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --content-base ./static --host 0.0.0.0 --port 8076 --progress --hot --inline'
+    node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --config webpack.config.dev.js -d --content-base ./static --host 0.0.0.0 --port 8076 --progress --inline'
   ports:
     - "8076:8076"
   volumes:

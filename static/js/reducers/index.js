@@ -1,18 +1,22 @@
 import { combineReducers } from 'redux';
 import {
   loginModal,
+  snackBar,
   authentication,
   registration,
   activation,
-  product,
+  course,
   cart,
+  buyTab,
 } from './index_page';
 
 export default combineReducers({
-  product,
+  course,
   loginModal,
+  snackBar,
   authentication,
   registration,
   activation,
   cart,
+  buyTab,
 });

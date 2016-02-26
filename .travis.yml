@@ -1,4 +1,4 @@
-language: python
+language: ruby
 script:
   - docker-compose -f travis-docker-compose.yml run web tox
 services:

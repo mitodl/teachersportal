@@ -1,27 +1,25 @@
 /* global StripeHandler:false */
 import React from 'react';
 import { calculateTotal } from '../util/util';
+import RaisedButton from 'material-ui/lib/raised-button';
 
 class StripeButton extends React.Component {
   render() {
-    const { onCheckout, cart, product } = this.props;
-    let total = calculateTotal(cart, [product]);
-    let text;
-    if (total === 0) {
-      text = "Checkout";
-    } else {
-      text = "Pay with card";
-    }
-    return <button onClick={onCheckout}>
-      {text}
-    </button>;
+    const { checkout } = this.props;
+
+    return <RaisedButton
+      label="Checkout"
+      className="checkout-button"
+      onClick={checkout}
+      secondary={true}
+    />;
   }
 }
 
 export default StripeButton;
 
 StripeButton.propTypes = {
-  onCheckout: React.PropTypes.func.isRequired,
-  cart: React.PropTypes.array.isRequired,
-  product: React.PropTypes.object.isRequired
+  checkout: React.PropTypes.func.isRequired,
+  cart: React.PropTypes.object.isRequired,
+  course: React.PropTypes.object.isRequired
 };

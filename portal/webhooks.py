@@ -3,21 +3,12 @@ Handlers for CCXCon webhooks
 """
 
 from __future__ import unicode_literals
+from six import string_types
 
 from django.db import transaction
-from oscar.apps.catalogue.models import (
-    Product,
-    ProductCategory,
-    ProductClass,
-    Category,
-)
 from rest_framework.exceptions import ValidationError
 
-from portal.util import (
-    make_upc,
-    MODULE_PRODUCT_TYPE,
-    COURSE_PRODUCT_TYPE,
-)
+from portal.models import Course, Module, BackingInstance
 
 # Note: reflection used for names below so be careful not to rename functions.
 
@@ -32,48 +23,47 @@ def course(action, payload):
     Returns:
         HttpResponse
     """
-    product_class = ProductClass.objects.get(name="Course")
-    category = Category.objects.get(name="Course")
 
     if action == 'update':
         try:
             title = payload['title']
-            external_pk = payload['external_pk']
+            uuid = payload['external_pk']
+            instance_url = payload['instance']
         except KeyError as ex:
             raise ValidationError("Missing key {key}".format(key=ex.args[0]))
         except TypeError as ex:
             raise ValidationError("Invalid key {key}".format(key=ex.args[0]))
 
-        if not external_pk:
+        if not uuid:
             raise ValidationError('Invalid external_pk')
+        if not isinstance(instance_url, string_types) or len(instance_url) == 0:
+            raise ValidationError("Instance must be a non-empty string")
 
-        upc = make_upc(COURSE_PRODUCT_TYPE, external_pk)
         with transaction.atomic():
             try:
-                product = Product.objects.get(upc=upc)
-                product.title = title
-                product.save()
-            except Product.DoesNotExist:
-                product = Product.objects.create(
-                    upc=upc,
-                    product_class=product_class,
-                    structure=Product.STANDALONE,
-                    title=title
+                existing_course = Course.objects.get(uuid=uuid)
+                if existing_course.instance.instance_url != instance_url:
+                    raise ValidationError("Instance cannot be changed")
+                existing_course.title = title
+                existing_course.save()
+            except Course.DoesNotExist:
+                backing_instance, _ = BackingInstance.objects.get_or_create(
+                    instance_url=instance_url
                 )
-
-            # Link product to category.
-            ProductCategory.objects.get_or_create(
-                category=category,
-                product=product,
-            )
+                Course.objects.create(
+                    uuid=uuid,
+                    title=title,
+                    live=False,
+                    instance=backing_instance
+                )
     elif action == 'delete':
         try:
-            upc = make_upc(COURSE_PRODUCT_TYPE, payload['external_pk'])
+            uuid = payload['external_pk']
         except KeyError as ex:
             raise ValidationError("Missing key {key}".format(key=ex.args[0]))
         except TypeError as ex:
             raise ValidationError("Invalid key {key}".format(key=ex.args[0]))
-        Product.objects.filter(upc=upc).delete()
+        Course.objects.filter(uuid=uuid).delete()
     else:
         raise ValidationError("Unknown action {action}".format(action=action))
 
@@ -89,73 +79,48 @@ def module(action, payload):
     Returns:
         HttpResponse
     """
-    category = Category.objects.get(name="Course")
-
     if action == 'update':
         try:
             title = payload['title']
-            external_pk = payload['external_pk']
-            course_external_pk = payload['course_external_pk']
+            uuid = payload['external_pk']
+            course_uuid = payload['course_external_pk']
         except KeyError as ex:
             raise ValidationError("Missing key {key}".format(key=ex.args[0]))
         except TypeError as ex:
             raise ValidationError("Invalid key {key}".format(key=ex.args[0]))
 
-        if not external_pk:
+        if not uuid:
             raise ValidationError("Invalid external_pk")
 
-        module_upc = make_upc(MODULE_PRODUCT_TYPE, external_pk)
-        course_upc = make_upc(COURSE_PRODUCT_TYPE, course_external_pk)
         with transaction.atomic():
             try:
-                parent = Product.objects.get(upc=course_upc)
-            except Product.DoesNotExist:
+                existing_course = Course.objects.get(uuid=course_uuid)
+            except Course.DoesNotExist:
                 raise ValidationError("Invalid course_external_pk")
 
-            if parent.structure == Product.STANDALONE:
-                # There will be at least one child.
-                parent.structure = Product.PARENT
-                parent.save()
-
             try:
-                product = Product.objects.get(upc=module_upc)
+                existing_module = Module.objects.get(uuid=uuid)
 
-                if parent != product.parent:
+                if existing_course != existing_module.course:
                     raise ValidationError("Invalid course_external_pk")
-                product.title = title
-                product.save()
-            except Product.DoesNotExist:
-                product = Product.objects.create(
-                    upc=module_upc,
-                    product_class=None,
-                    structure=Product.CHILD,
-                    parent=parent,
-                    title=title
-                )
 
-            # Link product to category.
-            ProductCategory.objects.get_or_create(
-                category=category,
-                product=product,
-            )
+                existing_module.title = title
+                existing_module.save()
+            except Module.DoesNotExist:
+                Module.objects.create(
+                    uuid=uuid,
+                    course=existing_course,
+                    title=title,
+                )
 
     elif action == 'delete':
         try:
-            upc = make_upc(MODULE_PRODUCT_TYPE, payload['external_pk'])
+            uuid = payload['external_pk']
         except KeyError as ex:
             raise ValidationError("Missing key {key}".format(key=ex.args[0]))
         except TypeError as ex:
             raise ValidationError("Invalid key {key}".format(key=ex.args[0]))
         with transaction.atomic():
-            try:
-                product = Product.objects.get(upc=upc)
-                parent = product.parent
-                if parent.children.count() == 1:
-                    parent.structure = Product.STANDALONE
-                    parent.save()
-            except Product.DoesNotExist:
-                pass
-
-            Product.objects.filter(upc=upc).delete()
+            Module.objects.filter(uuid=uuid).delete()
     else:
         raise ValidationError("Unknown action {action}".format(action=action))

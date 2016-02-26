@@ -3,56 +3,153 @@ API for checkout
 """
 
 from __future__ import unicode_literals
+import logging
+from decimal import Decimal
 
-
-from django.contrib.auth.decorators import login_required
+from django.conf import settings
 from django.db import transaction
-from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from stripe import Charge
 
-from portal.util import create_order
+from portal.util import (
+    calculate_cart_subtotal,
+    create_order,
+    get_cents,
+    validate_cart,
+)
+from ..models import OrderLine
+from portal.views.course_api import ccxcon_request
+
+log = logging.getLogger(__name__)
 
 
-@login_required
-@api_view(["POST"])
-def checkout_view(request):
+class CheckoutView(APIView):
     """
-    Make a purchase of the cart.
-    Args:
-        request: rest_framework.request.Request
-    Returns:
-        rest_framework.response.Response
+    Handles checkout for courses and modules.
     """
-    try:
-        token = str(request.data['token'])
-        cart = request.data['cart']
-    except KeyError as ex:
-        raise ValidationError("Missing key {}".format(ex.args[0]))
-    except TypeError:
-        raise ValidationError("Invalid JSON")
+    permission_classes = (IsAuthenticated,)
 
-    if not isinstance(cart, list):
-        raise ValidationError("Cart must be a list of items")
-    if len(cart) == 0:
-        raise ValidationError("Cannot checkout an empty cart")
+    @staticmethod
+    def notify_external_services(order, user):
+        """
+        Notify external services (ie CCXCon) about purchases.
 
-    with transaction.atomic():
-        order = create_order(cart, request.user)
+        Args:
+          order (portal.models.Order): The user's order.
+          user (django.contrib.auth.models.User): User for the request.
 
-        amount_in_cents = int(order.total_paid * 100)
-        if amount_in_cents != 0:
-            Charge.create(
-                amount=amount_in_cents,
-                currency="usd",
-                source=token,
-                description="Course purchase for MIT Teacher's Portal",
-                metadata={
-                    "order_id": order.id
-                }
+        Returns:
+          errors (set): A set of errors resulting from notification
+        """
+        errors = set()
+        courses_and_seats = {}
+
+        # OrderLine stores a reference to a module and the number of seats
+        # for each module. This number of seats should always be the same for each module
+        # in a course.
+        for line in OrderLine.objects.filter(order=order):
+            course_uuid = line.module.course.uuid
+            if course_uuid not in courses_and_seats:
+                courses_and_seats[line.module.course.uuid] = (line.module.course, line.seats)
+
+        for course, seats in courses_and_seats.values():
+            title = course.title
+            course_uuid = course.uuid
+            ccxcon = ccxcon_request()
+            api_base = settings.CCXCON_API
+            try:
+                result = ccxcon.post(
+                    '{api_base}v1/ccx/'.format(api_base=api_base),
+                    json={
+                        'master_course_id': course_uuid,
+                        'user_email': user.email,
+                        'total_seats': seats,
+                        'display_name': '{} for {}'.format(title, user.userinfo.full_name),
+                        'course_modules': [
+                            orderline.module.uuid for orderline in order.orderline_set.all()
+                        ]
+                    }
+                )
+            except Exception as e:  # pylint: disable=broad-except,invalid-name
+                log.error("Couldn't connect to ccxcon. Reason: %s", e)
+                errors.add(str(e))
+                continue
+
+            if result.status_code >= 300:
+                errors.add('Unable to post to ccxcon. Error: {} -- {}'.format(
+                    result.status_code, result.content))
+                log.error("Couldn't connect to ccxcon. Reason: %s", result.content)
+        return errors
+
+    def validate_data(self):
+        """
+        Validates incoming request data.
+
+        Returns:
+            (string, dict): stripe token and cart information.
+        """
+        data = self.request.data
+        try:
+            token = str(data['token'])
+            cart = data['cart']
+            estimated_total = Decimal(float(data['total']))
+        except KeyError as ex:
+            raise ValidationError("Missing key {}".format(ex.args[0]))
+        except TypeError:
+            raise ValidationError("Invalid JSON")
+
+        if not isinstance(cart, list):
+            raise ValidationError("Cart must be a list of items")
+        if len(cart) == 0:
+            raise ValidationError("Cannot checkout an empty cart")
+        validate_cart(cart, self.request.user)
+
+        total = calculate_cart_subtotal(cart)
+        if get_cents(total) != get_cents(estimated_total):
+            log.error(
+                "Cart total doesn't match expected value. "
+                "Total from client: %f but actual total is: %f",
+                estimated_total,
+                total
             )
+            raise ValidationError("Cart total doesn't match expected value")
 
-        # At this point tell edX everything went well
+        return token, cart
 
-    return Response(status=200)
+    def post(self, request):
+        """
+        Make a purchase of the cart.
+        Args:
+            request: rest_framework.request.Request
+        Returns:
+            rest_framework.response.Response
+        """
+        token, cart = self.validate_data()
+
+        with transaction.atomic():
+            order = create_order(cart, request.user)
+
+            amount_in_cents = get_cents(order.total_paid)
+            if amount_in_cents != 0:
+                Charge.create(
+                    amount=amount_in_cents,
+                    currency="usd",
+                    source=token,
+                    description="Course purchase for MIT Teacher's Portal",
+                    metadata={
+                        "order_id": order.id
+                    }
+                )
+
+        errors = self.notify_external_services(order, request.user)
+
+        if len(errors):
+            return Response({
+                'error': "Unable to post to CCXCon",
+                'error_list': errors,
+            }, status=500)
+
+        return Response(status=200)

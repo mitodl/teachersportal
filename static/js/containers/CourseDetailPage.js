@@ -1,67 +1,71 @@
-/* global StripeHandler:false */
 import React from 'react';
 import CourseDetail from '../components/CourseDetail';
+import Card from 'material-ui/lib/card/card';
+import LinearProgress from 'material-ui/lib/linear-progress';
 import {
-  fetchProduct,
+  fetchCourse,
+  fetchCourseList,
+  clearInvalidCartItems,
+  showSnackBar,
   FETCH_FAILURE,
   FETCH_SUCCESS,
-  addOrUpdateCartItem,
-  checkout,
 } from '../actions/index_page';
-import { calculateTotal } from '../util/util';
 import { connect } from 'react-redux';
 
 class CourseDetailPage extends React.Component {
 
   componentDidMount() {
-    this.fetchProduct.call(this);
+    this.fetchCourse.call(this);
+    this.handleError.call(this);
   }
 
   componentDidUpdate() {
-    this.fetchProduct.call(this);
+    this.fetchCourse.call(this);
+    this.handleError.call(this);
   }
 
-  fetchProduct() {
+  fetchCourse() {
     const {
-      product,
+      course,
       authentication,
       dispatch,
       params: { uuid }
     } = this.props;
 
-    if (authentication.isAuthenticated) {
-      // When user is authenticated and we haven't fetched courses and modules
-      // yet, fetch them now. This might execute the fetch action twice if
-      // this component is refreshed before action has a chance to dispatch,
-      // but that shouldn't cause any problems
-      if (product.status === undefined) {
-        dispatch(fetchProduct("Course_" + uuid));
-      }
+    // When user is authenticated and we haven't fetched courses and modules
+    // yet, fetch them now. This might execute the fetch action twice if
+    // this component is refreshed before action has a chance to dispatch,
+    // but that shouldn't cause any problems
+
+    if (course.courseStatus === undefined) {
+      dispatch(fetchCourse(uuid));
+    }
+    if (course.courseListStatus === undefined) {
+      dispatch(fetchCourseList()).then(() => {
+        return dispatch(clearInvalidCartItems());
+      });
     }
   }
 
   render() {
     const {
-      product,
-      cart,
-      authentication,
+      course
     } = this.props;
 
-    let error;
-
-    if (product.status === FETCH_FAILURE) {
-      error = "An error occurred fetching information about this course.";
-    } else if (!authentication.isAuthenticated) {
-      error = "Please log in to view the course information.";
+    let detail;
+    if (course.course === undefined) {
+      detail = <div id="course-body">
+        <Card id="course-content">
+          <LinearProgress mode="indeterminate" size="1" className="progress" />
+        </Card>
+      </div>;
+    } else {
+      detail = <CourseDetail
+        authenticated={this.props.authentication.isAuthenticated}
+        course={course.course}
+        courseList={course.courseList}
+      />;
     }
-
-    let detail = <CourseDetail
-      error={error}
-      cart={cart.cart}
-      addToCart={this.addToCart.bind(this)}
-      product={product.product}
-      onCheckout={this.onCheckout.bind(this)}
-    />;
 
     return <div>
       {detail}
@@ -69,41 +73,34 @@ class CourseDetailPage extends React.Component {
       ;
   }
 
-  addToCart(upc, seats) {
-    const { dispatch } = this.props;
 
-    dispatch(addOrUpdateCartItem(upc, seats));
-  }
+  handleError() {
+    const { course, dispatch, authentication } = this.props;
 
-  onCheckout() {
-    const { dispatch, cart, product } = this.props;
+    let error;
 
-    let total = calculateTotal(cart.cart, [product.product]);
-    if (total === 0) {
-      dispatch(checkout(cart.cart, ""));
-    } else {
-      StripeHandler.open({
-        name: 'MIT Teacher\'s Portal',
-        description: cart.cart.length + ' item(s)',
-        amount: Math.floor(total * 100)
-      });
+    if (course.courseStatus === FETCH_FAILURE) {
+      error = "An error occurred fetching information about this course.";
+    } else if (course.courseListStatus === FETCH_FAILURE) {
+      error = "An error occurred fetching information about other courses.";
+    }
+    if (error) {
+      dispatch(showSnackBar({ message: error }));
     }
   }
 }
 
 CourseDetailPage.propTypes = {
-  product: React.PropTypes.object.isRequired,
+  course: React.PropTypes.object.isRequired,
   authentication: React.PropTypes.object.isRequired,
   dispatch: React.PropTypes.func.isRequired,
-  params: React.PropTypes.object.isRequired,
-  cart: React.PropTypes.object.isRequired
+  params: React.PropTypes.object.isRequired
 };
 
 const mapStateToProps = (state) => {
   return {
-    product: state.product,
-    authentication: state.authentication,
-    cart: state.cart
+    course: state.course,
+    authentication: state.authentication
   };
 };
 

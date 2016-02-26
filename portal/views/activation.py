@@ -4,13 +4,15 @@ View for account activation.
 from __future__ import unicode_literals
 
 from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
+from rest_framework.decorators import permission_classes
+from rest_framework.response import Response
 
 from portal.models import UserInfo
 
 
 @api_view(["POST"])
+@permission_classes([])
 def activate_view(request):
     """
     Register token to activate user

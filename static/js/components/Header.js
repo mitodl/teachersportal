@@ -1,51 +1,71 @@
 import React from 'react';
 import Navigation from '../components/Navigation';
 import LoginModal from '../components/LoginModal';
+import {
+  showLogin,
+  hideLogin,
+  logout,
+  login,
+  loginFailure,
+  register,
+  registerFailure,
+} from '../actions/index_page';
 
 class Header extends React.Component {
   render() {
     const {
-      showSignIn,
-      hideSignIn,
+      dispatch,
       loginModal,
       authentication,
-      registration,
-      onSignOut,
-      signIn,
-      register,
-      reportLoginError,
-      reportRegisterError,
+      history,
+      registration
     } = this.props;
 
     return <div id="header">
-      <img src="/static/images/mit-white.png" className="logo" />
-      <Navigation onShowSignIn={showSignIn} onSignOut={onSignOut} authentication={authentication} />
+      <Navigation
+        onShowSignIn={() => dispatch(showLogin())}
+        onSignOut={() => dispatch(logout()).then(
+          () => { history.pushState(null, '/'); }
+        )}
+        authentication={authentication} />
 
       <LoginModal
         isOpen={loginModal.visible}
-        onHideLoginModal={hideSignIn}
-        signIn={signIn}
-        register={register}
-        reportLoginError={reportLoginError}
-        reportRegisterError={reportRegisterError}
+        onHideLoginModal={() => dispatch(hideLogin())}
+        signIn={this.signIn.bind(this)}
+        register={this.register.bind(this)}
+        reportLoginError={error => dispatch(loginFailure(error))}
+        reportRegisterError={error => dispatch(registerFailure(error))}
         loginError={authentication.error}
         registerError={registration.error}
       />
       </div>;
   }
+
+  signIn(username, password) {
+    const { dispatch } = this.props;
+
+    dispatch(login(username, password)).then(() => {
+      dispatch(hideLogin());
+    });
+  }
+
+  register(fullName, email, organization, password, redirect) {
+    const { dispatch } = this.props;
+
+    dispatch(register(fullName, email, organization, password, redirect)).then(() => {
+      dispatch(hideLogin());
+    });
+  }
+
 }
 
 export default Header;
 
 Header.propTypes = {
-  showSignIn: React.PropTypes.func.isRequired,
-  hideSignIn: React.PropTypes.func.isRequired,
   loginModal: React.PropTypes.object.isRequired,
   authentication: React.PropTypes.object.isRequired,
   registration: React.PropTypes.object.isRequired,
-  onSignOut: React.PropTypes.func.isRequired,
-  signIn: React.PropTypes.func.isRequired,
-  register: React.PropTypes.func.isRequired,
-  reportLoginError: React.PropTypes.func.isRequired,
-  reportRegisterError: React.PropTypes.func.isRequired
+  history: React.PropTypes.object.isRequired,
+  dispatch: React.PropTypes.func.isRequired
 };

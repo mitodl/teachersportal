@@ -4,42 +4,41 @@ import assert from 'assert';
 import ReactTestUtils from 'react-addons-test-utils';
 import ReactDOM from 'react-dom';
 import React from 'react';
-import jsdom from 'mocha-jsdom';
 import fetchMock from 'fetch-mock/src/server';
 import {
-  getProduct,
+  getCourse,
+  getCourseList,
   login,
   logout,
   register,
   activate,
   checkout,
 } from './api';
-import { PRODUCT_RESPONSE } from '../constants';
+import { COURSE_RESPONSE1 } from '../constants';
 
 
 describe('common api functions', function() {
   this.timeout(5000);  // eslint-disable-line no-invalid-this
-  jsdom();
 
-  it('gets a product', done => {
-    const upc = PRODUCT_RESPONSE.upc;
+  it('gets a course', done => {
+    const uuid = COURSE_RESPONSE1.uuid;
 
-    fetchMock.mock(`/api/v1/products/${upc}/`, PRODUCT_RESPONSE);
-    getProduct(upc).then(receivedCourse => {
-      assert.deepEqual(receivedCourse, PRODUCT_RESPONSE);
+    fetchMock.mock(`/api/v1/courses/${uuid}/`, COURSE_RESPONSE1);
+    getCourse(uuid).then(receivedCourse => {
+      assert.deepEqual(receivedCourse, COURSE_RESPONSE1);
 
       done();
     });
   });
 
-  it('fails to get a product', done => {
-    const upc = PRODUCT_RESPONSE.upc;
+  it('fails to get a course', done => {
+    const uuid = COURSE_RESPONSE1.uuid;
 
-    fetchMock.mock(`/api/v1/products/${upc}/`, {
-      body: PRODUCT_RESPONSE,
+    fetchMock.mock(`/api/v1/courses/${uuid}/`, {
+      body: COURSE_RESPONSE1,
       status: 400
     });
-    getProduct(upc).catch(() => {
+    getCourse(uuid).catch(() => {
       done();
     });
   });
@@ -169,41 +168,83 @@ describe('common api functions', function() {
   });
 
   it('checks out successfully', done => {
-    let expected = {
+    let input = {
       cart: [{
-        upc: "upc",
-        seats: 5
+        uuids: ["uuid"],
+        seats: 5,
+        courseUuid: "courseUuid"
       }],
-      token: "token"
+      token: "token",
+      total: 500
     };
+    let output = Object.assign({}, input, {
+      cart: input.cart.map(item => ({
+        uuids: item.uuids,
+        seats: item.seats,
+        course_uuid: item.courseUuid  // eslint-disable-line camelcase
+      }))
+    });
 
     fetchMock.mock('/api/v1/checkout/', (url, opts) => {
-      assert.deepEqual(JSON.parse(opts.body), expected);
+      assert.deepEqual(JSON.parse(opts.body), output);
       return {
         status: 200
       };
     });
-    checkout(expected.cart, expected.token).then(() => {
+    checkout(input.cart, input.token, input.total).then(() => {
       done();
     });
   });
 
   it('fails to checkout', done => {
-    let expected = {
+    let input = {
       cart: [{
-        upc: "upc",
-        seats: 5
+        uuids: ["uuid"],
+        seats: 5,
+        courseUuid: "courseUuid"
       }],
-      token: "token"
+      token: "token",
+      total: 500
     };
+    let output = Object.assign({}, input, {
+      cart: input.cart.map(item => ({
+        uuids: item.uuids,
+        seats: item.seats,
+        course_uuid: item.courseUuid  // eslint-disable-line camelcase
+      }))
+    });
 
     fetchMock.mock('/api/v1/checkout/', (url, opts) => {
-      assert.deepEqual(JSON.parse(opts.body), expected);
+      assert.deepEqual(JSON.parse(opts.body), output);
       return {
         status: 400
       };
     });
-    checkout(expected.cart, expected.token).catch(() => {
+    checkout(input.cart, input.token, input.total).catch(() => {
+      done();
+    });
+  });
+
+  it('gets a list of courses', done => {
+    fetchMock.mock('/api/v1/courses/', () => {
+      return {
+        status: 200
+      };
+    });
+
+    getCourseList().then(() => {
+      done();
+    });
+  });
+
+  it('fails to get a list of courses', done => {
+    fetchMock.mock('/api/v1/courses/', () => {
+      return {
+        status: 400
+      };
+    });
+
+    getCourseList().catch(() => {
       done();
     });
   });
