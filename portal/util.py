@@ -163,12 +163,6 @@ def validate_cart(cart, user):
 
             modules_in_cart.add(uuid)
 
-    for module_uuid in modules_in_cart:
-        module = Module.objects.get(uuid=module_uuid)
-        uuids = module.course.module_set.values_list('uuid', flat=True)
-        if not modules_in_cart.issuperset(uuids):
-            raise ValidationError("You must purchase all modules for a course.")
-
 
 def create_order(cart, user):
     """
