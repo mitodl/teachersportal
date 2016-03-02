@@ -19,7 +19,7 @@ import dj_database_url
 import yaml
 import stripe
 
-VERSION = "0.0.0"
+VERSION = "0.2.0"
 
 CONFIG_PATHS = [
     os.environ.get('TEACHERSPORTAL_CONFIG', ''),
