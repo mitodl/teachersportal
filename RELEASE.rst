@@ -1,6 +1,32 @@
 Release Notes
 =============
 
+Version 0.3.0
+-------------
+
+- Release 0.2.0
+- Navigating between courses no longer keeps stale state.
+- Used urljoin to create url for ccxcon API
+- Removed check that required a cart to contain all modules for a course
+- Implemented consistent dollar formatting
+- Add links to footer.
+- Fixed snackbar
+- Fixed CSS layout for activation page
+- Changed seat count to textbox, changed slider&#39;s step to 1
+- Implemented popup of login after successful activation
+- Added tests to increase coverage
+- Adding github PR template.
+- Implemented PATCH for course API
+- Fixed header overlap
+- Made courses which are not live visible to instructors, and added a live flag
+- Added delete button, other cart UI updates
+- Fixed React CSS for Homepage card
+- Added back React hot reloading with fixed version of webpack
+- Added uuid to module admin
+
+Release Notes
+=============
+
 Version 0.2.0
 -------------
 
