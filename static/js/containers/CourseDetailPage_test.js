@@ -45,12 +45,6 @@ describe('CourseDetailPage', () => {
   let store, sandbox, container, checkoutStub, listenForActions, dispatchThen;
 
   beforeEach(() => {
-    // Fake getSelection so material-ui doesn't complain about not being
-    // in a browser
-    window.getSelection = () => ({
-      removeAllRanges: () => {}
-    });
-
     sandbox = sinon.sandbox.create();
     checkoutStub = sandbox.stub(api, 'checkout');
 
