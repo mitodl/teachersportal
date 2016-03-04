@@ -8,6 +8,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.db import transaction
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -46,6 +47,11 @@ class CheckoutView(APIView):
         """
         errors = set()
         courses_and_seats = {}
+
+        try:
+            user.userinfo
+        except ObjectDoesNotExist:
+            raise ValidationError("You must have a user profile to check out.")
 
         # OrderLine stores a reference to a module and the number of seats
         # for each module. This number of seats should always be the same for each module

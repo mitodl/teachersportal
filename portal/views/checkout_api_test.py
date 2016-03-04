@@ -49,6 +49,48 @@ class CheckoutAPITests(CourseTests):
         )
         self.client.login(username=self.user.username, password=password)
 
+    @patch('portal.views.checkout_api.ccxcon_request')
+    def test_no_userinfo(self, mock_ccxcon):
+        """Should show validation error if there isn't a user info"""
+        user = User.objects.create_user(
+            username='Darth',
+            password='Vad3r',
+            email='darth@death.star',
+        )
+        self.client.login(username=user, password='Vad3r')
+
+        mock_ccxcon.return_value.post.return_value.status_code = 200
+        cart_item = {
+            "uuids": [self.module.uuid],
+            "seats": 5,
+            "course_uuid": self.course.uuid
+        }
+        cart = [cart_item]
+        total = calculate_cart_subtotal(cart)
+        # Note: autospec intentionally not used, we need an unbound method here
+        with patch.object(Charge, 'create') as create_mock:
+            mocked_kwargs = {}
+
+            def _create_mock(**kwargs):
+                """Side effect function to capture kwargs for assert"""
+                # Note: not just assigning to mocked_kwargs because of scope differences.
+                for key, value in kwargs.items():
+                    mocked_kwargs[key] = value
+            create_mock.side_effect = _create_mock
+
+            resp = self.client.post(
+                reverse('checkout'),
+                content_type='application/json',
+                data=json.dumps({
+                    "cart": cart,
+                    "token": "token",
+                    "total": float(total)
+                })
+            )
+
+        assert resp.status_code == 400, resp.content.decode('utf-8')
+        assert 'must have a user profile' in resp.content.decode('utf-8')
+
     def test_empty_cart(self):
         """
         Assert that an empty cart causes a 400.
