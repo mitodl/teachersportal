@@ -9,6 +9,7 @@ import {
   login,
   register,
   activate,
+  clearActivation,
   checkout,
   checkoutSuccess,
   checkoutFailure,
@@ -20,6 +21,7 @@ import {
   updateSelectedChapters,
   clearInvalidCartItems,
   receiveCourseListSuccess,
+  removeCartItem,
 
   REQUEST_COURSE,
   RECEIVE_COURSE_SUCCESS,
@@ -45,11 +47,13 @@ import {
   REGISTER_FAILURE,
   ACTIVATE_SUCCESS,
   ACTIVATE_FAILURE,
+  CLEAR_ACTIVATION,
   UPDATE_CART_ITEMS,
   UPDATE_CART_VISIBILITY,
   UPDATE_SEAT_COUNT,
   UPDATE_SELECTED_CHAPTERS,
   RESET_BUYTAB,
+  REMOVE_CART_ITEM,
 
   FETCH_FAILURE,
   FETCH_SUCCESS,
@@ -157,9 +161,10 @@ describe('reducers', () => {
     });
 
     it('should set login state to show when triggered', done => {
-      dispatchThen(showLogin(), [SHOW_LOGIN]).then(state => {
+      dispatchThen(showLogin("message"), [SHOW_LOGIN]).then(state => {
         assert.deepEqual(state, {
-          visible: true
+          visible: true,
+          message: "message"
         });
         done();
       });
@@ -411,6 +416,18 @@ describe('reducers', () => {
         done();
       });
     });
+
+    it('clears activation status', done => {
+      store.dispatch({type: ACTIVATE_SUCCESS});
+
+      dispatchThen(clearActivation(), [CLEAR_ACTIVATION]).then(activationState => {
+        assert.deepEqual(activationState, {
+          status: null
+        });
+
+        done();
+      });
+    });
   });
 
   describe('cart reducers', () => {
@@ -583,6 +600,29 @@ describe('reducers', () => {
           cart: [],
           courseList: []
         });
+
+        done();
+      });
+    });
+
+    it('removes an item from the cart', done => {
+      let uuid = COURSE_RESPONSE1.modules[0].uuid;
+      let courseUuid = COURSE_RESPONSE1.uuid;
+      store.dispatch(updateCartItems([uuid], 5, courseUuid));
+      let expectedCart = [{
+        uuids: [uuid],
+        seats: 5,
+        courseUuid: courseUuid
+      }];
+
+      // If course uuid doesn't match, no item is removed
+      dispatchThen(removeCartItem("missing"), [REMOVE_CART_ITEM]).then(cartState => {
+        assert.deepEqual(cartState.cart, expectedCart);
+
+        // If course uuid matches, item is removed
+        return dispatchThen(removeCartItem(courseUuid), [REMOVE_CART_ITEM]);
+      }).then(cartState => {
+        assert.deepEqual(cartState.cart, []);
 
         done();
       });

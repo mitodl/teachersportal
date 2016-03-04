@@ -5,6 +5,7 @@ API for checkout
 from __future__ import unicode_literals
 import logging
 from decimal import Decimal
+from six.moves.urllib.parse import urljoin  # pylint: disable=import-error
 
 from django.conf import settings
 from django.db import transaction
@@ -59,10 +60,9 @@ class CheckoutView(APIView):
             title = course.title
             course_uuid = course.uuid
             ccxcon = ccxcon_request()
-            api_base = settings.CCXCON_API
             try:
                 result = ccxcon.post(
-                    '{api_base}v1/ccx/'.format(api_base=api_base),
+                    urljoin(settings.CCXCON_API, 'v1/ccx/'),
                     json={
                         'master_course_id': course_uuid,
                         'user_email': user.email,
@@ -98,8 +98,8 @@ class CheckoutView(APIView):
             estimated_total = Decimal(float(data['total']))
         except KeyError as ex:
             raise ValidationError("Missing key {}".format(ex.args[0]))
-        except TypeError:
-            raise ValidationError("Invalid JSON")
+        except (TypeError, ValueError):
+            raise ValidationError("Invalid float")
 
         if not isinstance(cart, list):
             raise ValidationError("Cart must be a list of items")

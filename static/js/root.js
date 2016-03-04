@@ -1,4 +1,8 @@
 /* global StripeHandler:true, StripeCheckout:false, window:false, SETTINGS:false */
+if (process.env.NODE_ENV !== 'production') {
+  __webpack_public_path__ = `http://${SETTINGS.host}:8076/`;  // eslint-disable-line no-undef, camelcase
+}
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import '../sass/layout.scss';

@@ -42,6 +42,7 @@ def course_as_dict(course, course_info=None, modules_info=None):
         "uuid": course.uuid,
         "info": course_info,
         "modules": modules,
+        "live": course.live
     }
 
 
@@ -129,7 +130,7 @@ def validate_cart(cart, user):
         if course_uuid in courses_in_cart:
             log.debug("Duplicate course %s in cart", course_uuid)
             raise ValidationError("Duplicate course in cart")
-        course = AuthorizationHelpers.get_course(course_uuid)
+        course = AuthorizationHelpers.get_course(course_uuid, user)
         if course is None:
             raise ValidationError("One or more courses are unavailable")
 
@@ -161,12 +162,6 @@ def validate_cart(cart, user):
                 raise ValidationError("Duplicate module in cart")
 
             modules_in_cart.add(uuid)
-
-    for module_uuid in modules_in_cart:
-        module = Module.objects.get(uuid=module_uuid)
-        uuids = module.course.module_set.values_list('uuid', flat=True)
-        if not modules_in_cart.issuperset(uuids):
-            raise ValidationError("You must purchase all modules for a course.")
 
 
 def create_order(cart, user):

@@ -2,13 +2,24 @@ import React from 'react';
 import RaisedButton from 'material-ui/lib/raised-button';
 import Slider from 'material-ui/lib/slider';
 import LeftNav from 'material-ui/lib/left-nav';
-import MenuItem from 'material-ui/lib/menus/menu-item';
+import List from 'material-ui/lib/lists/list';
+import ListItem from 'material-ui/lib/lists/list-item';
+import Checkbox from 'material-ui/lib/checkbox';
 import AppBar from 'material-ui/lib/app-bar';
 import IconButton from 'material-ui/lib/icon-button';
 import NavigationClose from 'material-ui/lib/svg-icons/navigation/close';
 import ChapterTab from './ChapterTab';
 import StripeButton from './StripeButton';
-import { getModule, getCourse, calculateTotal } from '../util/util';
+import MenuItem from 'material-ui/lib/menus/menu-item';
+import {
+  getModule,
+  getCourse,
+  calculateTotal,
+  formatDollars,
+} from '../util/util';
+import { removeCartItem } from '../actions/index_page';
+
+const MAX_SEATS = 200;
 
 class BuyTab extends React.Component {
   componentWillReceiveProps(nextProps) {
@@ -33,26 +44,70 @@ class BuyTab extends React.Component {
       buyTab,
       buyTabTotal,
       updateSelectedChapters,
+      updateSeatCount,
       } = this.props;
 
     let cartContents = <MenuItem>No chapters selected</MenuItem>;
 
     if (cart.cart.length > 0) {
-      cartContents = cart.cart.map((item, i) => {
+      // courseList will be empty before we have fetched the courses from the server
+      // If a course is not yet available, skip the items in the display
+      let filteredCart = cart.cart.filter(
+        item => getCourse(item.courseUuid, courseList) !== undefined
+      );
+      cartContents = filteredCart.map(item => {
         let course = getCourse(item.courseUuid, courseList);
-        let title = "";
-        if (course !== undefined) {
-          title = course.title;
-        }
 
-        return <MenuItem
-          key={item.courseUuid}>{i}: {title}:
-          Seats: {item.seats}
-        </MenuItem>;
+        // filter out missing modules
+        let modules = item.uuids.filter(
+          uuid => getModule(uuid, courseList) !== undefined
+        ).map(uuid => getModule(uuid, courseList));
+
+        // reorder modules in the order they appeared when we got their information
+        // from the server
+        modules = modules.sort((a, b) => {
+          // Inefficient, but we aren't dealing with many modules here
+          let orderA = course.modules.findIndex(module => module.uuid === a.uuid);
+          let orderB = course.modules.findIndex(module => module.uuid === b.uuid);
+          return orderA - orderB;
+        });
+
+
+        let moduleDescriptions = modules.map(
+          module => <div key={module.uuid} className="cart-item-module">
+            {getModule(module.uuid, courseList).title}
+          </div>
+        );
+        let itemTotal = calculateTotal([item], courseList);
+
+        return <ListItem
+          key={course.uuid} className="cart-item">
+          <div className="cart-item-content">
+            <span className="cart-item-description">
+              <div>{course.title}</div>
+              {moduleDescriptions}
+            </span>
+            <div className="cart-item-options">
+              <button onClick={() => this.removeCartItem.call(this, item.courseUuid)}>Delete</button>
+            </div>
+          </div>
+          <div className="cart-item-info">
+            <div className="cart-item-seats">
+              <span className="cart-item-seats-count">{item.seats}</span>
+              <br />
+              <span className="cart-item-info-label">Total Seats</span>
+            </div>
+            <div className="cart-item-cost">
+              <span className="cart-item-cost-total">{formatDollars(itemTotal)}</span>
+              <br />
+              <span className="cart-item-info-label">Course Cost</span>
+            </div>
+          </div>
+          </ListItem>
+          ;
       });
     }
 
-    const maxSeats = 200;
     let cartTotal = calculateTotal(cart.cart, courseList);
 
     return <div className="course-purchase-selector">
@@ -62,22 +117,35 @@ class BuyTab extends React.Component {
           <Slider
             className="number-of-seats"
             name="number-of-seats"
-            max={maxSeats}
+            max={MAX_SEATS}
             value={buyTab.seats}
-            step={10}
+            step={1}
             style={{ 'marginBottom': '5px' }}
-            onChange={this.onUpdateSeatCount.bind(this)}
+            onChange={(e, value) => this.onUpdateSeatCount.call(this, value)}
           />
           <div className="slider-scale">
             <span className="left">0</span>
-            <span className="left-quarter">{maxSeats * 0.25}</span>
-            <span className="middle">{maxSeats * 0.5}</span>
-            <span className="right-quarter">{maxSeats * 0.75}</span>
-            <span className="right">{maxSeats}</span>
+            <span className="left-quarter">{MAX_SEATS * 0.25}</span>
+            <span className="middle">{MAX_SEATS * 0.5}</span>
+            <span className="right-quarter">{MAX_SEATS * 0.75}</span>
+            <span className="right">{MAX_SEATS}</span>
           </div>
         </div>
-        <div className="seatCount">{buyTab.seats}<br /><span className="seatCountLabel">Seats</span></div>
-        <div className="selectionTotal">${buyTabTotal}<br /><span className="selectionTotalLabel">Total</span></div>
+        <div className="seat-count">
+          <input
+            type="text"
+            value={buyTab.seats}
+            onChange={e => this.onUpdateSeatCount.call(this, e.target.value)}
+            className="seat-count-text"
+          />
+          <br />
+          <span className="seat-count-label">Seats</span>
+        </div>
+        <div className="selection-total">
+          {formatDollars(buyTabTotal)}
+          <br />
+          <span className="selection-total-label">Total</span>
+        </div>
         <RaisedButton
           label="Update Cart"
           className="add-to-cart"
@@ -87,7 +155,7 @@ class BuyTab extends React.Component {
       </div>
       <h3 className="chapter-label">Chapters</h3>
       <ChapterTab
-        className="moduleSelector"
+        className="module-selector"
         selectable={selectable}
         multiSelectable={selectable}
         enableSelectAll={selectable}
@@ -115,12 +183,18 @@ class BuyTab extends React.Component {
             </IconButton>
           }
         />
+        <List className="shopping-cart-list">
         {cartContents}
+        </List>
         <div className="cart-actions">
           <StripeButton cart={cart} course={course} checkout={this.onCheckout.bind(this)}/>
         </div>
         <div className="cart-status">
-          <span className="cart-total">${cartTotal}<br /><span className="cart-total-label">total cost</span></span>
+          <span className="cart-total">
+            {formatDollars(cartTotal)}
+            <br />
+            <span className="cart-total-label">total cost</span>
+          </span>
         </div>
       </LeftNav>
     </div>;
@@ -137,9 +211,20 @@ class BuyTab extends React.Component {
     updateCartVisibility(true);
   }
 
-  onUpdateSeatCount(e, value) {
+  onUpdateSeatCount(value) {
     const { updateSeatCount } = this.props;
-    updateSeatCount(value);
+
+    let number = parseInt(value);
+    if (!isFinite(number)) {
+      number = 0;
+    }
+    if (number < 0) {
+      number = 0;
+    }
+    if (number > MAX_SEATS) {
+      number = MAX_SEATS;
+    }
+    updateSeatCount(number);
   }
 
   onCartClose() {
@@ -153,6 +238,12 @@ class BuyTab extends React.Component {
     updateCartVisibility(false);
     checkout();
   }
+
+  removeCartItem(courseUuid) {
+    const { dispatch } = this.props;
+
+    dispatch(removeCartItem(courseUuid));
+  }
 }
 
 export default BuyTab;
@@ -160,6 +251,7 @@ export default BuyTab;
 BuyTab.propTypes = {
   course: React.PropTypes.object.isRequired,
   courseList: React.PropTypes.array.isRequired,
+  dispatch: React.PropTypes.func.isRequired,
   selectable: React.PropTypes.bool.isRequired,
   cart: React.PropTypes.object.isRequired,
   buyTab: React.PropTypes.object.isRequired,

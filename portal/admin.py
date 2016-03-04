@@ -10,14 +10,14 @@ from portal.models import Course, Module, BackingInstance
 
 
 class ModuleInline(admin.TabularInline):
-    "Module inline for editing on course admin"
+    """Module inline for editing on course admin"""
     model = Module
-    fields = ('title', 'price_without_tax')
+    fields = ('uuid', 'title', 'price_without_tax')
     extra = 0
 
 
 class CourseAdmin(admin.ModelAdmin):
-    "Course admin page"
+    """Course admin page"""
     inlines = [
         ModuleInline
     ]

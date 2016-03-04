@@ -31,6 +31,10 @@ EDIT_OWN_PRICE = (
     'edit_own_price',
     'Can edit the price of a module'
 )
+SEE_OWN_NOT_LIVE = (
+    'see_own_not_live',
+    'Can see courses which are not live'
+)
 
 
 class HmacPermission(BasePermission):
@@ -60,10 +64,22 @@ class AuthorizationHelpers(object):
     Functions used to ensure permissions are applied.
     """
 
-    @staticmethod
-    def get_courses():
+    @classmethod
+    def _is_visible(cls, course, user):
+        """
+        Helper method to contain course visibility logic.
+        """
+        return course.is_available_for_purchase or (
+            cls.is_owner(course, user) and cls.can_see_own_not_live(course, user)
+        )
+
+    @classmethod
+    def get_courses(cls, user):
         """
         Returns a list of courses accessible by user.
+
+        Args:
+            user (django.contrib.auth.models.User): Logged in user
 
         Returns:
             list: A list of courses
@@ -71,16 +87,17 @@ class AuthorizationHelpers(object):
         from portal.models import Course
         return [
             course for course in Course.objects.all()
-            if course.is_available_for_purchase
+            if cls._is_visible(course, user)
         ]
 
-    @staticmethod
-    def get_course(course_uuid):
+    @classmethod
+    def get_course(cls, course_uuid, user):
         """
         Returns a course, or None if no course exists or is not available for purchase.
 
         Args:
-            course_uuid (str): A course
+            course_uuid (str): A course UUID
+            user (django.contrib.auth.models.User): Logged in user
         Returns:
             Course: A course, or None if course is not accessible to the user
         """
@@ -91,7 +108,7 @@ class AuthorizationHelpers(object):
             log.debug("Couldn't find a course with uuid %s in the portal", course_uuid)
             return None
 
-        if not course.is_available_for_purchase:
+        if not cls._is_visible(course, user):
             log.debug("Course %s isn't available for sale.", course)
             return None
         return course
@@ -115,7 +132,6 @@ class AuthorizationHelpers(object):
         Does user have permission to edit their own course's price?
 
         Args:
-            cls (AuthorizationHelpers): This class
             course (Course): A course
             user (django.contrib.auth.models.User): A User
 
@@ -133,7 +149,6 @@ class AuthorizationHelpers(object):
         Does user have permission to edit their own course's descriptive content?
 
         Args:
-            cls (AuthorizationHelpers): This class
             course (Course): A course
             user (django.contrib.auth.models.User): A User
 
@@ -151,7 +166,6 @@ class AuthorizationHelpers(object):
         Does user have permission to edit their own course's live flag?
 
         Args:
-            cls (AuthorizationHelpers): This class
             course (Course): A course
             user (django.contrib.auth.models.User): A User
 
@@ -176,3 +190,20 @@ class AuthorizationHelpers(object):
             bool: True if user has permission to buy a course
         """
         return not cls.is_owner(course, user) and course.is_available_for_purchase
+
+    @classmethod
+    def can_see_own_not_live(cls, course, user):
+        """
+        Does user have permission to see their own courses which aren't live?
+
+        Args:
+            course (Course): A course
+            user (django.contrib.auth.models.User): A User
+
+        Returns:
+            bool: True if user has this permission for this course.
+        """
+        return (
+            user.has_perm("portal.{}".format(SEE_OWN_NOT_LIVE[0])) and
+            cls.is_owner(course, user)
+        )

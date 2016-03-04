@@ -8,6 +8,8 @@ import { connect } from 'react-redux';
 import {
   showSnackBar,
   hideSnackBar,
+  clearActivation,
+  showLogin,
   FETCH_FAILURE,
   FETCH_SUCCESS,
 } from '../actions/index_page';
@@ -16,10 +18,12 @@ class App extends React.Component {
 
   componentDidMount() {
     this.handleMessage.call(this);
+    this.showLoginAfterActivation.call(this);
   }
 
   componentDidUpdate() {
     this.handleMessage.call(this);
+    this.showLoginAfterActivation.call(this);
   }
 
   handleMessage() {
@@ -43,6 +47,14 @@ class App extends React.Component {
     }
   }
 
+  showLoginAfterActivation() {
+    const { dispatch, activation } = this.props;
+    if (activation.status === FETCH_SUCCESS) {
+      dispatch(clearActivation());
+      dispatch(showLogin("Thanks for activating! You may now sign in."));
+    }
+  }
+
   render() {
     const {
       authentication,
@@ -63,14 +75,18 @@ class App extends React.Component {
         loginModal={loginModal}
         history={history}
       />
+      <div id="app-body">
         {content}
+      </div>
       <Snackbar
         open={snackBar.open}
         message={snackBar.message}
-        autoHideDuration={3000}
+        action="dismiss"
+        autoHideDuration={0}
         onActionTouchTap={() => dispatch(hideSnackBar())}
         onRequestClose={() => dispatch(hideSnackBar())}
         bodyStyle={{ 'backgroundColor': 'rgba(100, 100, 100, 0.9)' }}
+        className="snackbar"
       />
       <Footer/>
     </div>;
@@ -87,6 +103,7 @@ App.propTypes = {
 
 const mapStateToProps = (state) => {
   return {
+    activation: state.activation,
     authentication: state.authentication,
     registration: state.registration,
     loginModal: state.loginModal,

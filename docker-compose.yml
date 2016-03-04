@@ -35,7 +35,7 @@ watch:
     npm install --no-bin-links &&
     npm rebuild node-sass &&
     echo Finished npm install &&
-    node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --config webpack.config.dev.js -d --content-base ./static --host 0.0.0.0 --port 8076 --progress --inline'
+    node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --config webpack.config.dev.js -d --content-base ./static --host 0.0.0.0 --port 8076 --progress --inline --hot'
   ports:
     - "8076:8076"
   volumes:

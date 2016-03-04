@@ -28,6 +28,7 @@ export const CLEAR_REGISTRATION_ERROR = 'CLEAR_REGISTRATION_ERROR';
 
 export const ACTIVATE_SUCCESS = 'ACTIVATE_SUCCESS';
 export const ACTIVATE_FAILURE = 'ACTIVATE_FAILURE';
+export const CLEAR_ACTIVATION = 'CLEAR_ACTIVATION';
 
 export const UPDATE_CART_ITEMS = 'UPDATE_CART_ITEMS';
 export const CLEAR_CART = 'CLEAR_CART';
@@ -35,6 +36,7 @@ export const CHECKOUT_SUCCESS = 'CHECKOUT_SUCCESS';
 export const CHECKOUT_FAILURE = 'CHECKOUT_FAILURE';
 export const CLEAR_INVALID_CART_ITEMS = 'CLEAR_INVALID_CART_ITEMS';
 export const RESET_BUYTAB = 'RESET_BUYTAB';
+export const REMOVE_CART_ITEM = 'REMOVE_CART_ITEM';
 
 export const UPDATE_SELECTED_CHAPTERS = 'UPDATE_SELECTED_CHAPTERS';
 export const UPDATE_SEAT_COUNT = 'UPDATE_SEAT_COUNT';
@@ -58,7 +60,7 @@ export const receiveCourseListSuccess = createAction(
 
 const receiveCourseListFailure = createAction(RECEIVE_COURSE_LIST_FAILURE);
 
-export const showLogin = createAction(SHOW_LOGIN);
+export const showLogin = createAction(SHOW_LOGIN, message => ({message}));
 
 export const showSnackBar = createAction(SHOW_SNACKBAR);
 export const hideSnackBar = createAction(HIDE_SNACKBAR);
@@ -152,6 +154,7 @@ export function register(fullName, email, organization, password, redirect) {
 
 export const activateSuccess = createAction(ACTIVATE_SUCCESS);
 export const activateFailure = createAction(ACTIVATE_FAILURE);
+export const clearActivation = createAction(CLEAR_ACTIVATION);
 
 export function activate(token) {
   return dispatch => {
@@ -198,3 +201,7 @@ export const updateSelectedChapters = createAction(
 
 export const updateSeatCount = createAction(
   UPDATE_SEAT_COUNT, (seats) => { return { seats }; });
+
+export const removeCartItem = createAction(
+  REMOVE_CART_ITEM, courseUuid => ({courseUuid})
+);

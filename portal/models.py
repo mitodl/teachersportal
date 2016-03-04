@@ -24,6 +24,7 @@ from portal.permissions import (
     EDIT_OWN_CONTENT,
     EDIT_OWN_LIVENESS,
     EDIT_OWN_PRICE,
+    SEE_OWN_NOT_LIVE,
 )
 
 
@@ -46,7 +47,7 @@ class Course(models.Model):
     """
     uuid = TextField()
     title = TextField()
-    description = TextField(blank=True, null=True)
+    description = TextField(blank=True)
     live = BooleanField()
     created_at = DateTimeField(auto_now_add=True, blank=True)
     modified_at = DateTimeField(auto_now=True, blank=True)
@@ -71,6 +72,7 @@ class Course(models.Model):
         permissions = (
             EDIT_OWN_CONTENT,
             EDIT_OWN_LIVENESS,
+            SEE_OWN_NOT_LIVE,
         )
 
 

@@ -22,7 +22,9 @@ def add_permissions_to_groups(apps, schema_editor, with_create_permissions=True)
     for codename in ('edit_own_content', 'edit_own_liveness', 'edit_own_price'):
         try:
             perm = Permission.objects.get(
-                codename=codename, content_type__app_label='portal')
+                codename=codename,
+                content_type__app_label='portal'
+            )
         except Permission.DoesNotExist:
             if with_create_permissions:
                 # Manually run create_permissions
@@ -38,6 +40,20 @@ def add_permissions_to_groups(apps, schema_editor, with_create_permissions=True)
         instructor.permissions.add(perm)
 
 
+def reverse_add_permissions_to_groups(apps, schema_editor):
+    """
+    Important: the permission will get recreated in the post_migrate hook
+    so the reverse migration won't work fully. However it won't be attached
+    to the group or users anymore.
+    """
+    Permission = apps.get_model("auth", "Permission")
+    for codename in ('edit_own_content', 'edit_own_liveness', 'edit_own_price'):
+        Permission.objects.get(
+            codename=codename,
+            content_type__app_label='portal'
+        ).delete()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -46,5 +62,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(add_permissions_to_groups)
+        migrations.RunPython(add_permissions_to_groups, reverse_add_permissions_to_groups)
     ]

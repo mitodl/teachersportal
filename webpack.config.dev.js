@@ -17,10 +17,7 @@ module.exports = {
       {
         test: /\.jsx?$/,
         exclude: /node_modules/,
-        loader: 'babel-loader',
-        query: {
-          presets: ['es2015', 'react']
-        }
+        loader: "react-hot!babel-loader?presets[]=es2015&presets[]=react",
       },  // to transform JSX into JS
       {
         test: /\.scss$/,

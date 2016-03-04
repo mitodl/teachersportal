@@ -3,17 +3,26 @@ Views for course availability listing.
 """
 from __future__ import unicode_literals
 
+from decimal import Decimal, DecimalException
 import logging
 import json
-from six.moves.urllib.parse import urlparse, urlunparse  # pylint: disable=import-error
+from six.moves.urllib.parse import (  # pylint: disable=import-error
+    urlparse,
+    urlunparse,
+    urljoin,
+)
+from six import string_types
 
 from django.conf import settings
 from django.http.response import Http404
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
 
+from portal.models import Module
 from portal.permissions import AuthorizationHelpers
 from portal.serializers import (
     CourseSerializer,
@@ -99,11 +108,10 @@ def fetch_ccxcon_info(uuid):
             Item two is the information for each module for that course
     """
     oauth_ccxcon = ccxcon_request()
-    ccxcon_api = settings.CCXCON_API
 
-    course_url = "{api_base}v1/coursexs/{course_uuid}/".format(
-        api_base=ccxcon_api,
-        course_uuid=uuid
+    course_url = urljoin(
+        settings.CCXCON_API,
+        'v1/coursexs/{course_uuid}/'.format(course_uuid=uuid)
     )
     response = oauth_ccxcon.get(course_url)
     if response.status_code != HTTP_200_OK:
@@ -121,9 +129,9 @@ def fetch_ccxcon_info(uuid):
     # Whitelist of allowed keys to pass through
 
     # Add module information to list
-    modules_url = "{api_base}v1/coursexs/{course_uuid}/modules/".format(
-        api_base=ccxcon_api,
-        course_uuid=uuid
+    modules_url = urljoin(
+        settings.CCXCON_API,
+        'v1/coursexs/{course_uuid}/modules/'.format(course_uuid=uuid)
     )
     response = oauth_ccxcon.get(modules_url)
     if response.status_code != HTTP_200_OK:
@@ -159,7 +167,7 @@ class CourseListView(ListAPIView):
 
         return [
             course_as_dict(course)
-            for course in AuthorizationHelpers.get_courses()
+            for course in AuthorizationHelpers.get_courses(self.request.user)
         ]
 
 
@@ -184,7 +192,7 @@ class CourseDetailView(RetrieveAPIView):
         Looks up information for a course from CCXCon and Course model.
         """
         uuid = self.kwargs['uuid']
-        course = AuthorizationHelpers.get_course(uuid)
+        course = AuthorizationHelpers.get_course(uuid, self.request.user)
         if course is None:
             raise Http404
 
@@ -198,3 +206,115 @@ class CourseDetailView(RetrieveAPIView):
                 for uuid, module in modules_info.items()
             }
         )
+
+    # This method is a mammoth due to how much per-field validation we need to do
+    # pylint: disable=too-many-locals, too-many-branches, too-many-statements
+    def patch(self, request, *args, **kwargs):  # pylint: disable=unused-argument
+        """
+        Take PATCH requests, check permissions, and alter state based on them.
+        """
+        uuid = self.kwargs['uuid']
+        data = request.data
+        user = request.user
+        # We shouldn't save any data until all validation checks out
+        course_modified = False
+        course = AuthorizationHelpers.get_course(uuid, user)
+        if course is None:
+            raise Http404
+
+        if "live" in data:
+            live = data['live']
+            if not isinstance(live, bool):
+                raise ValidationError("live must be a bool")
+            if not AuthorizationHelpers.can_edit_own_liveness(course, user):
+                raise ValidationError("User doesn't have permission to edit course liveness")
+
+            course.live = live
+            course_modified = True
+
+        if "title" in data:
+            title = data['title']
+            if not isinstance(title, string_types) or title == '':
+                raise ValidationError("title must be a non-empty string")
+            if not AuthorizationHelpers.can_edit_own_content(course, user):
+                raise ValidationError(
+                    "User doesn't have permission to edit course descriptions or titles"
+                )
+
+            course.title = title
+            course_modified = True
+
+        if "description" in data:
+            description = data['description']
+            if not isinstance(description, string_types):
+                raise ValidationError("description must be a string")
+            if not AuthorizationHelpers.can_edit_own_content(course, user):
+                raise ValidationError(
+                    "User doesn't have permission to edit course descriptions or titles"
+                )
+
+            course.description = description
+            course_modified = True
+
+        modules_to_save = {}
+        if "modules" in data:
+            if not isinstance(data['modules'], list):
+                raise ValidationError("modules must be a list of modules")
+
+            for module_data in data['modules']:
+                if not isinstance(module_data, dict):
+                    raise ValidationError("Each module must be an object")
+                if 'uuid' not in module_data:
+                    raise ValidationError("Missing key uuid")
+                if module_data['uuid'] in modules_to_save:
+                    raise ValidationError("Duplicate module")
+
+                try:
+                    # We've already checked permissions for course above
+                    # so this is a simple object lookup
+                    module = Module.objects.get(
+                        uuid=module_data['uuid'],
+                        course=course
+                    )
+                except Module.DoesNotExist:
+                    raise ValidationError(
+                        "Unable to find module {uuid}".format(uuid=module_data['uuid'])
+                    )
+
+                if 'title' in module_data:
+                    title = module_data['title']
+                    if not isinstance(title, string_types) or title == '':
+                        raise ValidationError("title must be a non-empty string")
+                    if not AuthorizationHelpers.can_edit_own_content(course, user):
+                        raise ValidationError(
+                            "User doesn't have permission to edit course descriptions or titles"
+                        )
+
+                    module.title = title
+                    modules_to_save[module.uuid] = module
+
+                if 'price_without_tax' in module_data:
+                    price_without_tax = module_data['price_without_tax']
+                    if price_without_tax is not None:
+                        if not isinstance(price_without_tax, string_types):
+                            raise ValidationError('price_without_tax must be a string')
+                        try:
+                            price_without_tax = Decimal(price_without_tax)
+                        except DecimalException:
+                            raise ValidationError('price_without_tax is not a valid number')
+                        if not price_without_tax.is_finite():
+                            raise ValidationError('price_without_tax is not a valid number')
+                        if price_without_tax < 0:
+                            raise ValidationError('price_without_tax is not a valid number')
+
+                    if not AuthorizationHelpers.can_edit_own_price(course, user):
+                        raise ValidationError("User doesn't have permission to edit module price")
+
+                    module.price_without_tax = price_without_tax
+                    modules_to_save[module.uuid] = module
+
+        if course_modified:
+            course.save()
+        for module in modules_to_save.values():
+            module.save()
+        return Response(status=200)

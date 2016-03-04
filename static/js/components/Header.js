@@ -38,6 +38,7 @@ class Header extends React.Component {
         reportRegisterError={error => dispatch(registerFailure(error))}
         loginError={authentication.error}
         registerError={registration.error}
+        message={loginModal.message}
       />
       </div>;
   }

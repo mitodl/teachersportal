@@ -17,6 +17,7 @@ from portal.permissions import (
     EDIT_OWN_CONTENT,
     EDIT_OWN_LIVENESS,
     EDIT_OWN_PRICE,
+    SEE_OWN_NOT_LIVE,
     AuthorizationHelpers as Helpers,
 )
 
@@ -37,13 +38,14 @@ class PermissionsAPITests(TestCase):
         ModuleFactory.create(price_without_tax=3, course=course)
         assert course.is_available_for_purchase
 
-        def assert_permissions(edit_content, edit_liveness, edit_price, is_owner):
+        def assert_permissions(edit_content, edit_liveness, edit_price, is_owner, see_not_live):
             """Mock and assert these set of permissions"""
 
             @patch.object(Helpers, 'is_owner', return_value=is_owner)
             @patch.object(Helpers, 'can_edit_own_content', return_value=edit_content)
             @patch.object(Helpers, 'can_edit_own_liveness', return_value=edit_liveness)
             @patch.object(Helpers, 'can_edit_own_price', return_value=edit_price)
+            @patch.object(Helpers, 'can_see_own_not_live', return_value=see_not_live)
             def run_assert_permissions(*args):  # pylint: disable=unused-argument
                 """Something to attach our patch objects to so we don't indent each time"""
                 resp = self.client.get(
@@ -56,6 +58,7 @@ class PermissionsAPITests(TestCase):
                     EDIT_OWN_CONTENT[0]: edit_content,
                     EDIT_OWN_PRICE[0]: edit_price,
                     EDIT_OWN_LIVENESS[0]: edit_liveness,
+                    SEE_OWN_NOT_LIVE[0]: see_not_live,
                 }
             run_assert_permissions()
 

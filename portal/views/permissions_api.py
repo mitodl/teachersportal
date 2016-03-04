@@ -13,6 +13,7 @@ from portal.permissions import (
     EDIT_OWN_PRICE,
     EDIT_OWN_CONTENT,
     EDIT_OWN_LIVENESS,
+    SEE_OWN_NOT_LIVE,
 )
 
 
@@ -27,7 +28,7 @@ def course_permissions_view(request, uuid):
     Returns:
         rest_framework.request.Response: The REST response
     """
-    course = AuthorizationHelpers.get_course(uuid)
+    course = AuthorizationHelpers.get_course(uuid, request.user)
     if course is None:
         raise Http404
 
@@ -39,6 +40,9 @@ def course_permissions_view(request, uuid):
             course, request.user
         ),
         EDIT_OWN_LIVENESS[0]: AuthorizationHelpers.can_edit_own_liveness(
+            course, request.user
+        ),
+        SEE_OWN_NOT_LIVE[0]: AuthorizationHelpers.can_see_own_not_live(
             course, request.user
         ),
         "is_owner": AuthorizationHelpers.is_owner(course, request.user)

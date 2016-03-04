@@ -131,6 +131,24 @@ class LoginTests(AuthenticationTestCase):
         assert resp.status_code == 400, resp.content.decode('utf-8')
         assert not self.is_authenticated(self.user)
 
+    def test_login_not_activated(self):
+        """
+        Make sure we forbid login to a user who is not activated.
+        """
+        self.user.is_active = False
+        self.user.save()
+
+        resp = self.client.post(
+            reverse('login'),
+            {
+                "username": self.USERNAME,
+                "password": self.PASSWORD,
+            },
+            format='json'
+        )
+        assert resp.status_code == 403, resp.content.decode('utf-8')
+        assert not self.is_authenticated(self.user)
+
     def test_logout(self):
         """
         Assert that logout works correctly.
