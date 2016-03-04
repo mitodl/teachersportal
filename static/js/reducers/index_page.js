@@ -6,10 +6,8 @@ import {
   RECEIVE_COURSE_LIST_SUCCESS,
   RECEIVE_COURSE_LIST_FAILURE,
   REQUEST_COURSE_LIST,
-  CLEAR_COURSE,
   SHOW_LOGIN,
   HIDE_LOGIN,
-  SHOW_SNACKBAR,
   HIDE_SNACKBAR,
   FETCH_FAILURE,
   FETCH_PROCESSING,
@@ -17,8 +15,6 @@ import {
   LOGIN_FAILURE,
   LOGIN_SUCCESS,
   LOGOUT,
-  CLEAR_AUTHENTICATION_ERROR,
-  CLEAR_REGISTRATION_ERROR,
   REGISTER_SUCCESS,
   REGISTER_FAILURE,
   ACTIVATE_SUCCESS,
@@ -52,10 +48,6 @@ const INITIAL_SNACKBAR_STATE = {
 };
 
 export const snackBar = handleActions({
-  SHOW_SNACKBAR: payloadMerge((action) => ({
-    message: action.payload.message,
-    open: true
-  })),
   HIDE_SNACKBAR: payloadMerge((action) => ({
     open: false
   })),
@@ -65,6 +57,22 @@ export const snackBar = handleActions({
   })),
   CHECKOUT_FAILURE: payloadMerge(action => ({
     message: "There was an error purchasing the course.",
+    open: true
+  })),
+  RECEIVE_COURSE_FAILURE: payloadMerge(() => ({
+    message: "An error occurred fetching information about this course.",
+    open: true
+  })),
+  RECEIVE_COURSE_LIST_FAILURE: payloadMerge(() => ({
+    message: "An error occurred fetching information about other courses.",
+    open: true
+  })),
+  REGISTER_SUCCESS: payloadMerge(() => ({
+    message: "User registered successfully! Check your email for an activation link.",
+    open: true
+  })),
+  REGISTER_FAILURE: payloadMerge(() => ({
+    message: "An error occurred registering the user.",
     open: true
   }))
 }, INITIAL_SNACKBAR_STATE);
@@ -100,7 +108,8 @@ export const course = handleActions({
     courseListStatus: FETCH_FAILURE
   })),
 
-  CLEAR_COURSE: (state, action) => INITIAL_COURSE_STATE
+  LOGIN_SUCCESS: (state, action) => INITIAL_COURSE_STATE,
+  LOGOUT: (state, action) => INITIAL_COURSE_STATE
 }, INITIAL_COURSE_STATE);
 
 const INITIAL_LOGIN = {visible: false};
@@ -125,13 +134,17 @@ export const authentication = handleActions({
     isAuthenticated: false,
     name: ""
   }),
-  CLEAR_AUTHENTICATION_ERROR: payloadMerge((action) => ({error: ""}))
+  HIDE_LOGIN: payloadMerge((action) => ({error: ""}))
 }, {
   isAuthenticated: SETTINGS.isAuthenticated,
   name: SETTINGS.name,
   error: ""
 });
 
+const INITIAL_REGISTRATION = {
+  error: "",
+  status: null
+};
 export const registration = handleActions({
   REGISTER_SUCCESS: (state, action) => ({
     error: "",
@@ -141,8 +154,8 @@ export const registration = handleActions({
     error: action.payload.error,
     status: FETCH_FAILURE
   }),
-  CLEAR_REGISTRATION_ERROR: payloadMerge((action) => ({error: ""}))
-}, { error: "", status: null });
+  HIDE_LOGIN: payloadMerge((action) => ({error: ""}))
+}, INITIAL_REGISTRATION);
 
 const INITIAL_ACTIVATION_STATUS = { status: null };
 export const activation = handleActions({

@@ -6,7 +6,6 @@ import RaisedButton from 'material-ui/lib/raised-button';
 import { connect } from 'react-redux';
 
 import {
-  showSnackBar,
   hideSnackBar,
   clearActivation,
   showLogin,
@@ -17,34 +16,11 @@ import {
 class App extends React.Component {
 
   componentDidMount() {
-    this.handleMessage.call(this);
     this.showLoginAfterActivation.call(this);
   }
 
   componentDidUpdate() {
-    this.handleMessage.call(this);
     this.showLoginAfterActivation.call(this);
-  }
-
-  handleMessage() {
-    const {
-      registration,
-      dispatch,
-      snackBar
-    } = this.props;
-
-    let message;
-
-    if (registration.status === FETCH_FAILURE) {
-      message = "An error occurred registering the user.";
-    } else if (registration.status === FETCH_SUCCESS) {
-      message = "User registered successfully! Check your email for an activation link.";
-    }
-
-    // If message is already displayed don't display it again to avoid recursion
-    if (message !== undefined && message !== snackBar.message) {
-      dispatch(showSnackBar({message: message}));
-    }
   }
 
   showLoginAfterActivation() {

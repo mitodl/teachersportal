@@ -1,7 +1,6 @@
 import {
   showLogin,
   hideLogin,
-  showSnackBar,
   hideSnackBar,
   logout,
   loginFailure,
@@ -21,6 +20,10 @@ import {
   updateSelectedChapters,
   clearInvalidCartItems,
   receiveCourseListSuccess,
+  receiveCourseListFailure,
+  receiveCourseFailure,
+  registerSuccess,
+  registerFailure,
   removeCartItem,
 
   REQUEST_COURSE,
@@ -31,9 +34,6 @@ import {
   RECEIVE_COURSE_LIST_FAILURE,
   SHOW_LOGIN,
   HIDE_LOGIN,
-  CLEAR_AUTHENTICATION_ERROR,
-  CLEAR_REGISTRATION_ERROR,
-  SHOW_SNACKBAR,
   HIDE_SNACKBAR,
   CHECKOUT_SUCCESS,
   CHECKOUT_FAILURE,
@@ -42,7 +42,6 @@ import {
   LOGIN_SUCCESS,
   LOGIN_FAILURE,
   LOGOUT,
-  CLEAR_COURSE,
   REGISTER_SUCCESS,
   REGISTER_FAILURE,
   ACTIVATE_SUCCESS,
@@ -59,7 +58,7 @@ import {
   FETCH_SUCCESS,
 } from '../actions/index_page';
 import * as api from '../util/api';
-import { COURSE_RESPONSE1 } from '../constants';
+import { COURSE_RESPONSE1, COURSE_LIST } from '../constants';
 
 import configureTestStore from '../store/configureStore_test';
 import assert from 'assert';
@@ -171,7 +170,7 @@ describe('reducers', () => {
     });
 
     it('should set login state to hide when triggered', done => {
-      dispatchThen(hideLogin(), [HIDE_LOGIN, CLEAR_AUTHENTICATION_ERROR, CLEAR_REGISTRATION_ERROR]).then(state => {
+      dispatchThen(hideLogin(), [HIDE_LOGIN]).then(state => {
         assert.deepEqual(state, {
           visible: false
         });
@@ -196,43 +195,10 @@ describe('reducers', () => {
       });
     });
 
-    it('should set snackBar to open when triggered', done => {
-      dispatchThen(
-        showSnackBar({ message: "Snackbar is open for business!" }),
-        [SHOW_SNACKBAR]
-      ).then(state => {
-        assert.deepEqual(state, {
-          message: "Snackbar is open for business!",
-          open: true
-        });
-        done();
-      });
-    });
-
-    it('should set snackbar open to false when triggered', done => {
-      let message = "Snackbar is open for business!";
-      dispatchThen(
-        showSnackBar({ message: message }),
-        [SHOW_SNACKBAR]
-      ).then(state => {
-        assert.deepEqual(state, {
-          message: message,
-          open: true
-        });
-
-        dispatchThen(hideSnackBar(), [HIDE_SNACKBAR]).then(state => {
-          assert.deepEqual(state, {
-            message: message,
-            open: false
-          });
-          done();
-        });
-      });
-    });
-
     it('messages the snackbar on checkout success', done => {
       dispatchThen(checkoutSuccess(), [CHECKOUT_SUCCESS]).then(state => {
         assert.equal(state.message, "Course successfully purchased!");
+        assert.ok(state.open);
         done();
       });
     });
@@ -240,8 +206,54 @@ describe('reducers', () => {
     it('messages the snackbar on checkout failure', done => {
       dispatchThen(checkoutFailure(), [CHECKOUT_FAILURE]).then(state => {
         assert.equal(state.message, "There was an error purchasing the course.");
+        assert.ok(state.open);
         done();
       });
+    });
+
+    it('shows a success message after registration', done => {
+      dispatchThen(registerSuccess(), [REGISTER_SUCCESS]).then(state => {
+        assert.equal(
+          state.message,
+          "User registered successfully! Check your email for an activation link."
+        );
+        assert.ok(state.open);
+        done();
+      });
+    });
+
+    it('shows a failure message after registration', done => {
+      dispatchThen(registerFailure(), [REGISTER_FAILURE]).then(state => {
+        assert.equal(
+          state.message,
+          "An error occurred registering the user."
+        );
+        assert.ok(state.open);
+        done();
+      });
+    });
+
+    it('shows an error after failing to load the course', done => {
+      dispatchThen(receiveCourseFailure(), [RECEIVE_COURSE_FAILURE]).then(state => {
+        assert.equal(
+          state.message,
+          "An error occurred fetching information about this course."
+        );
+        assert.ok(state.open);
+        done();
+      });
+    });
+
+    it('shows an error after failing to load the course list', done => {
+      dispatchThen(receiveCourseListFailure(), [RECEIVE_COURSE_LIST_FAILURE]).then(state => {
+        assert.equal(
+          state.message,
+          "An error occurred fetching information about other courses."
+        );
+        assert.ok(state.open);
+        done();
+      });
+
     });
   });
 
@@ -292,14 +304,14 @@ describe('reducers', () => {
       loginStub.returns(Promise.resolve({name: "Darth Vader"}));
 
       // ERROR
-      dispatchThen(login("user", "pass"), [LOGIN_SUCCESS, CLEAR_COURSE]).then(loginState => {
+      dispatchThen(login("user", "pass"), [LOGIN_SUCCESS]).then(loginState => {
         assert.deepEqual(loginState, {
           isAuthenticated: true,
           error: "",
           name: "Darth Vader"
         });
 
-        dispatchThen(logout(), [LOGOUT, CLEAR_COURSE]).then(logoutState => {
+        dispatchThen(logout(), [LOGOUT]).then(logoutState => {
           assert.deepEqual(logoutState, {
             isAuthenticated: false,
             error: "",
@@ -337,7 +349,7 @@ describe('reducers', () => {
         name: "Darth Vader"
       };
 
-      dispatchThen(login("user", "pass"), [LOGIN_SUCCESS, CLEAR_COURSE]).then(loginState => {
+      dispatchThen(login("user", "pass"), [LOGIN_SUCCESS]).then(loginState => {
         assert.deepEqual(loginState, expectedState);
 
         return dispatchThen(logout(), []);
