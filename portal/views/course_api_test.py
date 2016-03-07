@@ -13,15 +13,9 @@ import requests_mock
 
 from portal.factories import CourseFactory, ModuleFactory
 from portal.models import Course, Module
-from portal.views.course_api import (
-    filter_ccxcon_course_info,
-    filter_ccxcon_module_info,
-)
+from portal.serializers import CourseSerializer
 from portal.views.base import CourseTests, FAKE_CCXCON_API
 from portal.views.util import as_json
-from portal.util import (
-    course_as_dict,
-)
 
 
 class CourseAPIGETTests(CourseTests):
@@ -81,88 +75,19 @@ class CourseAPIGETTests(CourseTests):
         courses_from_api = as_json(resp)
 
         self.validate_course_api(courses_from_api)
-        assert courses_from_api == [
-            course_as_dict(self.course)
-        ]
+        assert courses_from_api == [CourseSerializer().to_representation(self.course)]
 
-    @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
-    @requests_mock.mock()
-    def test_course_detail(self, mock, fetch_mock):  # pylint: disable=unused-argument
+    def test_course_detail(self):
         """
         Test that course detail works properly.
         """
-        course_uuid = self.course.uuid
-        module_uuid = self.module.uuid
-
-        ccxcon_course_title = "ccxcon course title"
-        ccxcon_module_title = "ccxcon module title"
-        ccxcon_description = "ccxcon description"
-        author = "author"
-        overview = "overview"
-        subchapters = ["subchapter1", "subchapter2"]
-        image_url = "http://youtube.com/"
-        fetch_mock.get(
-            "{base}v1/coursexs/{course_uuid}/".format(
-                base=FAKE_CCXCON_API,
-                course_uuid=course_uuid,
-            ), json={
-                "uuid": course_uuid,
-                "title": ccxcon_course_title,
-                "author_name": author,
-                "overview": overview,
-                "description": ccxcon_description,
-                "image_url": image_url,
-                "edx_instance": "http://mitx.edx.org",
-                "url": "https://example.com",
-                "modules": "https://example.com",
-                "instructors": [],
-                "course_id": "course_id"
-            }
-        )
-        fetch_mock.get(
-            "{base}v1/coursexs/{course_uuid}/modules/".format(
-                base=FAKE_CCXCON_API,
-                course_uuid=course_uuid
-            ), json=[
-                {
-                    "uuid": module_uuid,
-                    "title": ccxcon_module_title,
-                    "subchapters": subchapters,
-                    "course": "https://example.com/",
-                    "url": "https://example.com/"
-                }
-            ]
-        )
-
         resp = self.client.get(
             reverse("course-detail", kwargs={"uuid": self.course.uuid})
         )
         assert resp.status_code == 200
-        assert json.loads(resp.content.decode('utf-8')) == {
-            "info": {
-                "title": ccxcon_course_title,
-                "description": ccxcon_description,
-                "overview": overview,
-                "image_url": image_url,
-                "author_name": author
-            },
-            "title": self.course.title,
-            "description": self.course.description,
-            "uuid": course_uuid,
-            "modules": [
-                {
-                    "info": {
-                        "title": ccxcon_module_title,
-                        "subchapters": subchapters
-                    },
-                    "title": self.module.title,
-                    "uuid": module_uuid,
-                    "price_without_tax": float(self.module.price_without_tax)
-                }
-            ],
-            "live": True,
-        }
-        assert fetch_mock.called
+        assert json.loads(resp.content.decode('utf-8')) == dict(
+            CourseSerializer().to_representation(self.course)
+        )
 
     def test_course_not_available(self):
         """
@@ -243,100 +168,6 @@ class CourseAPIGETTests(CourseTests):
         assert resp.status_code == 200, resp.content.decode('utf-8')
         assert 'modules' not in resp.data
 
-    @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
-    @requests_mock.mock()
-    def test_error_reading_courses(self, mock, fetch_mock):  # pylint: disable=unused-argument
-        """
-        Test that an error reading courses from CCXCon will cause an error locally.
-        """
-        fetch_mock.get(
-            "{base}v1/coursexs/{course_uuid}/".format(
-                base=FAKE_CCXCON_API,
-                course_uuid=self.course.uuid,
-            ),
-            status_code=500,
-            json={}
-        )
-
-        with self.assertRaises(Exception) as ex:
-            self.client.get(
-                reverse("course-detail", kwargs={"uuid": self.course.uuid})
-            )
-        assert "CCXCon returned a non 200 status code 500" in ex.exception.args[0]
-        assert fetch_mock.called
-
-        # Course list API does not read from CCXCon so it should be unaffected
-        resp = self.client.get(reverse('course-list'))
-        assert resp.status_code == 200
-
-    @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
-    @requests_mock.mock()
-    def test_error_reading_modules(self, mock, fetch_mock):  # pylint: disable=unused-argument
-        """
-        Test that an error reading modules from CCXCon will cause an error locally.
-        """
-        fetch_mock.get(
-            "{base}v1/coursexs/{course_uuid}/modules/".format(
-                base=FAKE_CCXCON_API,
-                course_uuid=self.course.uuid,
-            ),
-            status_code=500,
-            json={}
-        )
-        fetch_mock.get(
-            "{base}v1/coursexs/{course_uuid}/".format(
-                base=FAKE_CCXCON_API,
-                course_uuid=self.course.uuid,
-            ),
-            status_code=200,
-            json={}
-        )
-
-        with self.assertRaises(Exception) as ex:
-            self.client.get(
-                reverse("course-detail", kwargs={"uuid": self.course.uuid})
-            )
-        assert "CCXCon returned a non 200 status code 500" in ex.exception.args[0]
-        assert fetch_mock.called
-
-        # Course list API does not read from CCXCon so it should be unaffected
-        resp = self.client.get(reverse('course-list'))
-        assert resp.status_code == 200
-
-    def test_filter_course_info(self):  # pylint: disable=no-self-use
-        """
-        Assert what we filter from the information we got from CCXCon
-        """
-        filtered = filter_ccxcon_course_info({
-            "uuid": "uuid",
-            "title": "title",
-            "author_name": "author",
-            "overview": "overview",
-            "description": "description",
-            "image_url": "http://youtube.com/",
-            "edx_instance": "http://mitx.edx.org",
-            "url": "http://example.com",
-            "modules": "http://example.com",
-            "instructors": [],
-            "course_id": "course_id"
-        })
-        assert set(filtered.keys()) == {
-            'title', 'description', 'overview', 'image_url', 'author_name'
-        }
-
-    def test_filter_module_info(self):  # pylint: disable=no-self-use
-        """
-        Assert what we filter from the module information we got from CCXCon
-        """
-        filtered = filter_ccxcon_module_info({
-            "uuid": "ed99737e-d5bf-4b95-a467-bf4ecf31f7b0",
-            "title": "other course",
-            "subchapters": [],
-            "course": "http://example.com",
-            "url": "http://example.com"
-        })
-        assert set(filtered.keys()) == {'title', 'subchapters'}
-
     def assert_course_visibility(self, visibility_pairs):
         """
         Assert course-list and course-detail visibility for courses
@@ -348,7 +179,7 @@ class CourseAPIGETTests(CourseTests):
 
         # No not_live_course here
         assert courses == [
-            course_as_dict(Course.objects.get(uuid=uuid))
+            dict(CourseSerializer().to_representation(Course.objects.get(uuid=uuid)))
             for uuid, visible in visibility_pairs
             if visible
         ]
@@ -469,7 +300,7 @@ class CourseAPIPATCHTests(CourseTests):
     def assert_patch_validation(self, course_uuid, course_dict, error):
         """Helper method to assert course validation errors"""
         course = Course.objects.get(uuid=course_uuid)
-        module = course.module_set.first()
+        module = course.modules.first()
         old_course_title = course.title
         old_course_description = course.description
         old_module_title = module.title
