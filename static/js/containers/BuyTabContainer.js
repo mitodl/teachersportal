@@ -3,6 +3,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import BuyTab from '../components/BuyTab';
 import {
+  resetBuyTab,
   updateCartItems,
   updateCartVisibility,
   updateSelectedChapters,
@@ -35,6 +36,11 @@ class BuyTabContainer extends React.Component {
       checkout={this.onCheckout.bind(this)}
 
       />;
+  }
+
+  componentWillUnmount() {
+    const { dispatch } = this.props;
+    dispatch(resetBuyTab());
   }
 
   updateTotal() {

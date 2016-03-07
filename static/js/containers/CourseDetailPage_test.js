@@ -10,6 +10,7 @@ import TestUtils from 'react-addons-test-utils';
 
 import App from './App';
 import CourseDetailPage from './CourseDetailPage';
+import BuyTabContainer from './BuyTabContainer';
 import { COURSE_LIST, COURSE_RESPONSE1, COURSE_RESPONSE2 } from '../constants';
 import * as api from '../util/api';
 import { calculateTotal } from '../util/util';
@@ -32,7 +33,9 @@ import {
   REQUEST_COURSE,
   REQUEST_COURSE_LIST,
   RECEIVE_COURSE_SUCCESS,
+  RECEIVE_COURSE_FAILURE,
   RECEIVE_COURSE_LIST_SUCCESS,
+  RECEIVE_COURSE_LIST_FAILURE,
   CLEAR_INVALID_CART_ITEMS,
   UPDATE_SELECTED_CHAPTERS,
   UPDATE_CART_ITEMS,
@@ -40,18 +43,15 @@ import {
   CHECKOUT_SUCCESS,
   CLEAR_CART,
   RESET_BUYTAB,
-  CHECKOUT_FAILURE,
+  CHECKOUT_FAILURE
 } from '../actions/index_page';
 
 describe('CourseDetailPage', () => {
-  let store, sandbox, container, checkoutStub, courseStub, listenForActions, dispatchThen;
+  let store, sandbox, container, checkoutStub, listenForActions, dispatchThen;
 
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
     checkoutStub = sandbox.stub(api, 'checkout');
-
-    courseStub = sandbox.stub(api, 'getCourse');
-    courseStub.returns(Promise.resolve(COURSE_RESPONSE1));
 
     store = configureTestStore();
     listenForActions = store.createListenForActions(state => state);
@@ -76,32 +76,59 @@ describe('CourseDetailPage', () => {
     global.StripeHandler = null;
   });
 
-  // Helper function to render CourseDetailPage
-  const renderCourseDetail = (postMountFetchResult = COURSE_RESPONSE1) => new Promise(resolve => {
-    const uuid = postMountFetchResult.uuid;
+  // Helper function to render CourseDetailPage, mock course APIs and
+  // assert actions
+  const renderCourseDetail = (
+    mockedCourse = COURSE_RESPONSE1,
+    mockedCourseList = COURSE_LIST,
+    extraTypesToAssert = []
+  ) => new Promise(resolve => {
+    let uuid = mockedCourse ? mockedCourse.uuid : "invalid";
 
+    let expectedTypes = [REQUEST_COURSE, REQUEST_COURSE_LIST];
+    let courseStub = sandbox.stub(api, 'getCourse');
+    if (mockedCourse) {
+      courseStub.returns(Promise.resolve(mockedCourse));
+      expectedTypes.push(RECEIVE_COURSE_SUCCESS);
+    } else {
+      courseStub.returns(Promise.reject());
+      expectedTypes.push(RECEIVE_COURSE_FAILURE);
+    }
+
+    let courseListStub = sandbox.stub(api, 'getCourseList');
+    if (mockedCourseList) {
+      courseListStub.returns(Promise.resolve(mockedCourseList));
+      expectedTypes.push(RECEIVE_COURSE_LIST_SUCCESS, CLEAR_INVALID_CART_ITEMS);
+    } else {
+      courseListStub.returns(Promise.reject());
+      expectedTypes.push(RECEIVE_COURSE_LIST_FAILURE, CLEAR_INVALID_CART_ITEMS);
+    }
+
+    expectedTypes.push(...extraTypesToAssert);
+
+    let appComponent;
     const afterMount = component => {
-      resolve(component);
-      store.dispatch(receiveCourseSuccess(postMountFetchResult));
+      appComponent = component;
     };
 
-    TestUtils.renderIntoDocument(
-      <div>
-        <Provider store={store}>
-          <App ref={afterMount}>
-            <CourseDetailPage
-              params={{ uuid }}
-            />
-          </App>
-        </Provider>
-      </div>
-    );
+    listenForActions(expectedTypes, () => {
+      TestUtils.renderIntoDocument(
+        <div>
+          <Provider store={store}>
+            <App ref={afterMount}>
+              <CourseDetailPage
+                params={{ uuid }}
+              />
+            </App>
+          </Provider>
+        </div>
+      );
+    }).then(() => {
+      resolve(appComponent);
+    });
   });
 
   it('cannot see tabs if not logged in', done => {
-    store.dispatch(receiveCourseListSuccess(COURSE_LIST));
-    store.dispatch(receiveCourseSuccess(COURSE_RESPONSE1));
-
     renderCourseDetail().then(component => {
       let node = ReactDOM.findDOMNode(component);
       assert.ok(!node.innerHTML.includes("ABOUT"), 'about missing');
@@ -116,8 +143,6 @@ describe('CourseDetailPage', () => {
   it('can check off items in the buy tab', done => {
     // Set up state as if we logged in already
     store.dispatch(loginSuccess({name: "Darth Vader"}));
-    store.dispatch(receiveCourseListSuccess(COURSE_LIST));
-    store.dispatch(receiveCourseSuccess(COURSE_RESPONSE1));
 
     renderCourseDetail().then(component => {
       const node = ReactDOM.findDOMNode(component);
@@ -151,7 +176,6 @@ describe('CourseDetailPage', () => {
   });
 
   it('can add items to the cart', done => {
-    courseStub.returns(Promise.resolve(COURSE_RESPONSE2));
     // Alter state as if we logged in, selected all chapters and updated seat count
     const course1SeatCount = 77;
     const course2SeatCount = 88;
@@ -164,8 +188,6 @@ describe('CourseDetailPage', () => {
     }];
     // The current course is COURSE_RESPONSE2. COURSE_RESPONSE1 is already in cart
     store.dispatch(loginSuccess({name: "Darth Vader"}));
-    store.dispatch(receiveCourseListSuccess(COURSE_LIST));
-    store.dispatch(receiveCourseSuccess(COURSE_RESPONSE2));
     store.dispatch(updateSeatCount(course2SeatCount));
     store.dispatch(updateSelectedChapters(COURSE_RESPONSE2.modules.map(child => child.uuid), false));
 
@@ -219,8 +241,6 @@ describe('CourseDetailPage', () => {
     // Alter state as if we logged in, selected all chapters and updated seat count,
     // and updated the cart
     store.dispatch(loginSuccess({name: "Darth Vader"}));
-    store.dispatch(receiveCourseListSuccess(COURSE_LIST));
-    store.dispatch(receiveCourseSuccess(COURSE_RESPONSE1));
     // Cart will contain two courses
     for (let pair of coursePairs) {
       let { course, seatCount } = pair;
@@ -278,8 +298,6 @@ describe('CourseDetailPage', () => {
     // Alter state as if we logged in, selected all chapters and updated seat count,
     // and updated the cart
     store.dispatch(loginSuccess({name: "Darth Vader"}));
-    store.dispatch(receiveCourseListSuccess(COURSE_LIST));
-    store.dispatch(receiveCourseSuccess(COURSE_RESPONSE1));
     // Cart will contain two courses
     for (let pair of coursePairs) {
       let { course, seatCount } = pair;
@@ -307,8 +325,13 @@ describe('CourseDetailPage', () => {
     checkoutStub.returns(Promise.resolve());
 
     renderCourseDetail().then(component => {
-      // Click Checkout.
-      return listenForActions([UPDATE_CART_VISIBILITY, CHECKOUT_SUCCESS, CLEAR_CART, RESET_BUYTAB], () => {
+      return listenForActions([
+        UPDATE_CART_VISIBILITY,
+        CHECKOUT_SUCCESS,
+        CLEAR_CART,
+        RESET_BUYTAB
+      ], () => {
+        // Click Checkout.
         // Make sure the total shown in stripe is the same as what we calculate here
         let cart = store.getState().cart.cart;
         expectedTotal = calculateTotal(cart, store.getState().course.courseList);
@@ -317,8 +340,9 @@ describe('CourseDetailPage', () => {
         let button = TestUtils.findRenderedDOMComponentWithClass(component, "checkout-button");
         TestUtils.Simulate.click(button);
       });
-    }).then(state => {
+    }).then(() => {
       // Assert that things returned to initial state
+      let state = store.getState();
       assert.deepEqual(state.cart.cart, []);
       assert.equal(state.buyTab.seats, 20);
       assert.deepEqual(state.buyTab.selectedChapters, []);
@@ -344,8 +368,6 @@ describe('CourseDetailPage', () => {
     // Alter state as if we logged in, selected all chapters and updated seat count,
     // and updated the cart
     store.dispatch(loginSuccess({name: "Darth Vader"}));
-    store.dispatch(receiveCourseListSuccess([zeroPriceCourse]));
-    store.dispatch(receiveCourseSuccess(zeroPriceCourse));
     store.dispatch(updateSeatCount(newSeatCount));
     store.dispatch(updateSelectedChapters(uuids, false));
     store.dispatch(updateCartItems(uuids, newSeatCount, zeroPriceCourse.uuid));
@@ -354,9 +376,14 @@ describe('CourseDetailPage', () => {
     // Mock checkout api to succeed
     checkoutStub.returns(Promise.resolve());
 
-    renderCourseDetail().then(component => {
+    renderCourseDetail(zeroPriceCourse, [zeroPriceCourse]).then(component => {
       // Click Checkout.
-      return listenForActions([UPDATE_CART_VISIBILITY, CHECKOUT_SUCCESS, CLEAR_CART, RESET_BUYTAB], () => {
+      return listenForActions([
+        UPDATE_CART_VISIBILITY,
+        CHECKOUT_SUCCESS,
+        CLEAR_CART,
+        RESET_BUYTAB,
+      ], () => {
         let button = TestUtils.findRenderedDOMComponentWithClass(component, "checkout-button");
         TestUtils.Simulate.click(button);
       });
@@ -387,8 +414,6 @@ describe('CourseDetailPage', () => {
     // Alter state as if we logged in, selected all chapters and updated seat count,
     // and updated the cart
     store.dispatch(loginSuccess({name: "Darth Vader"}));
-    store.dispatch(receiveCourseListSuccess([zeroPriceCourse]));
-    store.dispatch(receiveCourseSuccess(zeroPriceCourse));
     store.dispatch(updateSeatCount(newSeatCount));
     store.dispatch(updateSelectedChapters(uuids, false));
     store.dispatch(updateCartItems(uuids, newSeatCount, zeroPriceCourse.uuid));
@@ -398,9 +423,12 @@ describe('CourseDetailPage', () => {
 
     const oldCart = store.getState().cart.cart;
 
-    renderCourseDetail().then(component => {
+    renderCourseDetail(zeroPriceCourse, [zeroPriceCourse]).then(component => {
       // Click Checkout.
-      return listenForActions([UPDATE_CART_VISIBILITY, CHECKOUT_FAILURE], () => {
+      return listenForActions([
+        UPDATE_CART_VISIBILITY,
+        CHECKOUT_FAILURE,
+      ], () => {
         let button = TestUtils.findRenderedDOMComponentWithClass(component, "checkout-button");
         TestUtils.Simulate.click(button);
       });
@@ -412,6 +440,35 @@ describe('CourseDetailPage', () => {
 
       assert.ok(checkoutStub.calledOnce);
 
+      done();
+    });
+  });
+
+  it('clears the buytab when leaving the course detail page', done => {
+    let container = document.createElement("div");
+    ReactDOM.render(
+      <div>
+        <Provider store={store}>
+          <BuyTabContainer
+            selectable={true}
+            fixedHeader={true}
+            fixedFooter={true}
+            stripedRows={false}
+            showRowHover={true}
+            deselectOnClickaway={true}
+            height={'auto'}
+            course={COURSE_RESPONSE1}
+            courseList={COURSE_LIST}
+          />
+        </Provider>
+      </div>,
+      container
+    );
+
+    listenForActions([RESET_BUYTAB], () => {
+      let unmounted = ReactDOM.unmountComponentAtNode(container);
+      assert.ok(unmounted);
+    }).then(() => {
       done();
     });
   });
