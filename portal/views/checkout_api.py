@@ -5,7 +5,6 @@ API for checkout
 from __future__ import unicode_literals
 import logging
 from decimal import Decimal
-from six.moves.urllib.parse import urljoin  # pylint: disable=import-error
 
 from django.conf import settings
 from django.db import transaction
@@ -23,7 +22,7 @@ from portal.util import (
     validate_cart,
 )
 from ..models import OrderLine
-from portal.views.course_api import ccxcon_request
+from ..ccxcon_api import CCXConAPI
 
 log = logging.getLogger(__name__)
 
@@ -62,32 +61,29 @@ class CheckoutView(APIView):
             if course_uuid not in courses_and_seats:
                 courses_and_seats[line.module.course.uuid] = (line.module.course, line.seats)
 
+        ccxcon = CCXConAPI(
+            settings.CCXCON_API,
+            settings.CCXCON_OAUTH_CLIENT_ID,
+            settings.CCXCON_OAUTH_CLIENT_SECRET,
+        )
         for course, seats in courses_and_seats.values():
-            title = course.title
-            course_uuid = course.uuid
-            ccxcon = ccxcon_request()
             try:
-                result = ccxcon.post(
-                    urljoin(settings.CCXCON_API, 'v1/ccx/'),
-                    json={
-                        'master_course_id': course_uuid,
-                        'user_email': user.email,
-                        'total_seats': seats,
-                        'display_name': '{} for {}'.format(title, user.userinfo.full_name),
-                        'course_modules': [
-                            orderline.module.uuid for orderline in order.orderline_set.all()
-                        ]
-                    }
-                )
+                _, status_code, response_json = ccxcon.create_ccx(
+                    course.uuid, user.email, seats, course.title,
+                    course_modules=[
+                        orderline.module.uuid
+                        for orderline in order.orderline_set.all()
+                    ])
             except Exception as e:  # pylint: disable=broad-except,invalid-name
                 log.error("Couldn't connect to ccxcon. Reason: %s", e)
                 errors.add(str(e))
                 continue
 
-            if result.status_code >= 300:
+            if status_code >= 300:
                 errors.add('Unable to post to ccxcon. Error: {} -- {}'.format(
-                    result.status_code, result.content))
-                log.error("Couldn't connect to ccxcon. Reason: %s", result.content)
+                    status_code, response_json))
+                log.error(
+                    "Couldn't connect to ccxcon. Reason: %s", response_json)
         return errors
 
     def validate_data(self):

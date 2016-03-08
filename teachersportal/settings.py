@@ -89,6 +89,7 @@ INSTALLED_APPS = (
 
     # Our INSTALLED_APPS
     'portal',
+    'manual_fulfillment',
 )
 
 SITE_ID = 1
@@ -152,8 +153,6 @@ else:
 DATABASES = {
     'default': DEFAULT_DATABASE_CONFIG
 }
-
-CCXCON_API = get_var('CCXCON_API', None)
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
@@ -277,6 +276,8 @@ LOGGING = {
         }
     },
 }
+
+CCXCON_API = get_var('CCXCON_API', None)
 
 # Secret used with signatures for CCXCon webhooks endpoint
 CCXCON_WEBHOOKS_SECRET = force_bytes(get_var('CCXCON_WEBHOOKS_SECRET', ''))
