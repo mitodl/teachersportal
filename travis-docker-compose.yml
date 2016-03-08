@@ -11,6 +11,7 @@ web:
     ./with_host.sh python manage.py runserver 0.0.0.0:8075'
   environment:
     DEBUG: 'False'
+    NODE_ENV: 'production'
     PORT: 8075
     DATABASE_URL: postgres://postgres@db:5432/postgres
     PORTAL_DB_DISABLE_SSL: 'True'
