@@ -25,6 +25,7 @@ import {
   registerSuccess,
   registerFailure,
   removeCartItem,
+  resetBuyTab,
 
   REQUEST_COURSE,
   RECEIVE_COURSE_SUCCESS,
@@ -648,8 +649,8 @@ describe('reducers', () => {
 
     it('sets cart visibility', done => {
       assert.equal(store.getState().buyTab.cartVisibility, false);
-      dispatchThen(updateCartVisibility(true), [UPDATE_CART_VISIBILITY]).then(cartState => {
-        assert.equal(cartState.cartVisibility, true);
+      dispatchThen(updateCartVisibility(true), [UPDATE_CART_VISIBILITY]).then(buyTabState => {
+        assert.equal(buyTabState.cartVisibility, true);
         done();
       });
     });
@@ -661,23 +662,28 @@ describe('reducers', () => {
       dispatchThen(
         updateSelectedChapters(['a', 'b', 'c'], true),
         [UPDATE_SELECTED_CHAPTERS]
-      ).then(cartState => {
-        assert.deepEqual(cartState.selectedChapters, ['a', 'b', 'c']);
-        assert.equal(cartState.allRowsSelected, true);
+      ).then(buyTabState => {
+        assert.deepEqual(buyTabState.selectedChapters, ['a', 'b', 'c']);
+        assert.equal(buyTabState.allRowsSelected, true);
 
         done();
       });
     });
 
-    it('updates seat count', done => {
+    it('updates seat count then resets it', done => {
       assert.equal(store.getState().buyTab.seats, 20);
 
       dispatchThen(
         updateSeatCount(200),
         [UPDATE_SEAT_COUNT]
-      ).then(cartState => {
-        assert.equal(cartState.seats, 200);
-        done();
+      ).then(buyTabState => {
+        assert.equal(buyTabState.seats, 200);
+
+        dispatchThen(resetBuyTab(), [RESET_BUYTAB]).then(buyTabState => {
+          assert.equal(buyTabState.seats, 20);
+
+          done();
+        });
       });
     });
   });
