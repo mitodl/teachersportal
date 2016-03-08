@@ -40,6 +40,21 @@ class LoginTests(AuthenticationTestCase):
         assert self.is_authenticated(self.user)
         assert not self.is_authenticated(self.other_user)
 
+    def test_login_success_no_userinfo(self):
+        """If the user has no userinfo object, their name is the email"""
+        UserInfo.objects.filter(user=self.user).delete()
+        resp = self.client.post(
+            reverse('login'),
+            json.dumps({
+                "username": self.USERNAME,
+                "password": self.PASSWORD,
+            }),
+            content_type="application/json"
+        )
+        assert resp.status_code == 200, resp.content.decode('utf-8')
+        json_data = json.loads(resp.content.decode('utf-8'))
+        assert json_data['name'] == self.user.email
+
     def test_login_twice(self):
         """
         User logs in in while already logged in

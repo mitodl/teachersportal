@@ -3,6 +3,7 @@ Views for login/logout.
 """
 from __future__ import unicode_literals
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -39,11 +40,17 @@ class LoginView(APIView):
             username=username,
             password=password,
         )
+
         if user is not None:
+            full_name = user.email
+            try:
+                full_name = user.userinfo.full_name
+            except (ObjectDoesNotExist,):
+                pass
             if user.is_active:
                 login(request, user)
                 return Response(status=200, data={
-                    'name': user.userinfo.full_name,
+                    'name': full_name,
                 })
             else:
                 return Response(status=403)

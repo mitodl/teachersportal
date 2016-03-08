@@ -33,6 +33,24 @@ class TestViews(TestCase):
                     status_code=200
                 )
 
+    def test_no_userinfo_still_email(self):
+        """
+        If there is no userinfo object, it should still show the email.
+        """
+        User.objects.create_user(
+            username='user',
+            password='pass',
+            email='darth@vad.er',
+        )
+        assert self.client.login(username='user', password='pass')
+
+        response = self.client.get(reverse('portal-index'))
+        self.assertContains(
+            response,
+            '''email": "darth@vad.er"''',
+            msg_prefix=response.content.decode('utf-8')
+        )
+
     def test_empty_name_no_user(self):
         """
         If there is no userinfo object, it should still render the homepage

@@ -21,14 +21,18 @@ def index_view(request):
         HttpResponse
     """
     host = request.get_host().split(":")[0]
-    try:
+
+    # AnonymousUser doesn't have an email address
+    email = ""
+    # Incorrectly built/anonymous users lack a userinfo property.
+    name = ""
+    if not request.user.is_anonymous():
         email = request.user.email
-        name = request.user.userinfo.full_name
-    except (AttributeError, ObjectDoesNotExist):
-        # AnonymousUser doesn't have an email address
-        # or incorrectly built user, as it lacks a userinfo property.
-        email = ""
-        name = ""
+
+        try:
+            name = request.user.userinfo.full_name
+        except (ObjectDoesNotExist,):
+            pass
 
     js_settings = {
         "host": host,

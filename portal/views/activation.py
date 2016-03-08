@@ -38,7 +38,7 @@ def activate_view(request):
     try:
         userinfo = UserInfo.objects.get(registration_token=token)
     except UserInfo.DoesNotExist:
-        return Response(status=403)
+        return Response("Could not find registration token.", status=403)
 
     user = userinfo.user
     user.is_active = True
