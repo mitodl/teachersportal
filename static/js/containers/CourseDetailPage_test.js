@@ -16,17 +16,19 @@ import { calculateTotal } from '../util/util';
 import {
   receiveCourseListSuccess,
   receiveCourseSuccess,
+  receiveCourseListFailure,
+  receiveCourseFailure,
   loginSuccess,
   updateSeatCount,
   updateSelectedChapters,
   checkout,
   updateCartItems,
+  registerSuccess,
+  registerFailure,
 
   SHOW_LOGIN,
   HIDE_LOGIN,
   LOGIN_SUCCESS,
-  CLEAR_AUTHENTICATION_ERROR,
-  CLEAR_REGISTRATION_ERROR,
   REQUEST_COURSE,
   REQUEST_COURSE_LIST,
   RECEIVE_COURSE_SUCCESS,
@@ -42,11 +44,14 @@ import {
 } from '../actions/index_page';
 
 describe('CourseDetailPage', () => {
-  let store, sandbox, container, checkoutStub, listenForActions, dispatchThen;
+  let store, sandbox, container, checkoutStub, courseStub, listenForActions, dispatchThen;
 
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
     checkoutStub = sandbox.stub(api, 'checkout');
+
+    courseStub = sandbox.stub(api, 'getCourse');
+    courseStub.returns(Promise.resolve(COURSE_RESPONSE1));
 
     store = configureTestStore();
     listenForActions = store.createListenForActions(state => state);
@@ -109,9 +114,6 @@ describe('CourseDetailPage', () => {
   });
 
   it('can check off items in the buy tab', done => {
-    let courseStub = sandbox.stub(api, 'getCourse');
-    courseStub.returns(Promise.resolve(COURSE_RESPONSE1));
-
     // Set up state as if we logged in already
     store.dispatch(loginSuccess({name: "Darth Vader"}));
     store.dispatch(receiveCourseListSuccess(COURSE_LIST));
@@ -149,7 +151,6 @@ describe('CourseDetailPage', () => {
   });
 
   it('can add items to the cart', done => {
-    let courseStub = sandbox.stub(api, 'getCourse');
     courseStub.returns(Promise.resolve(COURSE_RESPONSE2));
     // Alter state as if we logged in, selected all chapters and updated seat count
     const course1SeatCount = 77;
@@ -205,9 +206,6 @@ describe('CourseDetailPage', () => {
   });
 
   it('shows items in the cart panel', done => {
-    let courseStub = sandbox.stub(api, 'getCourse');
-    courseStub.returns(Promise.resolve(COURSE_RESPONSE1));
-
     const course1SeatCount = 77;
     const course2SeatCount = 88;
     const coursePairs = [{
@@ -265,9 +263,6 @@ describe('CourseDetailPage', () => {
   });
 
   it('can checkout the cart', done => {
-    let courseStub = sandbox.stub(api, 'getCourse');
-    courseStub.returns(Promise.resolve(COURSE_RESPONSE1));
-
     const fakeToken = "FAKE_TOKEN";
 
     const course1SeatCount = 77;
@@ -335,9 +330,6 @@ describe('CourseDetailPage', () => {
   });
 
   it('can checkout the cart with an empty price', done => {
-    let courseStub = sandbox.stub(api, 'getCourse');
-    courseStub.returns(Promise.resolve(COURSE_RESPONSE1));
-
     const zeroPriceCourse = Object.assign(COURSE_RESPONSE1,
       {
         modules: COURSE_RESPONSE1.modules.map(child =>
@@ -381,9 +373,6 @@ describe('CourseDetailPage', () => {
   });
 
   it('fails to checkout', done => {
-    let courseStub = sandbox.stub(api, 'getCourse');
-    courseStub.returns(Promise.resolve(COURSE_RESPONSE1));
-
     const zeroPriceCourse = Object.assign(COURSE_RESPONSE1,
       {
         modules: COURSE_RESPONSE1.modules.map(child =>

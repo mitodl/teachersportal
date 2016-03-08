@@ -6,7 +6,6 @@ import {
   FETCH_PROCESSING,
   FETCH_FAILURE,
   activate,
-  showSnackBar
 } from '../actions/index_page';
 
 class ActivatePage extends React.Component {

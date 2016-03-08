@@ -9,22 +9,18 @@ export const RECEIVE_COURSE_FAILURE = 'RECEIVE_COURSE_FAILURE';
 export const REQUEST_COURSE_LIST = 'REQUEST_COURSE_LIST';
 export const RECEIVE_COURSE_LIST_SUCCESS = 'RECEIVE_COURSE_LIST_SUCCESS';
 export const RECEIVE_COURSE_LIST_FAILURE = 'RECEIVE_COURSE_LIST_FAILURE';
-export const CLEAR_COURSE = 'CLEAR_COURSE';
 
 export const SHOW_LOGIN = 'SHOW_LOGIN';
 export const HIDE_LOGIN = 'HIDE_LOGIN';
 
-export const SHOW_SNACKBAR = 'SHOW_SNACKBAR';
 export const HIDE_SNACKBAR = 'HIDE_SNACKBAR';
 
 export const LOGIN_FAILURE = 'LOGIN_FAILURE';
 export const LOGIN_SUCCESS = 'LOGIN_SUCCESS';
 export const LOGOUT = 'LOGOUT';
-export const CLEAR_AUTHENTICATION_ERROR = 'CLEAR_AUTHENTICATION_ERROR';
 
 export const REGISTER_SUCCESS = 'REGISTER_SUCCESS';
 export const REGISTER_FAILURE = 'REGISTER_FAILURE';
-export const CLEAR_REGISTRATION_ERROR = 'CLEAR_REGISTRATION_ERROR';
 
 export const ACTIVATE_SUCCESS = 'ACTIVATE_SUCCESS';
 export const ACTIVATE_FAILURE = 'ACTIVATE_FAILURE';
@@ -48,33 +44,22 @@ export const FETCH_SUCCESS = 'FETCH_SUCCESS';
 export const FETCH_PROCESSING = 'FETCH_PROCESSING';
 
 const requestCourse = createAction(REQUEST_COURSE);
-
 export const receiveCourseSuccess = createAction(
   RECEIVE_COURSE_SUCCESS, (course) => {return {course};});
-
-const receiveCourseFailure = createAction(RECEIVE_COURSE_FAILURE);
+export const receiveCourseFailure = createAction(RECEIVE_COURSE_FAILURE);
 const requestCourseList = createAction(REQUEST_COURSE_LIST);
-
 export const receiveCourseListSuccess = createAction(
   RECEIVE_COURSE_LIST_SUCCESS, (courseList) => {return {courseList};});
-
-const receiveCourseListFailure = createAction(RECEIVE_COURSE_LIST_FAILURE);
+export const receiveCourseListFailure = createAction(RECEIVE_COURSE_LIST_FAILURE);
 
 export const showLogin = createAction(SHOW_LOGIN, message => ({message}));
 
-export const showSnackBar = createAction(SHOW_SNACKBAR);
 export const hideSnackBar = createAction(HIDE_SNACKBAR);
 
 export function hideLogin() {
   return dispatch => {
     dispatch({
       type: HIDE_LOGIN
-    });
-    dispatch({
-      type: CLEAR_AUTHENTICATION_ERROR
-    });
-    dispatch({
-      type: CLEAR_REGISTRATION_ERROR
     });
   };
 }
@@ -110,9 +95,6 @@ export function logout() {
       dispatch({
         type: LOGOUT
       });
-      dispatch({
-        type: CLEAR_COURSE
-      });
     });
   };
 }
@@ -121,9 +103,6 @@ export function login(username, password) {
   return dispatch => {
     return api.login(username, password).
       then((data) => {
-        dispatch({
-          type: CLEAR_COURSE
-        });
         return dispatch(loginSuccess(data));
       }).
       catch((e) => {
