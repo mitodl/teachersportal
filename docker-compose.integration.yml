@@ -1,0 +1,32 @@
+# This file exists to link a teacher's portal web process to a ccxcon
+# web process.  You can run it by:
+#
+#  docker-compose -f docker-compose.yml \
+#    -f docker-compose.integration.yml \
+#    up web_integration watch
+
+web_integration:
+  build: .
+  command: >
+    /bin/bash -c '
+    sleep 3 &&
+    python manage.py migrate &&
+    ./with_host.sh python manage.py runserver 0.0.0.0:8075'
+  volumes:
+    - .:/src
+  environment:
+    DEBUG: 'True'
+    PORT: 8075
+    DATABASE_URL: postgres://postgres@db:5432/postgres
+    PORTAL_DB_DISABLE_SSL: 'True'
+    PORTAL_USE_WEBPACK_DEV_SERVER: 'True'
+    PORTAL_EMAIL_BACKEND: 'django.core.mail.backends.console.EmailBackend'
+    PORTAL_SECURE_SSL_REDIRECT: 'False'
+    STATUS_TOKEN: 'test-token'
+  env_file: .env
+  ports:
+    - "8075:8075"
+  links:
+    - db
+  external_links:
+    - "ccxcon_web_1:localhost.daplie.com"
