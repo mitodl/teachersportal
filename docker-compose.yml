@@ -10,8 +10,8 @@ web:
     sleep 3 &&
     python manage.py migrate &&
     ./with_host.sh python manage.py runserver 0.0.0.0:8075'
-  volumes:
-    - .:/src
+  volumes_from:
+    - unison
   environment:
     DEBUG: 'True'
     NODE_ENV: 'development'
@@ -39,8 +39,17 @@ watch:
     node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --config webpack.config.dev.js -d --content-base ./static --host 0.0.0.0 --port 8076 --progress --inline --hot'
   ports:
     - "8076:8076"
-  volumes:
-    - .:/src
+  volumes_from:
+    - unison
   environment:
     NODE_ENV: 'development'
+
+unison:
+  image: leighmcculloch/unison
+  environment:
+    - UNISON_VERSION=2.48.3
+  ports:
+    - "5000:5000"
+  volumes:
+    - .:/src
 

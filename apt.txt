@@ -5,6 +5,7 @@ libpq-dev
 python-dev
 python3-dev
 nodejs
+unison
 
 # developer requirements
 postgresql-client
