@@ -12,4 +12,4 @@ django-oauth-toolkit==0.9.0
 requests-oauthlib==0.5.0
 newrelic==2.54.0.41
 stripe==1.27.1
-django-server-status==0.1.1
+django-server-status==0.3
