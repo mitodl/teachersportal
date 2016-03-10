@@ -17,7 +17,6 @@ import platform
 from django.utils.encoding import force_bytes
 import dj_database_url
 import yaml
-import stripe
 
 VERSION = "0.3.0"
 
@@ -295,10 +294,6 @@ CCXCON_WEBHOOKS_SECRET = force_bytes(get_var('CCXCON_WEBHOOKS_SECRET', ''))
 # Oauth settings for CCXCon
 CCXCON_OAUTH_CLIENT_ID = get_var("CCXCON_OAUTH_CLIENT_ID", "")
 CCXCON_OAUTH_CLIENT_SECRET = get_var("CCXCON_OAUTH_CLIENT_SECRET", "")
-
-# Stripe keys
-STRIPE_PUBLISHABLE_KEY = get_var("STRIPE_PUBLISHABLE_KEY", "")
-stripe.api_key = get_var("STRIPE_SECRET_KEY", "")
 
 # status
 STATUS_TOKEN = get_var("STATUS_TOKEN", "")

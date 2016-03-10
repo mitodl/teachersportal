@@ -13,7 +13,6 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from stripe import Charge
 
 from portal.util import (
     calculate_cart_subtotal,
@@ -136,15 +135,16 @@ class CheckoutView(APIView):
 
             amount_in_cents = get_cents(order.total_paid)
             if amount_in_cents != 0:
-                Charge.create(
-                    amount=amount_in_cents,
-                    currency="usd",
-                    source=token,
-                    description="Course purchase for MIT Teacher's Portal",
-                    metadata={
-                        "order_id": order.id
-                    }
-                )
+                raise Exception("Implement cybersource here")
+                # Charge.create(
+                #     amount=amount_in_cents,
+                #     currency="usd",
+                #     source=token,
+                #     description="Course purchase for MIT Teacher's Portal",
+                #     metadata={
+                #         "order_id": order.id
+                #     }
+                # )
 
         errors = self.notify_external_services(order, request.user)
 

@@ -86,11 +86,13 @@ class BuyTabContainer extends React.Component {
     if (total === 0) {
       dispatch(checkout(cart.cart, "", total));
     } else {
-      StripeHandler.open({
-        name: 'MIT Teacher\'s Portal',
-        description: cart.cart.length + ' course(s)',
-        amount: Math.floor(total * 100)
-      });
+
+      //StripeHandler.open({
+      //  name: 'MIT Teacher\'s Portal',
+      //  description: cart.cart.length + ' course(s)',
+      //  amount: Math.floor(total * 100)
+      //});
+      // TODO: cybersource here
     }
   }
 }

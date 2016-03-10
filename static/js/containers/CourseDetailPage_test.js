@@ -71,9 +71,6 @@ describe('CourseDetailPage', () => {
     container = null;
 
     sandbox.restore();
-
-    // Not set by default but might be set in the test
-    global.StripeHandler = null;
   });
 
   // Helper function to render CourseDetailPage, mock course APIs and
@@ -308,19 +305,19 @@ describe('CourseDetailPage', () => {
     // We calculate the expected total after the component renders
     let expectedTotal, expectedNumCartItems;
 
-    // Mock Stripe to immediately call the checkout api
-    global.StripeHandler = {
-      open: data => {
-        assert.deepEqual(data, {
-          name: "MIT Teacher's Portal",
-          description: expectedNumCartItems + " course(s)",
-          amount: Math.floor(expectedTotal * 100)
-        });
-
-        store.dispatch(checkout(store.getState().cart.cart, fakeToken));
-      }
-    };
-
+    //// Mock Stripe to immediately call the checkout api
+    //global.StripeHandler = {
+    //  open: data => {
+    //    assert.deepEqual(data, {
+    //      name: "MIT Teacher's Portal",
+    //      description: expectedNumCartItems + " course(s)",
+    //      amount: Math.floor(expectedTotal * 100)
+    //    });
+    //
+    //    store.dispatch(checkout(store.getState().cart.cart, fakeToken));
+    //  }
+    //};
+    //
     // Mock checkout api to succeed
     checkoutStub.returns(Promise.resolve());
 

@@ -27,34 +27,6 @@ const store = configureStore();
 let debug = SETTINGS.reactGaDebug === "true";
 ga.initialize(SETTINGS.gaTrackingID, { debug: debug });
 
-StripeHandler = StripeCheckout.configure({
-  key: SETTINGS.stripePublishableKey,
-  locale: 'auto',
-  billingAddress: true,
-  zipCode: true,
-  email: SETTINGS.email,
-  token: token => {
-    // User has confirmed the intent to pay, now process the transaction
-    let total = calculateTotal(
-      store.getState().cart.cart,
-      store.getState().course.courseList
-    );
-    store.dispatch(checkout(store.getState().cart.cart, token.id, total));
-  },
-  closed: () => {
-    // Fix body style CSS. When the slider opens material-ui adds a 'overflow: hidden'
-    // but Stripe checkout will add a 'position: relative'. The slider closes as Stripe
-    // checkout opens so Stripe checkout thinks the state it wants to preserve is 'overflow: hidden'
-    // but that breaks scrolling
-    document.body.style = "";
-  }
-});
-
-window.onpopstate = () => {
-  // Close checkout on page navigation
-  StripeHandler.close();
-};
-
 let debugTools;
 if (process.env.NODE_ENV !== 'production') {
   debugTools = <DebugPanel top right bottom>

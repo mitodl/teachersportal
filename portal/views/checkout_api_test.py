@@ -8,7 +8,11 @@ import json
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from mock import patch
+<<<<<<< HEAD
 from stripe import Charge
+=======
+import requests_mock
+>>>>>>> e10c4d5... Cybersource
 
 from portal.factories import (
     CourseFactory,
@@ -296,55 +300,6 @@ class CheckoutAPITests(CourseTests):
             self.course.title,
             course_modules=[self.module.uuid, module2.uuid],
         )
-
-    @patch('portal.views.checkout_api.CCXConAPI')
-    def test_stripe_charge(self, ccxcon_api):
-        """
-        Assert that we execute the stripe charge with the proper arguments, on successful checkout.
-        """
-        ccxcon_api.return_value.create_ccx.return_value = (True, 200, '')
-        cart_item = {
-            "uuids": [self.module.uuid],
-            "seats": 5,
-            "course_uuid": self.course.uuid
-        }
-        cart = [cart_item]
-        total = calculate_cart_subtotal(cart)
-        # Note: autospec intentionally not used, we need an unbound method here
-        with patch.object(Charge, 'create') as create_mock:
-            mocked_kwargs = {}
-
-            def _create_mock(**kwargs):
-                """Side effect function to capture kwargs for assert"""
-                # Note: not just assigning to mocked_kwargs because of scope differences.
-                for key, value in kwargs.items():
-                    mocked_kwargs[key] = value
-            create_mock.side_effect = _create_mock
-
-            resp = self.client.post(
-                reverse('checkout'),
-                content_type='application/json',
-                data=json.dumps({
-                    "cart": cart,
-                    "token": "token",
-                    "total": float(total)
-                })
-            )
-        assert resp.status_code == 200, resp.content.decode('utf-8')
-
-        assert mocked_kwargs['source'] == 'token'
-        assert mocked_kwargs['amount'] == get_cents(total)
-        assert mocked_kwargs['currency'] == 'usd'
-        assert 'order_id' in mocked_kwargs['metadata']
-        assert ccxcon_api.return_value.create_ccx.called
-
-        order = Order.objects.get(id=mocked_kwargs['metadata']['order_id'])
-        assert order.orderline_set.count() == 1
-        order_line = order.orderline_set.first()
-        assert calculate_orderline_total(
-            cart_item['uuids'][0],
-            cart_item['seats']
-        ) == order_line.line_total
 
     def test_cart_with_price_not_matching_total(self):
         """
