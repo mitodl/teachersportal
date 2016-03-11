@@ -16,11 +16,10 @@ class CourseCard extends Component {
 
     let path = "/courses/" + course.uuid;
 
-    let ccxDescription = course.info ? course.info.description : "";
-    let description = course.description || ccxDescription;
+    let description = course.description;
 
     let content = <Card className="course-card">
-      <CourseCardImage src="http://lorempixel.com/305/75/abstract/" />
+      <CourseCardImage src={course.image_url} />
       <Link to={path}>
         <CardTitle
           title={course.title}

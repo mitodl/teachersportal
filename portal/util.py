@@ -18,55 +18,6 @@ from portal.permissions import AuthorizationHelpers
 log = logging.getLogger(__name__)
 
 
-def course_as_dict(course, course_info=None, modules_info=None):
-    """
-    Serialize course to dict, ready for JSON serialization
-    Args:
-        course (Course): A Course
-        course_info (dict): Information fetched from CCXCon about the course
-        modules_info (dict): Information about each module, in fetched order
-
-    Returns:
-        dict: The course as a dictionary
-    """
-    if modules_info is None:
-        modules_info = {}
-
-    modules = [
-        module_as_dict(module, modules_info.get(module.uuid))
-        for module in course.module_set.order_by('created_at')
-        ]
-    return {
-        "title": course.title,
-        "description": course.description,
-        "uuid": course.uuid,
-        "info": course_info,
-        "modules": modules,
-        "live": course.live
-    }
-
-
-def module_as_dict(module, ccxcon_module_info=None):
-    """
-    Serialize module to dict, ready for JSON serialization
-    Args:
-        module (Module): A Module
-        ccxcon_module_info (dict): Information fetched from CCXCon
-
-    Returns:
-        dict: The module as a dictionary
-    """
-    price_without_tax = None
-    if module.price_without_tax is not None:
-        price_without_tax = float(module.price_without_tax)
-    return {
-        "title": module.title,
-        "uuid": module.uuid,
-        "price_without_tax": price_without_tax,
-        "info": ccxcon_module_info,
-    }
-
-
 def calculate_cart_subtotal(cart):
     """
     Calculate total of a cart.
