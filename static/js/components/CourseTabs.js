@@ -21,7 +21,7 @@ class CourseTabs extends React.Component {
     return <Card id="course-tabs-card">
         <Tabs id="course-tabs">
             <Tab label="About" id="about" className="tab" onActive={this.handleActive}>
-                <AboutTab content={course.overview} />
+                <AboutTab content={course.info.overview} />
             </Tab>
             <Tab label="Buy" id="buy" className="tab" onActive={this.handleActive}>
                 <BuyTabContainer

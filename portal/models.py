@@ -19,7 +19,6 @@ from django.db.models.fields import (
     DateTimeField,
 )
 from django.utils.encoding import python_2_unicode_compatible
-from jsonfield import JSONField
 
 from portal.permissions import (
     EDIT_OWN_CONTENT,
@@ -48,26 +47,21 @@ class Course(models.Model):
     """
     uuid = TextField()
     title = TextField()
-    description = TextField(blank=True, null=True)
+    description = TextField(blank=True)
     live = BooleanField()
     created_at = DateTimeField(auto_now_add=True, blank=True)
     modified_at = DateTimeField(auto_now=True, blank=True)
     instance = ForeignKey(BackingInstance)
     owners = ManyToManyField(to=User, related_name="courses_owned", blank=True)
-    course_id = TextField(blank=True, null=True)
-    author_name = TextField(blank=True, null=True)
-    overview = TextField(blank=True, null=True)
-    image_url = TextField(blank=True, null=True)
-    instructors = JSONField(blank=True, null=True)
 
     @property
     def is_available_for_purchase(self):
         """
         Does the course have any modules available for purchase?
         """
-        if self.modules.count() == 0:
+        if self.module_set.count() == 0:
             return False
-        return all(module.is_available_for_purchase for module in self.modules.all())
+        return all(module.is_available_for_purchase for module in self.module_set.all())
 
     def __str__(self):
         """String representation to show in Django Admin console"""
@@ -88,7 +82,7 @@ class Module(models.Model):
     A chapter in a CCX course
     """
     uuid = TextField()
-    course = ForeignKey(Course, related_name="modules")
+    course = ForeignKey(Course)
     title = TextField()
     price_without_tax = DecimalField(decimal_places=2, max_digits=20, blank=True, null=True)
     created_at = DateTimeField(auto_now_add=True, blank=True)

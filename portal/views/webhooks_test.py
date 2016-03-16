@@ -55,13 +55,7 @@ class WebhookTests(TestCase):
             'payload': {
                 'title': self.COURSE_TITLE1,
                 'external_pk': self.COURSE_UUID1,
-                'instance': self.INSTANCE,
-                'course_id': 'course_id',
-                'author_name': 'author_name',
-                'overview': 'overview',
-                'description': 'description',
-                'image_url': 'image_url',
-                'instructors': ['one', 'two', 'three'],
+                'instance': self.INSTANCE
             }
         })
         self.post_webhook({
@@ -142,13 +136,7 @@ class WebhookTests(TestCase):
             'payload': {
                 'title': self.COURSE_TITLE2,
                 'external_pk': self.COURSE_UUID2,
-                'instance': self.INSTANCE,
-                'course_id': 'course_id',
-                'author_name': 'author_name',
-                'overview': 'overview',
-                'description': 'description',
-                'image_url': 'image_url',
-                'instructors': ['one', 'two', 'three'],
+                'instance': self.INSTANCE
             }
         }
         resp = self.client.post(
@@ -170,13 +158,7 @@ class WebhookTests(TestCase):
             'payload': {
                 'title': self.COURSE_TITLE2,
                 'external_pk': self.COURSE_UUID2,
-                'instance': self.INSTANCE,
-                'course_id': 'course_id',
-                'author_name': 'author_name',
-                'overview': 'overview',
-                'description': 'description',
-                'image_url': 'image_url',
-                'instructors': ['one', 'two', 'three'],
+                'instance': self.INSTANCE
             }
         }
         # Signature is now for a different set of data and therefore invalid
@@ -203,28 +185,15 @@ class WebhookTests(TestCase):
             'payload': {
                 'title': self.COURSE_TITLE2,
                 'external_pk': self.COURSE_UUID2,
-                'instance': self.INSTANCE,
-                'course_id': 'course_id',
-                'author_name': 'author_name',
-                'overview': 'overview',
-                'description': 'description',
-                'image_url': 'image_url',
-                'instructors': ['one', 'two', 'three'],
+                'instance': self.INSTANCE
             }
         })
 
         courses = self.get_courses()
         assert len(courses) == course_count + 1
-        course = courses[-1]
-        assert course.title == self.COURSE_TITLE2
-        assert course.uuid == self.COURSE_UUID2
-        assert course.instance.instance_url == self.INSTANCE
-        assert course.course_id == 'course_id'
-        assert course.author_name == 'author_name'
-        assert course.overview == 'overview'
-        assert course.description == 'description'
-        assert course.image_url == 'image_url'
-        assert course.instructors == ['one', 'two', 'three']
+        assert courses[-1].title == self.COURSE_TITLE2
+        assert courses[-1].uuid == self.COURSE_UUID2
+        assert courses[-1].instance.instance_url == self.INSTANCE
 
     def test_update_course(self):
         """
@@ -239,64 +208,15 @@ class WebhookTests(TestCase):
             'payload': {
                 'title': new_title,
                 'external_pk': self.COURSE_UUID1,
-                'instance': self.INSTANCE,
-                'course_id': 'new course_id',
-                'author_name': 'new author_name',
-                'overview': 'new overview',
-                'description': 'new description',
-                'image_url': 'new image_url',
-                'instructors': ['four'],
+                'instance': self.INSTANCE
             }
         })
 
         courses = self.get_courses()
         assert len(courses) == course_count
-        course = courses[0]
-        assert course.title == new_title
-        assert course.uuid == self.COURSE_UUID1
-        assert course.instance.instance_url == self.INSTANCE
-        assert course.course_id == 'new course_id'
-        assert course.author_name == 'new author_name'
-        assert course.overview == 'new overview'
-        assert course.description == 'new description'
-        assert course.image_url == 'new image_url'
-        assert course.instructors == ['four']
-
-    def test_update_course_null(self):
-        """
-        Test updating a course with null values.
-        """
-        course_count = len(self.get_courses())
-        # Second time it should update course in place.
-        new_title = "changed title"
-        self.post_webhook({
-            'action': 'update',
-            'type': COURSE_PRODUCT_TYPE,
-            'payload': {
-                'title': new_title,
-                'external_pk': self.COURSE_UUID1,
-                'instance': self.INSTANCE,
-                'course_id': None,
-                'author_name': None,
-                'overview': None,
-                'description': None,
-                'image_url': None,
-                'instructors': None,
-            }
-        })
-
-        courses = self.get_courses()
-        assert len(courses) == course_count
-        course = courses[0]
-        assert course.title == new_title
-        assert course.uuid == self.COURSE_UUID1
-        assert course.instance.instance_url == self.INSTANCE
-        assert course.course_id is None
-        assert course.author_name is None
-        assert course.overview is None
-        assert course.description is None
-        assert course.image_url is None
-        assert course.instructors is None
+        assert courses[0].title == new_title
+        assert courses[0].uuid == self.COURSE_UUID1
+        assert courses[0].instance.instance_url == self.INSTANCE
 
     def test_add_course_with_same_title(self):
         """Test adding a course with duplicate titles"""
@@ -308,13 +228,7 @@ class WebhookTests(TestCase):
             'payload': {
                 'title': self.COURSE_TITLE1,
                 'external_pk': self.COURSE_UUID2,
-                'instance': self.INSTANCE,
-                'course_id': 'course_id',
-                'author_name': 'author_name',
-                'overview': 'overview',
-                'description': 'description',
-                'image_url': 'image_url',
-                'instructors': ['one', 'two', 'three'],
+                'instance': self.INSTANCE
             }
         })
 
@@ -348,13 +262,7 @@ class WebhookTests(TestCase):
             'payload': {
                 'title': self.COURSE_TITLE1,
                 'external_pk': '',
-                'instance': self.INSTANCE,
-                'course_id': 'course_id',
-                'author_name': 'author_name',
-                'overview': 'overview',
-                'description': 'description',
-                'image_url': 'image_url',
-                'instructors': ['one', 'two', 'three'],
+                'instance': self.INSTANCE
             }
         }, expected_status=400, expected_errors=['Invalid external_pk'])
 
@@ -388,13 +296,7 @@ class WebhookTests(TestCase):
             'payload': {
                 'title': self.MODULE_TITLE1,
                 'external_pk': self.MODULE_UUID1,
-                'instance': self.INSTANCE,
-                'course_id': 'course_id',
-                'author_name': 'author_name',
-                'overview': 'overview',
-                'description': 'description',
-                'image_url': 'image_url',
-                'instructors': ['one', 'two', 'three'],
+                'instance': self.INSTANCE
             }
         })
 
@@ -415,13 +317,7 @@ class WebhookTests(TestCase):
             'payload': {
                 'title': '',
                 'external_pk': self.COURSE_UUID1,
-                'instance': self.INSTANCE,
-                'course_id': 'course_id',
-                'author_name': 'author_name',
-                'overview': 'overview',
-                'description': 'description',
-                'image_url': 'image_url',
-                'instructors': ['one', 'two', 'three'],
+                'instance': self.INSTANCE
             }
         })
 
@@ -623,13 +519,7 @@ class WebhookTests(TestCase):
             'payload': {
                 'title': self.COURSE_TITLE2,
                 'external_pk': self.COURSE_UUID2,
-                'instance': self.INSTANCE,
-                'course_id': 'course_id',
-                'author_name': 'author_name',
-                'overview': 'overview',
-                'description': 'description',
-                'image_url': 'image_url',
-                'instructors': ['one', 'two', 'three'],
+                'instance': self.INSTANCE
             }
         })
         courses = self.get_courses()
@@ -668,13 +558,7 @@ class WebhookTests(TestCase):
             'payload': {
                 'title': self.COURSE_TITLE2,
                 'external_pk': self.COURSE_UUID2,
-                'instance': self.INSTANCE,
-                'course_id': 'course_id',
-                'author_name': 'author_name',
-                'overview': 'overview',
-                'description': 'description',
-                'image_url': 'image_url',
-                'instructors': ['one', 'two', 'three'],
+                'instance': self.INSTANCE
             }
         })
         # Update module1 to point to course2
@@ -825,13 +709,7 @@ class WebhookTests(TestCase):
         payload = {
             'title': self.COURSE_TITLE1,
             'external_pk': self.COURSE_UUID1,
-            'instance': self.INSTANCE,
-            'course_id': 'course_id',
-            'author_name': 'author_name',
-            'overview': 'overview',
-            'description': 'description',
-            'image_url': 'image_url',
-            'instructors': ['one', 'two', 'three'],
+            'instance': self.INSTANCE
         }
         for key in payload.keys():
             payload_copy = dict(payload)
@@ -866,13 +744,7 @@ class WebhookTests(TestCase):
             'payload': {
                 'title': self.COURSE_TITLE1,
                 'external_pk': self.COURSE_UUID1,
-                'instance': '{}/update'.format(self.INSTANCE),
-                'course_id': 'course_id',
-                'author_name': 'author_name',
-                'overview': 'overview',
-                'description': 'description',
-                'image_url': 'image_url',
-                'instructors': ['one', 'two', 'three'],
+                'instance': '{}/update'.format(self.INSTANCE)
             }
         }, expected_status=400, expected_errors=['Instance cannot be changed'])
 
@@ -886,13 +758,7 @@ class WebhookTests(TestCase):
                     'payload': {
                         'title': self.COURSE_TITLE1,
                         'external_pk': self.COURSE_UUID1,
-                        'instance': instance,
-                        'course_id': 'course_id',
-                        'author_name': 'author_name',
-                        'overview': 'overview',
-                        'description': 'description',
-                        'image_url': 'image_url',
-                        'instructors': ['one', 'two', 'three'],
+                        'instance': instance
                     }
                 },
                 expected_status=400,

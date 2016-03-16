@@ -29,12 +29,6 @@ def course(action, payload):
             title = payload['title']
             uuid = payload['external_pk']
             instance_url = payload['instance']
-            course_id = payload['course_id']
-            author_name = payload['author_name']
-            overview = payload['overview']
-            description = payload['description']
-            image_url = payload['image_url']
-            instructors = payload['instructors']
         except KeyError as ex:
             raise ValidationError("Missing key {key}".format(key=ex.args[0]))
         except TypeError as ex:
@@ -51,13 +45,6 @@ def course(action, payload):
                 if existing_course.instance.instance_url != instance_url:
                     raise ValidationError("Instance cannot be changed")
                 existing_course.title = title
-
-                existing_course.course_id = course_id
-                existing_course.author_name = author_name
-                existing_course.overview = overview
-                existing_course.description = description
-                existing_course.image_url = image_url
-                existing_course.instructors = instructors
                 existing_course.save()
             except Course.DoesNotExist:
                 backing_instance, _ = BackingInstance.objects.get_or_create(
@@ -67,20 +54,14 @@ def course(action, payload):
                     uuid=uuid,
                     title=title,
                     live=False,
-                    instance=backing_instance,
-                    course_id=course_id,
-                    author_name=author_name,
-                    overview=overview,
-                    description=description,
-                    image_url=image_url,
-                    instructors=instructors,
+                    instance=backing_instance
                 )
     elif action == 'delete':
         try:
             uuid = payload['external_pk']
         except KeyError as ex:
             raise ValidationError("Missing key {key}".format(key=ex.args[0]))
-        except TypeError:
+        except TypeError as ex:
             raise ValidationError("Invalid value for payload")
         Course.objects.filter(uuid=uuid).delete()
     else:
@@ -137,7 +118,7 @@ def module(action, payload):
             uuid = payload['external_pk']
         except KeyError as ex:
             raise ValidationError("Missing key {key}".format(key=ex.args[0]))
-        except TypeError:
+        except TypeError as ex:
             raise ValidationError("Invalid value for payload")
         with transaction.atomic():
             Module.objects.filter(uuid=uuid).delete()

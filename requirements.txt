@@ -1,4 +1,4 @@
-Django==1.9.4
+Django==1.8.11
 PyYAML==3.11
 dj-database-url==0.3.0
 dj-static==0.0.6
@@ -12,5 +12,4 @@ django-oauth-toolkit==0.9.0
 requests-oauthlib==0.5.0
 newrelic==2.54.0.41
 stripe==1.27.1
-django-server-status==0.3
-jsonfield==1.0.3
+django-server-status==0.1.1

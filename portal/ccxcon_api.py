@@ -13,6 +13,13 @@ CCXCON_TOKEN_URL = '/o/token/'
 CCXCON_CREATE_CCX = '/api/v1/ccx/'
 
 
+class APIError(Exception):
+    """
+    Catch-all error for errors dealing with the API
+    """
+    pass
+
+
 # pylint: disable=too-few-public-methods
 class CCXConAPI(object):
     """
@@ -113,6 +120,23 @@ class CCXConAPI(object):
             resp.status_code,
             resp.json()
         )
+
+    def update_ccx_seats(self, master_course_uuid, ccx_id, new_seat_count):
+        """
+        Updates a CCX using CCXCon
+
+        Args:
+          master_course_uuid (str): uuid of the master course on CCXCon
+          ccx_id (int): ID of the CCX.
+          new_seat_count (int): Number of seats the CCX should now have
+
+        Returns:
+          None
+
+        Throws:
+          APIError
+        """
+        pass
 
 
 def parse_arguments():

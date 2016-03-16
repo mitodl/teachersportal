@@ -5,9 +5,11 @@ from __future__ import unicode_literals
 
 from decimal import Decimal, DecimalException
 import logging
+import json
 from six.moves.urllib.parse import (  # pylint: disable=import-error
     urlparse,
     urlunparse,
+    urljoin,
 )
 from six import string_types
 
@@ -18,12 +20,16 @@ from requests_oauthlib import OAuth2Session
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
+from rest_framework.status import HTTP_200_OK
 
 from portal.models import Module
 from portal.permissions import AuthorizationHelpers
 from portal.serializers import (
     CourseSerializer,
     CourseSerializerReduced,
+)
+from portal.util import (
+    course_as_dict,
 )
 
 
@@ -56,6 +62,98 @@ def ccxcon_request():
     return oauth_ccxcon
 
 
+def filter_ccxcon_course_info(course_info):
+    """
+    Filter course info
+    Args:
+        course_info (dict): CCXCon course info
+
+    Returns:
+        The CCXCon course info with only allowed fields
+    """
+    allowed_course_keys = ('title', 'description', 'overview', 'image_url', 'author_name')
+    return {
+        k: v for k, v in course_info.items()
+        if k in allowed_course_keys
+    }
+
+
+def filter_ccxcon_module_info(module_info):
+    """
+    Filter module info
+
+    Args:
+        module_info (dict): CCXCon module info
+
+    Returns:
+        The CCXCon module info with only allowed fields
+    """
+    allowed_module_keys = ('title', 'subchapters')
+    return {
+        k: v for k, v in module_info.items()
+        if k in allowed_module_keys
+    }
+
+
+def fetch_ccxcon_info(uuid):
+    """
+    Fetch information from CCXCon about a course and its modules. Note that
+    this list is not filtered by availability to buy, that will be done in view.
+    Args:
+        uuid (str): The course uuid
+    Returns:
+        tuple:
+            (dict, dict) where
+            Item one is information from CCXCon for a course,
+            Item two is the information for each module for that course
+    """
+    oauth_ccxcon = ccxcon_request()
+
+    course_url = urljoin(
+        settings.CCXCON_API,
+        'v1/coursexs/{course_uuid}/'.format(course_uuid=uuid)
+    )
+    response = oauth_ccxcon.get(course_url)
+    if response.status_code != HTTP_200_OK:
+        log.info(
+            "Unable to fetch course from CCXCon: url: %s, code: %s, content: %s",
+            course_url,
+            response.status_code,
+            response.content.decode('utf-8')
+        )
+        raise Exception("CCXCon returned a non 200 status code {code}: {content}".format(
+            code=response.status_code,
+            content=response.content,
+        ))
+    course_info = json.loads(response.content.decode('utf-8'))
+    # Whitelist of allowed keys to pass through
+
+    # Add module information to list
+    modules_url = urljoin(
+        settings.CCXCON_API,
+        'v1/coursexs/{course_uuid}/modules/'.format(course_uuid=uuid)
+    )
+    response = oauth_ccxcon.get(modules_url)
+    if response.status_code != HTTP_200_OK:
+        log.info(
+            "Unable to fetch modules from CCXCon: url: %s, code: %s, content: %s",
+            modules_url,
+            response.status_code,
+            response.content.decode('utf-8')
+        )
+        raise Exception("CCXCon returned a non 200 status code {code}: {content}".format(
+            code=response.status_code,
+            content=response.content,
+        ))
+    data = json.loads(response.content.decode('utf-8'))
+    modules_info = {}
+    for module_info in data:
+        uuid = module_info['uuid']
+        modules_info[uuid] = module_info
+
+    return course_info, modules_info
+
+
 class CourseListView(ListAPIView):
     """
     Lists courses available for purchase
@@ -67,7 +165,10 @@ class CourseListView(ListAPIView):
     def get_queryset(self):
         """A queryset for courses that are available for purchase"""
 
-        return AuthorizationHelpers.get_courses(self.request.user)
+        return [
+            course_as_dict(course)
+            for course in AuthorizationHelpers.get_courses(self.request.user)
+        ]
 
 
 class CourseDetailView(RetrieveAPIView):
@@ -95,7 +196,16 @@ class CourseDetailView(RetrieveAPIView):
         if course is None:
             raise Http404
 
-        return course
+        course_info, modules_info = fetch_ccxcon_info(uuid)
+
+        return course_as_dict(
+            course,
+            filter_ccxcon_course_info(course_info),
+            {
+                uuid: filter_ccxcon_module_info(module)
+                for uuid, module in modules_info.items()
+            }
+        )
 
     # This method is a mammoth due to how much per-field validation we need to do
     # pylint: disable=too-many-locals, too-many-branches, too-many-statements

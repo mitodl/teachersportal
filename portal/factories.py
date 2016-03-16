@@ -53,7 +53,6 @@ class CourseFactory(DjangoModelFactory):
     description = factory.LazyAttribute(lambda x: FAKE.text())
     live = False
     instance = factory.SubFactory(BackingInstanceFactory)
-    instructors = factory.LazyAttribute(lambda x: [FAKE.text() for _ in range(10)])
 
     class Meta:  # pylint: disable=missing-docstring,no-init,too-few-public-methods,old-style-class
         model = Course

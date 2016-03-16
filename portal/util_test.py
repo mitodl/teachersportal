@@ -19,6 +19,8 @@ from portal.util import (
     calculate_orderline_total,
     create_order,
     get_cents,
+    course_as_dict,
+    module_as_dict,
     validate_cart,
 )
 
@@ -27,6 +29,37 @@ class CourseUtilTests(CourseTests):
     """
     Test for utility functions.
     """
+
+    def test_course_module_json(self):
+        """
+        Test functionality of course_as_json and module_as_json
+        """
+
+        expected_module = {
+            "title": self.module.title,
+            "uuid": self.module.uuid,
+            "price_without_tax": float(self.module.price_without_tax),
+            "info": {
+                "type": "module"
+            }
+        }
+        course_info = {"type": "course"}
+        modules_info = {
+            self.module.uuid: {
+                "type": "module"
+            }
+        }
+        assert module_as_dict(self.module, modules_info[self.module.uuid]) == expected_module
+        assert course_as_dict(self.course, course_info, modules_info) == {
+            "title": self.course.title,
+            "description": self.course.description,
+            "uuid": self.course.uuid,
+            "info": {
+                "type": "course"
+            },
+            "modules": [expected_module],
+            "live": self.course.live
+        }
 
     def test_live_availability(self):
         """Assert that live boolean affects availability for purchase"""

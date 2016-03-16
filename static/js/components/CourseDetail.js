@@ -23,13 +23,13 @@ class CourseDetail extends Component {
     let baseContent = <div>
       <CardTitle
         title={course.title}
-        subtitle={course.author_name}
+        subtitle={course.info.author_name}
         id="course-title"
       />
-      <CourseImage src={course.image_url}/>
+      <CourseImage src={course.info.image_url}/>
       <CardText
         id="course-description"
-        dangerouslySetInnerHTML={{__html: course.description }}
+        dangerouslySetInnerHTML={{__html: course.description || course.info.description }}
       />
     </div>;
 
