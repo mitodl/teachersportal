@@ -8,7 +8,6 @@ import json
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from mock import patch
-import requests_mock
 from stripe import Charge
 
 from portal.factories import (
@@ -18,7 +17,7 @@ from portal.factories import (
     OrderLineFactory,
 )
 from portal.models import Order, OrderLine, UserInfo
-from portal.views.base import CourseTests, FAKE_CCXCON_API
+from portal.views.base import CourseTests
 from portal.util import (
     calculate_cart_subtotal,
     calculate_orderline_total,
@@ -49,8 +48,8 @@ class CheckoutAPITests(CourseTests):
         )
         self.client.login(username=self.user.username, password=password)
 
-    @patch('portal.views.checkout_api.ccxcon_request')
-    def test_no_userinfo(self, mock_ccxcon):
+    @patch('portal.views.checkout_api.CCXConAPI')
+    def test_no_userinfo(self, ccxcon_api):
         """Should show validation error if there isn't a user info"""
         user = User.objects.create_user(
             username='Darth',
@@ -59,7 +58,9 @@ class CheckoutAPITests(CourseTests):
         )
         self.client.login(username=user, password='Vad3r')
 
-        mock_ccxcon.return_value.post.return_value.status_code = 200
+        ccxcon_api.return_value.create_ccx.return_value.status_code = [
+            True, 200, ''
+        ]
         cart_item = {
             "uuids": [self.module.uuid],
             "seats": 5,
@@ -223,12 +224,16 @@ class CheckoutAPITests(CourseTests):
             assert resp.status_code == 400, resp.content.decode('utf-8')
             assert "Missing key {}".format(key) in resp.content.decode('utf-8')
 
-    @patch('portal.views.checkout_api.ccxcon_request')
-    def test_cart_without_price(self, mock_ccxcon):
+    @patch('portal.views.checkout_api.CCXConAPI')
+    def test_cart_without_price(self, ccxcon_api):
         """
         Assert that if the total of a cart is zero, checkout still works.
         """
-        mock_ccxcon.return_value.post.return_value.status_code = 200
+        ccxcon_api.return_value.create_ccx.return_value = [
+            True,
+            200,
+            'content'
+        ]
 
         self.module.price_without_tax = 0
         self.module.save()
@@ -247,33 +252,19 @@ class CheckoutAPITests(CourseTests):
             })
         )
         assert resp.status_code == 200, resp.content.decode('utf-8')
-        assert mock_ccxcon.return_value.post.called
+        assert ccxcon_api.return_value.create_ccx.called
 
-    @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
-    @requests_mock.mock()
-    def test_ccx_creation(self, mock, mocked_request):  # pylint: disable=unused-argument
+    @patch('portal.views.checkout_api.CCXConAPI')
+    def test_ccx_creation(self, ccxcon_api):
         """
-        Assert that the proper POST is being sent to create the CCX, on successful checkout.
+        Assert that CCX is created, on successful checkout.
         """
         total_seats = 5
 
         # Add an extra module to assert we only POST to ccx endpoint once per course.
         module2 = ModuleFactory.create(course=self.course, price_without_tax=123)
 
-        def _mocked_request_callback(request, context):  # pylint: disable=unused-argument
-            """Assert that the data being sent is valid JSON"""
-            data = request.json()
-            assert data['course_modules'] == [self.module.uuid, module2.uuid]
-            assert data['user_email'] == self.user.email
-            assert data['display_name'] == '{} for {}'.format(
-                self.course.title, self.user.userinfo.full_name
-            )
-            assert data['master_course_id'] == self.course.uuid
-            assert data['total_seats'] == total_seats
-
-        mocked_request.post("{base}v1/ccx/".format(
-            base=FAKE_CCXCON_API
-        ), text=_mocked_request_callback)
+        ccxcon_api.return_value.create_ccx.return_value = (True, 200, '')
 
         cart_item = {
             "uuids": [self.module.uuid, module2.uuid],
@@ -297,14 +288,21 @@ class CheckoutAPITests(CourseTests):
 
         assert resp.status_code == 200, resp.content.decode('utf-8')
         assert create_mock.call_count == 1
-        assert mocked_request.call_count == 1
+        assert ccxcon_api.return_value.create_ccx.call_count == 1
+        ccxcon_api.return_value.create_ccx.assert_called_with(
+            self.course.uuid,
+            self.user.email,
+            total_seats,
+            self.course.title,
+            course_modules=[self.module.uuid, module2.uuid],
+        )
 
-    @patch('portal.views.checkout_api.ccxcon_request')
-    def test_stripe_charge(self, mock_ccxcon):
+    @patch('portal.views.checkout_api.CCXConAPI')
+    def test_stripe_charge(self, ccxcon_api):
         """
         Assert that we execute the stripe charge with the proper arguments, on successful checkout.
         """
-        mock_ccxcon.return_value.post.return_value.status_code = 200
+        ccxcon_api.return_value.create_ccx.return_value = (True, 200, '')
         cart_item = {
             "uuids": [self.module.uuid],
             "seats": 5,
@@ -338,7 +336,7 @@ class CheckoutAPITests(CourseTests):
         assert mocked_kwargs['amount'] == get_cents(total)
         assert mocked_kwargs['currency'] == 'usd'
         assert 'order_id' in mocked_kwargs['metadata']
-        assert mock_ccxcon.return_value.post.called
+        assert ccxcon_api.return_value.create_ccx.called
 
         order = Order.objects.get(id=mocked_kwargs['metadata']['order_id'])
         assert order.orderline_set.count() == 1
@@ -372,8 +370,8 @@ class CheckoutAPITests(CourseTests):
         assert resp.status_code == 400, resp.content.decode('utf-8')
         assert "Cart total doesn't match expected value" in resp.content.decode('utf-8')
 
-    @patch('portal.views.checkout_api.ccxcon_request')
-    def test_cart_fails_to_checkout(self, ccxcon_request):
+    @patch('portal.views.checkout_api.CCXConAPI')
+    def test_cart_fails_to_checkout(self, ccxcon_api):
         """
         Assert that we clean up everything if checkout failed.
         """
@@ -404,29 +402,29 @@ class CheckoutAPITests(CourseTests):
 
             assert Order.objects.count() == 0
             assert OrderLine.objects.count() == 0
-            assert not ccxcon_request.called
+            assert not ccxcon_api.called
 
-    @patch('portal.views.checkout_api.ccxcon_request')
-    def test_failed_api_try_all(self, requester):
+    @patch('portal.views.checkout_api.CCXConAPI')
+    def test_failed_api_try_all(self, ccxcon_api):
         """
         If the post fails, it should try again for the second orderline.
         """
-        requester.return_value.post.side_effect = AttributeError()
+        ccxcon_api.return_value.create_ccx.side_effect = AttributeError()
         order = OrderFactory.create()
         OrderLineFactory.create_batch(2, order=order)
 
         CheckoutView().notify_external_services(order, order.purchaser)
 
-        assert requester.return_value.post.call_count == 2
+        assert ccxcon_api.return_value.create_ccx.call_count == 2
 
-    @patch('portal.views.checkout_api.ccxcon_request')
-    def test_failed_post_makes_orders(self, requester):
+    @patch('portal.views.checkout_api.CCXConAPI')
+    def test_failed_post_makes_orders(self, ccxcon_api):
         """
-        If the post fails, orders are still created
+        If the ccx creation fails, orders are still created
         """
         start = Order.objects.count()
         start_ol = OrderLine.objects.count()
-        requester.return_value.post.side_effect = AttributeError()
+        ccxcon_api.return_value.create_ccx.side_effect = AttributeError()
         cart_item = {
             "uuids": [self.module.uuid],
             "seats": 5,
@@ -449,14 +447,14 @@ class CheckoutAPITests(CourseTests):
         assert Order.objects.count() - start == 1
         assert OrderLine.objects.count() - start_ol == 1
 
-    @patch('portal.views.checkout_api.ccxcon_request')
-    def test_errors_propagate_to_response(self, requester):
+    @patch('portal.views.checkout_api.CCXConAPI')
+    def test_errors_propagate_to_response(self, ccxcon_api):
         """
         If there are errors on checkout, they make it to the response.
         """
         course2 = CourseFactory.create(live=True)
         module2 = ModuleFactory.create(course=course2, price_without_tax=345)
-        requester.return_value.post.side_effect = [
+        ccxcon_api.return_value.create_ccx.side_effect = [
             AttributeError("Example Error"),
             AttributeError("Another Error"),
         ]
@@ -487,23 +485,21 @@ class CheckoutAPITests(CourseTests):
         assert "Example Error" in resp.content.decode('utf-8')
         assert "Another Error" in resp.content.decode('utf-8')
 
-    @patch('requests_oauthlib.oauth2_session.OAuth2Session.fetch_token', autospec=True)
-    @requests_mock.mock()
-    def test_non_200_propagates_to_response(self, mock, mocked_request):  # pylint: disable=unused-argument
+    @patch('portal.views.checkout_api.CCXConAPI')
+    def test_non_200_propagates_to_response(self, ccxcon_api):
         """
         If ccx POST returns a non-200, the response will have this information.
         """
+        error_message = "This is an error"
+        ccxcon_api.return_value.create_ccx.return_value = [
+            False,
+            500,
+            error_message
+        ]
         total_seats = 5
 
         # Add an extra module to assert we only POST to ccx endpoint once per course.
         module2 = ModuleFactory.create(course=self.course, price_without_tax=123)
-
-        error_message = "This is an error"
-        mocked_request.post(
-            "{base}v1/ccx/".format(base=FAKE_CCXCON_API),
-            text=error_message,
-            status_code=500
-        )
 
         cart_item = {
             "uuids": [self.module.uuid, module2.uuid],
