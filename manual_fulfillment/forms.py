@@ -12,7 +12,7 @@ class AmmendmentForm(ModelForm):
     """
     Form for editing Ammendments.
     """
-    class Meta:  # pylint: disable=missing-docstring
+    class Meta:  # pylint: disable=missing-docstring,no-init,old-style-class
         model = Ammendment
         fields = ('new_seat_count',)
 
