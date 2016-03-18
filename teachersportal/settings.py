@@ -277,6 +277,16 @@ LOGGING = {
     },
 }
 
+# Celery
+BROKER_URL = get_var("BROKER_URL", get_var("REDISCLOUD_URL", None))
+USE_CELERY = True
+CELERY_RESULT_BACKEND = get_var(
+    "CELERY_RESULT_BACKEND", get_var("REDISCLOUD_URL", None)
+)
+CELERY_ALWAYS_EAGER = get_var("CELERY_ALWAYS_EAGER", True)
+CELERY_EAGER_PROPAGATES_EXCEPTIONS = get_var(
+    "CELERY_EAGER_PROPAGATES_EXCEPTIONS", True)
+
 CCXCON_API = get_var('CCXCON_API', None)
 
 # Secret used with signatures for CCXCon webhooks endpoint
@@ -292,7 +302,7 @@ stripe.api_key = get_var("STRIPE_SECRET_KEY", "")
 
 # status
 STATUS_TOKEN = get_var("STATUS_TOKEN", "")
-HEALTH_CHECK = ['POSTGRES']
+HEALTH_CHECK = ['POSTGRES', 'CELERY']
 
 
 GA_TRACKING_ID = get_var("GA_TRACKING_ID", "")
