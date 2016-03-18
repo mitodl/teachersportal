@@ -38,7 +38,8 @@ class WebhooksCCXConView(APIView):
         try:
             hook = getattr(webhooks, message['type'].lower())
         except AttributeError:
-            raise ValidationError("No handler for type {type}".format(type=message['type']))
+            raise ValidationError("No handler for type {type}".format(
+                type=message['type']))
 
         hook(message['action'], message['payload'])
 

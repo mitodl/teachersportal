@@ -13,6 +13,7 @@ from portal.models import Course, Module, BackingInstance
 # Note: reflection used for names below so be careful not to rename functions.
 
 
+# pylint: disable=too-many-locals
 def course(action, payload):
     """
     Handle a CCXCon request regarding courses.
@@ -35,10 +36,13 @@ def course(action, payload):
             description = payload['description']
             image_url = payload['image_url']
             instructors = payload['instructors']
+
+            # Optional during migration period.
+            edx_course_id = payload.get('edx_course_id')
         except KeyError as ex:
             raise ValidationError("Missing key {key}".format(key=ex.args[0]))
         except TypeError as ex:
-            raise ValidationError("Invalid key {key}".format(key=ex.args[0]))
+            raise ValidationError("Invalid payload: {key}".format(key=ex.args[0]))
 
         if not uuid:
             raise ValidationError('Invalid external_pk')
@@ -58,6 +62,7 @@ def course(action, payload):
                 existing_course.description = description
                 existing_course.image_url = image_url
                 existing_course.instructors = instructors
+                existing_course.edx_course_id = edx_course_id
                 existing_course.save()
             except Course.DoesNotExist:
                 backing_instance, _ = BackingInstance.objects.get_or_create(
@@ -74,6 +79,7 @@ def course(action, payload):
                     description=description,
                     image_url=image_url,
                     instructors=instructors,
+                    edx_course_id=edx_course_id,
                 )
     elif action == 'delete':
         try:
@@ -103,6 +109,8 @@ def module(action, payload):
             title = payload['title']
             uuid = payload['external_pk']
             course_uuid = payload['course_external_pk']
+            # Optional during migration period.
+            locator_id = payload.get('locator_id')
         except KeyError as ex:
             raise ValidationError("Missing key {key}".format(key=ex.args[0]))
         except TypeError as ex:
@@ -124,12 +132,14 @@ def module(action, payload):
                     raise ValidationError("Invalid course_external_pk")
 
                 existing_module.title = title
+                existing_module.locator_id = locator_id
                 existing_module.save()
             except Module.DoesNotExist:
                 Module.objects.create(
                     uuid=uuid,
                     course=existing_course,
                     title=title,
+                    locator_id=locator_id,
                 )
 
     elif action == 'delete':

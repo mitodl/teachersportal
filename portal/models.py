@@ -70,6 +70,8 @@ class Course(models.Model):
     A CCX course
     """
     uuid = TextField()
+    edx_course_id = models.TextField(help_text="course locator from edx",
+                                     unique=True, null=True)
     title = TextField()
     description = TextField(blank=True, null=True)
     live = BooleanField()
@@ -116,6 +118,8 @@ class Module(models.Model):
     price_without_tax = DecimalField(decimal_places=2, max_digits=20, blank=True, null=True)
     created_at = DateTimeField(auto_now_add=True, blank=True)
     modified_at = DateTimeField(auto_now=True, blank=True)
+    locator_id = models.CharField(max_length=255, null=True)
+    order = models.IntegerField(default=0)
 
     @property
     def is_available_for_purchase(self):
@@ -129,7 +133,7 @@ class Module(models.Model):
         return "{title} ({uuid})".format(title=self.title, uuid=self.uuid)
 
     class Meta:  # pylint: disable=missing-docstring, no-init, old-style-class, too-few-public-methods
-        ordering = ('created_at', )
+        ordering = ('course_id', 'order')
         permissions = (
             EDIT_OWN_PRICE,
         )
