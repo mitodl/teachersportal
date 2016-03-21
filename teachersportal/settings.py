@@ -271,9 +271,13 @@ LOGGING = {
             'level': DJANGO_LOG_LEVEL,
             'propagate': True,
         },
+        'requests': {
+            'handlers': ['console'],
+            'level': LOG_LEVEL,
+        },
         'urllib3': {
             'level': 'INFO',
-        }
+        },
     },
 }
 

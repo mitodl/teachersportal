@@ -1,9 +1,10 @@
 """
 Tests for webhook handlers
 """
-# pylint: disable=no-self-use
+# pylint: disable=no-self-use,unused-argument
 from __future__ import unicode_literals
 from copy import deepcopy
+from mock import patch
 
 from django.test import TestCase
 from django.contrib.auth.models import User
@@ -16,6 +17,7 @@ from .factories import CourseFactory, ModuleFactory
 from .webhooks import course as course_webhook, module as module_webhook
 
 
+@patch('portal.webhooks.module_population', autospec=True)
 class CourseWebhookTests(TestCase):
     """
     Test for the Course incoming webhook
@@ -24,7 +26,7 @@ class CourseWebhookTests(TestCase):
         'title': 'title',
         'external_pk': 'uuid',
         'edx_course_id': 'course-v1:ColumbiaX+DS101X+3T2015',
-        'instance': 'instance',
+        'instance': 'https://edx.org/',
         'course_id': 'course_id',
         'author_name': 'author_name',
         'overview': 'overview',
@@ -33,37 +35,37 @@ class CourseWebhookTests(TestCase):
         'instructors': ['one', 'two', 'three'],
     }
 
-    def test_unknown_action_errors(self):
+    def test_unknown_action_errors(self, mod_pop):
         """Unknown actions error"""
         with pytest.raises(ValidationError) as exc:
             course_webhook('zammie', {})
         assert 'Unknown action zammie' in str(exc.value)
 
-    def test_delete_deletes_record(self):
+    def test_delete_deletes_record(self, mod_pop):
         """Delete should properly delete"""
         course = CourseFactory.create()
         course_webhook('delete', {'external_pk': course.uuid})
 
         assert not Course.objects.filter(pk=course.pk).exists()
 
-    def test_delete_nonexistent_silence(self):
+    def test_delete_nonexistent_silence(self, mod_pop):
         """Deleting non-existent records are silent"""
         # Should pass without Exception.
         course_webhook('delete', {'external_pk': 'asdf'})
 
-    def test_delete_bad_format_errors(self):
+    def test_delete_bad_format_errors(self, mod_pop):
         """Deleting with bad payload errors"""
         with pytest.raises(ValidationError) as exc:
             course_webhook('delete', None)
         assert 'Invalid value for payload' in str(exc.value)
 
-    def test_update_creates_if_dne(self):
+    def test_update_creates_if_dne(self, mod_pop):
         """Update creates if it doesn't exist"""
         course_webhook('update', self.valid_data)
         course = Course.objects.get(uuid='uuid')
         assert course.title == 'title'
         assert course.uuid == 'uuid'
-        assert course.instance.instance_url == 'instance'
+        assert course.instance.instance_url == 'https://edx.org/'
         assert course.course_id == 'course_id'
         assert course.author_name == 'author_name'
         assert course.overview == 'overview'
@@ -73,8 +75,9 @@ class CourseWebhookTests(TestCase):
         assert course.edx_course_id == 'course-v1:ColumbiaX+DS101X+3T2015'
         assert not course.live
         assert not course.owners.exists()
+        mod_pop.delay.assert_called_with(course.edx_course_id)
 
-    def test_update_updates_if_exists(self):
+    def test_update_updates_if_exists(self, mod_pop):
         """Update updates if it exists"""
         course = CourseFactory.create(
             uuid=self.valid_data['external_pk'],
@@ -90,7 +93,7 @@ class CourseWebhookTests(TestCase):
         course = Course.objects.get(uuid='uuid')
         assert course.title == 'title'
         assert course.uuid == 'uuid'
-        assert course.instance.instance_url == 'instance'
+        assert course.instance.instance_url == 'https://edx.org/'
         assert course.course_id == 'course_id'
         assert course.author_name == 'author_name'
         assert course.overview == 'overview'
@@ -100,8 +103,9 @@ class CourseWebhookTests(TestCase):
         assert course.owners.count() == 1
         assert course.owners.all()[0].id == user.id
         assert course.live
+        mod_pop.delay.assert_called_with(course.edx_course_id)
 
-    def test_errors_changing_instance(self):
+    def test_errors_changing_instance(self, mod_pop):
         """Update errors if changing backinginstance"""
         CourseFactory.create(
             uuid=self.valid_data['external_pk'],
@@ -112,19 +116,19 @@ class CourseWebhookTests(TestCase):
             course_webhook('update', self.valid_data)
         assert 'Instance cannot be changed' in str(exc.value)
 
-    def test_update_errors_bad_payload(self):
+    def test_update_errors_bad_payload(self, mod_pop):
         """Update errors when payload invalid"""
         with pytest.raises(ValidationError) as exc:
             course_webhook('update', None)
         assert 'Invalid payload' in str(exc.value)
 
-    def test_errors_keys_required(self):
+    def test_errors_keys_required(self, mod_pop):
         """If there's no external_pk, error"""
         with pytest.raises(ValidationError) as exc:
             course_webhook('update', {})
         assert "Missing key" in str(exc.value)
 
-    def test_update_instance_mandatory(self):
+    def test_update_instance_mandatory(self, mod_pop):
         """Instance must be present"""
         params = deepcopy(self.valid_data)
         params['instance'] = ''
@@ -132,7 +136,7 @@ class CourseWebhookTests(TestCase):
             course_webhook('update', params)
         assert "Instance must be a non-empty string" in str(exc.value)
 
-    def test_update_uuid_required(self):
+    def test_update_uuid_required(self, mod_pop):
         """Errors if missing the uuid"""
         params = deepcopy(self.valid_data)
         params['external_pk'] = ''

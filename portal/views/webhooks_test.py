@@ -18,6 +18,7 @@ from rest_framework.exceptions import ValidationError
 FAKE_SECRET = b'secret'
 
 
+@patch('portal.views.webhooks.webhooks', autospec=True)
 @override_settings(CCXCON_WEBHOOKS_SECRET=FAKE_SECRET)
 class WebhookViewTests(TestCase):
     """
@@ -41,10 +42,9 @@ class WebhookViewTests(TestCase):
             reverse('webhooks-ccxcon'),
             data=data_bytes,
             content_type="application/json",
-            HTTP_X_CCXCON_SIGNATURE=signature
+            HTTP_X_CCXCON_SIGNATURE=signature,
         )
 
-    @patch('portal.views.webhooks.webhooks', autospec=True)
     def test_checks_hmac_validity(self, wh_mock):
         """Test HMAC validity"""
         data = {
@@ -55,7 +55,6 @@ class WebhookViewTests(TestCase):
         resp = self._sign_send_payload(data, signature='asdf')
         assert resp.status_code == 403
 
-    @patch('portal.views.webhooks.webhooks', autospec=True)
     def test_proper_payload_structure(self, wh_mock):
         """Errors on invalid payload"""
         data = {
@@ -69,7 +68,6 @@ class WebhookViewTests(TestCase):
             resp = self._sign_send_payload(dupe_data)
             assert resp.status_code == 400
 
-    @patch('portal.views.webhooks.webhooks', autospec=True)
     def test_errors_on_invalid_action(self, wh_mock):
         """Error on invalid action"""
         data = {
@@ -80,7 +78,6 @@ class WebhookViewTests(TestCase):
         resp = self._sign_send_payload(data)
         assert resp.status_code == 400
 
-    @patch('portal.views.webhooks.webhooks', autospec=True)
     def test_200_status_on_success(self, wh_mock):
         """200 on success"""
         data = {
@@ -89,9 +86,8 @@ class WebhookViewTests(TestCase):
             'payload': {}
         }
         resp = self._sign_send_payload(data)
-        assert resp.status_code == 200
+        assert resp.status_code == 200, resp.content.decode('utf-8')
 
-    @patch('portal.views.webhooks.webhooks', autospec=True)
     def test_calls_hook_on_success(self, wh_mock):
         """Calls hooks with proper args."""
         hook = wh_mock.course
@@ -104,7 +100,6 @@ class WebhookViewTests(TestCase):
         assert hook.called
         hook.assert_called_with('update', {'a': 1})
 
-    @patch('portal.views.webhooks.webhooks', autospec=True)
     def test_validation_error_raises(self, wh_mock):
         """
         If there's a validation error, the error message is in the response
