@@ -4,7 +4,11 @@ Tests for models
 
 from __future__ import unicode_literals
 
+from datetime import timedelta
 from django.test import TestCase
+from django.utils.timezone import now
+import pytest
+from .models import BackingInstance
 
 from portal.factories import (
     CourseFactory,
@@ -41,3 +45,17 @@ class ModelsTests(TestCase):
         instance = BackingInstanceFactory.create()
         expected = instance.instance_url
         assert str(instance) == expected
+
+
+@pytest.mark.parametrize("incoming,expected", [
+    (now(), True),
+    (now() - timedelta(days=1), True),
+    (now() + timedelta(hours=1), True),  # no padding
+    (now() + timedelta(hours=3), False),
+    (now() + timedelta(days=1), False),
+    (None, True),  # null
+])
+def test_expiration(incoming, expected):
+    """Validate expiration tests correct conditions"""
+    assert BackingInstance(
+        access_token_expiration=incoming).is_expired == expected
