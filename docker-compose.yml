@@ -3,6 +3,11 @@ db:
   ports:
     - "5432"
 
+redis:
+  image: redis
+  ports:
+    - "6379"
+
 web:
   build: .
   command: >
@@ -22,11 +27,15 @@ web:
     PORTAL_EMAIL_BACKEND: 'django.core.mail.backends.console.EmailBackend'
     PORTAL_SECURE_SSL_REDIRECT: 'False'
     STATUS_TOKEN: 'test-token'
+    CELERY_ALWAYS_EAGER: 'False'
+    CELERY_RESULT_BACKEND: redis://redis:6379/4
+    BROKER_URL: redis://redis:6379/4
   env_file: .env
   ports:
     - "8075:8075"
   links:
     - db
+    - redis
 
 watch:
   image: teachersportal_web
@@ -44,3 +53,21 @@ watch:
   environment:
     NODE_ENV: 'development'
 
+celery:
+  image: teachersportal_web
+  command: >
+    /bin/bash -c '
+    sleep 3;
+    celery -A teachersportal worker -l debug'
+  volumes_from:
+    - web
+  environment:
+    DEBUG: 'True'
+    DJANGO_LOG_LEVEL: INFO
+    DATABASE_URL: postgres://postgres@db:5432/postgres
+    PORTAL_DB_DISABLE_SSL: 'True'
+    BROKER_URL: redis://redis:6379/4
+    CELERY_RESULT_BACKEND: redis://redis:6379/4
+  links:
+    - db
+    - redis
