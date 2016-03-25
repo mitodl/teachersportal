@@ -60,8 +60,9 @@ import {
 } from '../actions/index_page';
 import * as api from '../util/api';
 import { COURSE_RESPONSE1, COURSE_LIST } from '../constants';
+import rootReducer from '../reducers';
 
-import configureTestStore from '../store/configureStore_test';
+import configureTestStore from 'redux-asserts';
 import assert from 'assert';
 import sinon from 'sinon';
 
@@ -78,7 +79,7 @@ describe('reducers', () => {
     registerStub = sandbox.stub(api, 'register');
     activateStub = sandbox.stub(api, 'activate');
     checkoutStub = sandbox.stub(api, 'checkout');
-    store = configureTestStore();
+    store = configureTestStore(rootReducer);
   });
 
   afterEach(() => {
