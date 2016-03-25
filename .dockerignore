@@ -1,0 +1,7 @@
+.tox
+htmlcov
+.coverage
+node_modules
+static/bundles
+staticfiles/
+
