@@ -204,7 +204,7 @@ describe('CourseDetailPage', () => {
       return listenForActions([UPDATE_CART_ITEMS, UPDATE_CART_VISIBILITY], () => {
         // Click the Update cart button
         let button = TestUtils.findRenderedDOMComponentWithClass(component, "add-to-cart");
-        TestUtils.Simulate.click(button);
+        TestUtils.Simulate.click(button.firstChild);
       });
     }).then(state => {
       let expectedCart = [];
@@ -339,7 +339,7 @@ describe('CourseDetailPage', () => {
         expectedNumCartItems = cart.length;
 
         let button = TestUtils.findRenderedDOMComponentWithClass(component, "checkout-button");
-        TestUtils.Simulate.click(button);
+        TestUtils.Simulate.click(button.firstChild);
       });
     }).then(() => {
       // Assert that things returned to initial state
@@ -386,7 +386,7 @@ describe('CourseDetailPage', () => {
         RESET_BUYTAB,
       ], () => {
         let button = TestUtils.findRenderedDOMComponentWithClass(component, "checkout-button");
-        TestUtils.Simulate.click(button);
+        TestUtils.Simulate.click(button.firstChild);
       });
     }).then(state => {
       // Assert that things returned to initial state
@@ -431,7 +431,7 @@ describe('CourseDetailPage', () => {
         CHECKOUT_FAILURE,
       ], () => {
         let button = TestUtils.findRenderedDOMComponentWithClass(component, "checkout-button");
-        TestUtils.Simulate.click(button);
+        TestUtils.Simulate.click(button.firstChild);
       });
     }).then(state => {
       // Assert that things haven't changed in the UI
