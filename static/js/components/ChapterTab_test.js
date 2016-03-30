@@ -1,7 +1,6 @@
 /* global localStorage:true, document:false, window: false */
 import '../global_init';
 import { Provider } from 'react-redux';
-import configureTestStore from '../store/configureStore_test';
 import assert from 'assert';
 import sinon from 'sinon';
 import React from 'react';

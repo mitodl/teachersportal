@@ -1,17 +1,18 @@
 /* global localStorage:true, document:false, window: false */
 import '../global_init';
 import { Provider } from 'react-redux';
-import configureTestStore from '../store/configureStore_test';
 import assert from 'assert';
 import sinon from 'sinon';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import TestUtils from 'react-addons-test-utils';
+import configureTestStore from 'redux-asserts';
 
 import App from './App';
 import CourseDetailPage from './CourseDetailPage';
 import BuyTabContainer from './BuyTabContainer';
 import { COURSE_LIST, COURSE_RESPONSE1, COURSE_RESPONSE2 } from '../constants';
+import rootReducer from '../reducers';
 import * as api from '../util/api';
 import { calculateTotal } from '../util/util';
 import {
@@ -53,9 +54,9 @@ describe('CourseDetailPage', () => {
     sandbox = sinon.sandbox.create();
     checkoutStub = sandbox.stub(api, 'checkout');
 
-    store = configureTestStore();
-    listenForActions = store.createListenForActions(state => state);
-    dispatchThen = store.createDispatchThen(state => state);
+    store = configureTestStore(rootReducer);
+    listenForActions = store.createListenForActions();
+    dispatchThen = store.createDispatchThen();
 
     const body = document.getElementsByTagName("body")[0];
     container = document.createElement("div");
