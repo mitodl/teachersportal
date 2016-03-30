@@ -10,6 +10,7 @@
     "eslint-plugin-babel": "^2.1.1",
     "eslint-plugin-react": "^3.7.1",
     "fetch-mock": "^2.3.0",
+    "istanbul": "1.0.0-alpha.2",
     "jsdom": "^7.2.2",
     "jsdom-global": "^1.5.0",
     "mocha": "^2.3.3",
