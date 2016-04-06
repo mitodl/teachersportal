@@ -9,11 +9,12 @@ from django.db import transaction
 from rest_framework.exceptions import ValidationError
 
 from portal.models import Course, Module, BackingInstance
+from .tasks import module_population
 
 # Note: reflection used for names below so be careful not to rename functions.
 
 
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-locals,too-many-statements
 def course(action, payload):
     """
     Handle a CCXCon request regarding courses.
@@ -81,6 +82,8 @@ def course(action, payload):
                     instructors=instructors,
                     edx_course_id=edx_course_id,
                 )
+            if edx_course_id:
+                module_population.delay(edx_course_id)
     elif action == 'delete':
         try:
             uuid = payload['external_pk']
