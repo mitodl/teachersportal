@@ -79,7 +79,7 @@ class Course(models.Model):
     modified_at = DateTimeField(auto_now=True, blank=True)
     instance = ForeignKey(BackingInstance)
     owners = ManyToManyField(to=User, related_name="courses_owned", blank=True)
-    course_id = TextField(blank=True, null=True)
+    course_id = TextField(blank=True, null=True)  # uuid field
     author_name = TextField(blank=True, null=True)
     overview = TextField(blank=True, null=True)
     image_url = TextField(blank=True, null=True)
@@ -147,6 +147,7 @@ class UserInfo(models.Model):
     registration_token = TextField(null=True, blank=True)
     organization = TextField()
     full_name = TextField()
+    edx_instance = ForeignKey(BackingInstance, blank=True, null=True)
 
 
 class Order(models.Model):

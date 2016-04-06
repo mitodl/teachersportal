@@ -20,10 +20,19 @@ from portal.models import (
 FAKE = faker.Factory.create()
 
 
+class BackingInstanceFactory(DjangoModelFactory):
+    """Factory for BackingInstance"""
+    instance_url = fuzzy.FuzzyText(prefix="http://")
+
+    class Meta:  # pylint: disable=missing-docstring,no-init,too-few-public-methods,old-style-class
+        model = BackingInstance
+
+
 class UserInfoFactory(DjangoModelFactory):
     """Factory for UserInfo"""
     full_name = factory.LazyAttribute(lambda x: FAKE.name())
     organization = fuzzy.FuzzyText()
+    edx_instance = factory.SubFactory(BackingInstanceFactory)
 
     class Meta:  # pylint: disable=missing-docstring,no-init,too-few-public-methods,old-style-class
         model = UserInfo
@@ -36,14 +45,6 @@ class UserFactory(DjangoModelFactory):
 
     class Meta:  # pylint: disable=missing-docstring,no-init,too-few-public-methods,old-style-class
         model = User
-
-
-class BackingInstanceFactory(DjangoModelFactory):
-    """Factory for BackingInstance"""
-    instance_url = fuzzy.FuzzyText(prefix="http://")
-
-    class Meta:  # pylint: disable=missing-docstring,no-init,too-few-public-methods,old-style-class
-        model = BackingInstance
 
 
 class CourseFactory(DjangoModelFactory):

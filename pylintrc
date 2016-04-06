@@ -6,5 +6,6 @@ ignore=migrations
 const-rgx = (([A-Z_][A-Z0-9_]*)|(__.*__)|log|urlpatterns)$
 
 [TYPECHECK]
-
-ignored-classes = WSGIRequest, UserInfo, Order, OrderLine, Course, Module, BackingInstance
+ignored-classes = six, six.moves, WSGIRequest, UserInfo, Order, OrderLine, Course, Module, BackingInstance
+generated-members = status_code
+ignored-modules = six, six.moves
