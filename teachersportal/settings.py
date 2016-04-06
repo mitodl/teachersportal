@@ -86,6 +86,7 @@ INSTALLED_APPS = (
     'django.contrib.flatpages',
     'rest_framework',
     'server_status',
+    'oauth2_provider',
 
     # Our INSTALLED_APPS
     'portal',

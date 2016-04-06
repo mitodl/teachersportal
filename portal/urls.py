@@ -27,6 +27,7 @@ urlpatterns = (
     url(r'^api/v1/activate/$', activate_view, name='activate'),
     url(r'^api/v1/checkout/$', CheckoutView.as_view(), name='checkout'),
     url(r'^status/', include('server_status.urls')),
+    url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     # Note: this catches all URLs so put it last
     url(r'.*', index_view, name='portal-index')
 )
