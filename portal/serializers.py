@@ -66,3 +66,23 @@ class CourseSerializerReduced(ModelSerializer):
             'uuid',
             'image_url',
         )
+
+
+class EdxCourseSerializer(ModelSerializer):
+    """Serializer for Course via edx webhooks"""
+
+    modules = ModuleSerializer(many=True, read_only=True)
+
+    class Meta:  # pylint: disable=missing-docstring, too-few-public-methods
+        model = Course
+        fields = (
+            'title',
+            'description',
+            'live',
+            'modules',
+            'edx_course_id',
+            'author_name',
+            'overview',
+            'image_url',
+            'instance',
+        )

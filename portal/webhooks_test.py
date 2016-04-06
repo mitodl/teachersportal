@@ -122,7 +122,7 @@ class CourseWebhookTests(TestCase):
             course_webhook('update', None)
         assert 'Invalid payload' in str(exc.value)
 
-    def test_errors_keys_required(self, mod_pop):
+    def test_errors_no_external_pk(self, mod_pop):
         """If there's no external_pk, error"""
         with pytest.raises(ValidationError) as exc:
             course_webhook('update', {})
@@ -215,8 +215,8 @@ class ModuleWebhookTests(TestCase):
             module_webhook('update', self.valid_payload)
         assert 'Invalid course_external_pk' in str(exc.value)
 
-    def test_update_updates_module(self):
-        """Update updates the module if it exists"""
+    def test_update_updates_course(self):
+        """Update updates the course if it exists"""
         module = ModuleFactory.create(
             uuid='uuid',
             course__uuid='course-uuid',
