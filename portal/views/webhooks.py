@@ -17,6 +17,7 @@ from rest_framework.mixins import (
 
 from portal.permissions import HmacPermission
 from portal.models import Course
+from portal.oauth2_auth import OAuth2Authentication
 from portal.tasks import module_population
 from portal.serializers import EdxCourseSerializer
 import portal.webhooks as webhooks
@@ -30,6 +31,7 @@ class EdxWebhookView(CreateModelMixin, viewsets.GenericViewSet):
     """
     permission_classes = (IsAuthenticated,)
     serializer_class = EdxCourseSerializer
+    authentication_classes = (OAuth2Authentication,)
 
     def post(self, request, *args, **kwargs):  # pylint: disable=unused-argument
         """
