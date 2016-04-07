@@ -74,7 +74,7 @@ class Course(models.Model):
                                      unique=True, null=True)
     title = TextField()
     description = TextField(blank=True, null=True)
-    live = BooleanField()
+    live = BooleanField(default=False)
     created_at = DateTimeField(auto_now_add=True, blank=True)
     modified_at = DateTimeField(auto_now=True, blank=True)
     instance = ForeignKey(BackingInstance)
