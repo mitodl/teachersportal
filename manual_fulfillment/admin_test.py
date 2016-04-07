@@ -39,3 +39,11 @@ class PurchaseOrderAdminTests(unittest.TestCase):
         assert 'ccx_id' in result
         assert 'created' in result
         assert 'info' not in result
+
+    def test_is_processing(self):
+        """Ensures we are 'processing' if ccx_id isn't set"""
+        poa = PurchaseOrderAdmin(PurchaseOrder, mock.Mock())
+        pobj = PurchaseOrder()
+        assert poa.is_processing(pobj)
+        pobj.ccx_id = 1
+        assert not poa.is_processing(pobj)

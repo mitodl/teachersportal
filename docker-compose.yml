@@ -69,6 +69,9 @@ celery:
     PORTAL_DB_DISABLE_SSL: 'True'
     BROKER_URL: redis://redis:6379/4
     CELERY_RESULT_BACKEND: redis://redis:6379/4
+  extra_hosts:
+    - "localhost.daplie.com:192.168.33.10"
+  env_file: .env
   links:
     - db
     - redis

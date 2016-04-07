@@ -9,13 +9,17 @@ from .models import PurchaseOrder
 class PurchaseOrderAdmin(admin.ModelAdmin):
     """ModelAdmin for PurchaseOrders"""
     exclude = ('ccx_id',)
-    list_display = ('__str__', 'course', 'coach_email', 'seat_count', 'created')
+    list_display = ('__str__', 'course', 'coach_email', 'seat_count', 'created', 'is_processing')
     list_filter = ('created',)
 
     exclude_readonly = ('info',)
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    def is_processing(self, obj):  # pylint: disable=no-self-use
+        """Returns whether the async job is done or not"""
+        return obj.ccx_id is None
 
     def get_readonly_fields(self, request, obj=None):
         """
