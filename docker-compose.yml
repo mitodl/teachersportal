@@ -14,7 +14,7 @@ web:
     /bin/bash -c '
     sleep 3 &&
     python manage.py migrate &&
-    ./with_host.sh python manage.py runserver 0.0.0.0:8075'
+    ./with_host.sh python manage.py runsslserver 0.0.0.0:8075 --certificate=cert/fullchain.pem --key=cert/privkey.pem'
   volumes:
     - .:/src
   environment:
@@ -25,7 +25,7 @@ web:
     PORTAL_DB_DISABLE_SSL: 'True'
     PORTAL_USE_WEBPACK_DEV_SERVER: 'True'
     PORTAL_EMAIL_BACKEND: 'django.core.mail.backends.console.EmailBackend'
-    PORTAL_SECURE_SSL_REDIRECT: 'False'
+    PORTAL_SECURE_SSL_REDIRECT: 'True'
     STATUS_TOKEN: 'test-token'
     CELERY_ALWAYS_EAGER: 'False'
     CELERY_RESULT_BACKEND: redis://redis:6379/4
@@ -46,7 +46,7 @@ watch:
     npm install --no-bin-links &&
     npm rebuild node-sass &&
     echo Finished npm install &&
-    node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --config webpack.config.dev.js -d --content-base ./static --host 0.0.0.0 --port 8076 --progress --inline --hot'
+    node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --https --config webpack.config.dev.js -d --content-base ./static --host 0.0.0.0 --port 8076 --progress --inline --hot'
   ports:
     - "8076:8076"
   volumes:
