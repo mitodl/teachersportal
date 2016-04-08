@@ -1,44 +1,23 @@
 """Signals for Purchase Orders"""
 import logging
-from django.conf import settings
-from django.db.models.signals import pre_save
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from portal.ccxcon_api import CCXConAPI
 from .models import PurchaseOrder
+from .tasks import create_ccx
 
 
 log = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
-@receiver(pre_save, sender=PurchaseOrder)
-def purchase_order_pre_save(instance, *args, **kwargs):
+@receiver(post_save, sender=PurchaseOrder)
+def purchase_order_post_save(instance, created, *args, **kwargs):
     """Creates a CCX when we save the purchase order request.
 
-    This is necessary because this could fail, which would result in a record
-    and no backing ccx. This also lets us report errors to the user in a
-    meaningful way.
+    If the async task doesn't get completed, we should be able to detect this
+    with PurchaseOrder objects which don't have a ccx_id.
     """
-    if not instance.pk:  # New record
-        api = CCXConAPI(
-            settings.CCXCON_API,
-            settings.CCXCON_OAUTH_CLIENT_ID,
-            settings.CCXCON_OAUTH_CLIENT_SECRET,
-        )
-        works, _, content = api.create_ccx(
-            instance.course.uuid,
-            instance.coach_email,
-            instance.seat_count,
-            instance.title,
-            None
-        )
-
-        if not works:
-            raise RuntimeError("Unable to create CCX. {}".format(content))
-
-        if 'ccx_course_id' in content and '@' in content['ccx_course_id']:
-            instance.ccx_id = int(content['ccx_course_id'].split('@')[1])
-        else:
-            log.info("Malformed response from ccx creation. %s", content)
-            raise RuntimeError("Malformed response from CCX Creation")
+    if created:
+        log.debug("Sending ccx creation for purchase order %s", instance.pk)
+        create_ccx.delay(instance.pk)

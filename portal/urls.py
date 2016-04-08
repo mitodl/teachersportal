@@ -16,7 +16,7 @@ from portal.views.webpack import index_view
 urlpatterns = (
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/v1/webhooks/ccxcon/$', WebhooksCCXConView.as_view(), name='webhooks-ccxcon'),
-    url(r'^api/v1/webhooks/edx/$', EdxWebhookView.as_view({'post': 'post'}), name='webhooks-edx'),
+    url(r'^api/v1/coursexs/$', EdxWebhookView.as_view({'post': 'post'}), name='webhooks-edx'),
     url(r'^api/v1/login/$', LoginView.as_view(), name='login'),
     url(r'^api/v1/logout/$', logout_view, name='logout'),
     url(r'^api/v1/courses/$', CourseListView.as_view(), name='course-list'),

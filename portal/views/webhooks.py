@@ -6,6 +6,7 @@ from six.moves.urllib import parse
 import logging
 
 from django.shortcuts import HttpResponse
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -15,6 +16,7 @@ from rest_framework.mixins import (
     CreateModelMixin,
 )
 
+from portal.oauth2_auth import OAuth2Authentication
 from portal.permissions import HmacPermission
 from portal.models import Course
 from portal.tasks import module_population
@@ -28,6 +30,7 @@ class EdxWebhookView(CreateModelMixin, viewsets.GenericViewSet):
     """
     Webhook incoming from edx, which happens on course create or update.
     """
+    authentication_classes = (SessionAuthentication, OAuth2Authentication,)
     permission_classes = (IsAuthenticated,)
     serializer_class = EdxCourseSerializer
 

@@ -87,6 +87,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'server_status',
     'oauth2_provider',
+    'sslserver',
 
     # Our INSTALLED_APPS
     'portal',
@@ -188,7 +189,7 @@ INTERNAL_IPS = (get_var('HOST_IP', '127.0.0.1'), )
 
 # Request files from the webpack dev server
 USE_WEBPACK_DEV_SERVER = get_var('PORTAL_USE_WEBPACK_DEV_SERVER', False)
-WEBPACK_SERVER_URL = get_var('PORTAL_WEBPACK_SERVER_URL', 'http://{host}:8076')
+WEBPACK_SERVER_URL = get_var('PORTAL_WEBPACK_SERVER_URL', 'https://{host}:8076')
 
 # Configure e-mail settings
 EMAIL_BACKEND = get_var('PORTAL_EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
@@ -259,6 +260,10 @@ LOGGING = {
             'level': LOG_LEVEL,
         },
         'portal': {
+            'handlers': ['console', 'syslog'],
+            'level': LOG_LEVEL,
+        },
+        'manual_fulfillment': {
             'handlers': ['console', 'syslog'],
             'level': LOG_LEVEL,
         },

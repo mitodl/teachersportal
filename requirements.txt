@@ -16,3 +16,4 @@ django-server-status==0.3.2
 jsonfield==1.0.3
 celery==3.1.19
 redis==2.10.5
+edx-api-client==0.1.0

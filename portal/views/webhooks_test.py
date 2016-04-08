@@ -155,6 +155,7 @@ class EdxWebhooksTest(TestCase):
             "course_id": 'some-course-id',
             "image_url": "/234.jpg",
         })
+        assert mod_pop.delay.call_count == 1
         assert resp.status_code == 201
         resp = self.client.post(reverse('webhooks-edx'), {
             "title": "title1",
