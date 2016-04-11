@@ -22,19 +22,6 @@ import { removeCartItem } from '../actions/index_page';
 const MAX_SEATS = 200;
 
 class BuyTab extends React.Component {
-  componentWillReceiveProps(nextProps) {
-    // Workaround for half baked LeftNav material-ui component
-    const { buyTab: { cartVisibility } } = nextProps;
-
-    if (cartVisibility !== this.refs.shoppingCart.state.open) {
-      if (cartVisibility) {
-        this.refs.shoppingCart.open();
-      } else {
-        this.refs.shoppingCart.close();
-      }
-    }
-  }
-
   render() {
     const {
       selectable,
@@ -44,7 +31,6 @@ class BuyTab extends React.Component {
       buyTab,
       buyTabTotal,
       updateSelectedChapters,
-      updateSeatCount,
       } = this.props;
 
     let cartContents = <MenuItem>No chapters selected</MenuItem>;
@@ -174,6 +160,7 @@ class BuyTab extends React.Component {
         ref="shoppingCart"
         className="shopping-cart"
         width={400}
+        open={buyTab.cartVisibility}
       >
         <AppBar
           title="Cart Summary"

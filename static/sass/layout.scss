@@ -385,7 +385,7 @@ h3.course-listing-header {
 
       div {
         .tab {
-          background-color: white;
+          background-color: white !important;
           color: black !important;
           text-transform: uppercase;
           & > div > div div {

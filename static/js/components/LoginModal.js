@@ -37,14 +37,22 @@ class LoginModal extends React.Component {
             autoFocus
             hintText="Email"
             className="email"
-            onEnterKeyDown={() => this.refs.signinPassword.focus()}
+            onKeyDown={e => {
+              if (e.key === "Enter") {
+                this.refs.signinPassword.focus();
+              }
+            }}
           /></div>
           <div><TextField
             hintText="Password"
             type="password"
             className="password"
             ref="signinPassword"
-            onEnterKeyDown={this.onSignIn.bind(this)}
+            onKeyDown={e => {
+              if (e.key === "Enter") {
+                this.onSignIn.call(this);
+              }
+            }}
           /></div>
           <div>
             <RaisedButton
@@ -66,33 +74,53 @@ class LoginModal extends React.Component {
           <div><TextField
             hintText="Full Name"
             className="full-name"
-            onEnterKeyDown={() => this.refs.registerEmail.focus()}
+            onKeyDown={e => {
+              if (e.key === "Enter") {
+                this.refs.registerEmail.focus();
+              }
+            }}
           /></div>
           <div><TextField
             hintText="Email"
             className="email"
             ref="registerEmail"
-            onEnterKeyDown={() => this.refs.organization.focus()}
+            onKeyDown={e => {
+              if (e.key === "Enter") {
+                this.refs.organization.focus();
+              }
+            }}
           /></div>
           <div><TextField
             hintText="Organization"
             className="organization"
             ref="organization"
-            onEnterKeyDown={() => this.refs.registerPassword.focus()}
+            onKeyDown={e => {
+              if (e.key === "Enter") {
+                this.refs.registerPassword.focus();
+              }
+            }}
           /></div>
           <div><TextField
             hintText="Password"
             type="password"
             className="password"
             ref="registerPassword"
-            onEnterKeyDown={() => this.refs.registerConfirmPassword.focus()}
+            onKeyDown={e => {
+              if (e.key === "Enter") {
+                this.refs.registerConfirmPassword.focus();
+              }
+            }}
           /></div>
           <div><TextField
             hintText="Confirm password"
             type="password"
             className="confirm-password"
             ref="registerConfirmPassword"
-            onEnterKeyDown={this.onRegister.bind(this)}
+            onKeyDown={e => {
+              if (e.key === "Enter") {
+                this.onRegister.call(this);
+              }
+            }}
           /></div>
           <div>
             <RaisedButton

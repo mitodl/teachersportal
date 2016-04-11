@@ -4,7 +4,6 @@ import Tabs from 'material-ui/lib/tabs/tabs';
 import Tab from 'material-ui/lib/tabs/tab';
 import ChapterTab from './ChapterTab';
 import AboutTab from './AboutTab';
-import ReviewsTab from './ReviewsTab';
 import BuyTabContainer from '../containers/BuyTabContainer';
 import ga from 'react-ga';
 
@@ -20,22 +19,22 @@ class CourseTabs extends React.Component {
 
     return <Card id="course-tabs-card">
         <Tabs id="course-tabs">
-            <Tab label="About" id="about" className="tab" onActive={this.handleActive}>
-                <AboutTab content={course.overview} />
-            </Tab>
-            <Tab label="Buy" id="buy" className="tab" onActive={this.handleActive}>
-                <BuyTabContainer
-                  selectable={true}
-                  fixedHeader={true}
-                  fixedFooter={true}
-                  stripedRows={false}
-                  showRowHover={true}
-                  deselectOnClickaway={true}
-                  height={'auto'}
-                  course={course}
-                  courseList={courseList}
-                />
-            </Tab>
+          <Tab label="About" id="about" className="tab" onActive={this.handleActive}>
+            <AboutTab content={course.overview} />
+          </Tab>
+          <Tab label="Buy" id="buy" className="tab" onActive={this.handleActive}>
+            <BuyTabContainer
+              selectable={true}
+              fixedHeader={true}
+              fixedFooter={true}
+              stripedRows={false}
+              showRowHover={true}
+              deselectOnClickaway={true}
+              height={'auto'}
+              course={course}
+              courseList={courseList}
+            />
+          </Tab>
         </Tabs>
       </Card>;
   }
