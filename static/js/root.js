@@ -65,8 +65,8 @@ if (process.env.NODE_ENV !== 'production') {
 ReactDOM.render(
   <div>
     <Provider store={store}>
-      <Router history={createBrowserHistory()}>
-        <Route path="/" component={App} onUpdate={ga.pageview(window.location.pathname)}>
+      <Router history={createBrowserHistory()} onUpdate={() => ga.pageview(window.location.pathname)}>
+        <Route path="/" component={App}>
           <IndexRoute component={Homepage} />
           <Route path="courses" component={CourseListing} />
           <Route path="courses/:uuid" component={CourseDetailPage} />
